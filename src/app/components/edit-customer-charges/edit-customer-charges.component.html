@@ -1,0 +1,39 @@
+<form [formGroup]="editScheduleChargeForm">
+  <mat-form-field class="w-100" appearance="outline">
+    <mat-label>Particular</mat-label>
+    <mat-select formControlName="Charge" [compareWith]="compareSelectedCharge">
+      <mat-option *ngFor="let charge of charges" [value]="charge">
+        {{ charge.Category }} -
+        {{ charge.Particular }} -
+        {{ charge.Amount !== ".00" ? charge.Amount : "" }}
+        {{ charge.ComputeRate !== ".00" ? charge.ComputeRate : "" }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-checkbox formControlName="IsActive">Active</mat-checkbox>
+  Coverage
+  <mat-checkbox formControlName="IsRecurring">Recurring</mat-checkbox>
+  <div *ngIf="IsRecurring">
+    <mat-form-field class="w-100" appearance="outline">
+      <mat-label>Month</mat-label>
+      <mat-select formControlName="BillingMonth" [compareWith]="compareSelectedMonth">
+        <mat-option *ngFor="let month of months; let i = index" [value]="i+1">
+          {{ month }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="w-100" appearance="outline">
+      <mat-label>Year</mat-label>
+      <mat-select formControlName="BillingYear" [compareWith]="compareSelectedYear">
+        <mat-option *ngFor="let year of years" [value]="year">
+          {{ year }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <mat-form-field appearance="outline">
+    <mat-label>Remarks</mat-label>
+    <input matInput formControlName="Remarks"/>
+  </mat-form-field>
+</form>
+  <button (click)="saveCustomerCharge()">Save Charge</button>

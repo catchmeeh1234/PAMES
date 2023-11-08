@@ -1,0 +1,95 @@
+<mat-card class="cardWithShadow">
+  <mat-card-content>
+    <div class="title-container">
+      <div class="left-content">
+        <mat-card-title>
+          Accounts
+        </mat-card-title>
+        <ng-container *ngFor="let items of consumerService.consumerSummary">
+          <div class="subtitle">
+            <span class="label">{{ items.Name }}</span>
+            <span class="count">{{ items.Count }}</span>
+          </div>
+        </ng-container>
+      </div>
+      <button class="fab-button" (click)="openCreateAccount()">New Consumer +</button>
+    </div>
+    <div style="height: auto;">
+      <app-filter-customer></app-filter-customer>
+    </div>
+    <!-- <mat-card-subtitle class="mat-body-1 m-b-24">Create Account</mat-card-subtitle> -->
+    <!-- <i-tabler name="brand-github" class="someclass"></i-tabler> -->
+    <div class="table-responsive m-t-16">
+      <table mat-table [dataSource]="consumerService.dataSource" class="table-bordered">
+
+        <!--- Note that these columns can be defined in any order.
+              The actual rendered columns are set as a property on the row definition" -->
+
+        <ng-container matColumnDef="CustomerStatus">
+          <th mat-header-cell *matHeaderCellDef> Status </th>
+          <td mat-cell *matCellDef="let element" style="text-align: center;">
+            <button (click)="test()" mat-flat-button [ngClass]="{'customerActive': element.CustomerStatus === 'Active', 'customerDisconnected': element.CustomerStatus === 'Disconnected'}">
+              {{element.CustomerStatus}}
+            </button>
+          </td>
+        </ng-container>
+
+        <!-- Position Column -->
+        <ng-container matColumnDef="AccountNo">
+          <th mat-header-cell *matHeaderCellDef> Account No </th>
+          <td mat-cell *matCellDef="let element" class="cursor-pointer" (click)="viewConsumerInfo(element.Consumer_id)"> {{element.AccountNo}} </td>
+        </ng-container>
+
+        <!-- Name Column -->
+        <ng-container matColumnDef="FullName">
+          <th mat-header-cell *matHeaderCellDef> Full Name </th>
+          <td mat-cell *matCellDef="let element"> {{element.Lastname}} {{element.Firstname}} {{element.Middlename}} </td>
+        </ng-container>
+
+        <!-- Weight Column -->
+        <ng-container matColumnDef="ServiceAddress">
+          <th mat-header-cell *matHeaderCellDef> Service Address </th>
+          <td mat-cell *matCellDef="let element"> {{element.ServiceAddress}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="Zone">
+          <th mat-header-cell *matHeaderCellDef> Zone </th>
+          <td mat-cell *matCellDef="let element"> {{element.Zone}} </td>
+        </ng-container>
+
+        <!-- Symbol Column -->
+        <ng-container matColumnDef="ContactNo">
+          <th mat-header-cell *matHeaderCellDef> Contact No </th>
+          <td mat-cell *matCellDef="let element"> {{element.ContactNo}} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row;
+          let even = even;
+          columns: displayedColumns;"
+          [ngClass]="{gray: even}"
+        >
+        </tr>
+      </table>
+      <div *ngIf="!consumerService.dataSource || consumerService.dataSource.data.length === 0" fxLayout="row" fxLayoutAlign="center center">
+        <p>No Consumers found. <button mat-button (click)="openCreateAccount()">Create one</button></p>
+      </div>
+      <mat-paginator [pageSizeOptions]="[5, 10, 20]"
+                 showFirstLastButtons
+                 aria-label="Select page of Consumer">
+      </mat-paginator>
+    </div>
+    <!-- <div *ngIf="products$">
+      <div *ngFor="let product of products$ | async">
+        <h3>{{ product.title }}</h3>
+        <p>Description: {{ product.description }}</p>
+        <p>Price: {{ product.price }}</p>
+      </div>
+    </div>
+    <div *ngIf="!products$">
+      Loading products
+    </div> -->
+  </mat-card-content>
+</mat-card>

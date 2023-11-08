@@ -1,0 +1,50 @@
+mat-card {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+mat-card-content {
+  background-color: #f8f9fb;
+}
+
+.main-content {
+  width: 100vh;
+  height: auto;
+  padding: 0;
+}
+
+.content {
+  background-color: #ffffff;
+  padding: 0px 12px;
+  height: auto;
+  min-height: 15em;
+  // min-width: 20em;
+}
+
+.scroll-table {
+  height: 50px;
+  overflow-y: auto;
+}
+
+.smaller-table {
+  padding: 5px;    /* Adjust padding */
+}
+
+.smaller-table th, .smaller-table td {
+  padding: 5px;    /* Adjust cell padding */
+  font-size: 0.5rem; /* Adjust the font size */
+
+}
+
+.gray {
+   background-color: #f5f5f5;
+}
+
+.table-row {
+  height: 30px !important;
+  font-size: 8px !important;
+}
+
+.scrollable {
+  max-height:500px;
+  overflow: auto;
+}

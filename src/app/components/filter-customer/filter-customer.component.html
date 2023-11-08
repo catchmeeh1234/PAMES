@@ -1,0 +1,67 @@
+<div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="20px" style="padding: 0px 20px;">
+  <div class="toolbar-filter-container">
+    <button mat-button (click)="isOpen = !isOpen" class="toolbar-filter-btn" [class.open]="isOpen" [ngStyle.xs]="{'min-width': '70px'}">
+        <span fxLayout="row" fxLayoutAlign="start center">
+          <!-- <img class="avatar" [src]="'assets/images/avatars/noavatar.png'"> -->
+          <span class="name" fxHide fxShow.gt-xs>Filter</span>
+          <mat-icon class="icon" fxHide fxShow.gt-xs>keyboard_arrow_down</mat-icon>
+        </span>
+      </button>
+      <div class="dropdown mat-elevation-z1" [class.open]="isOpen">
+        <div class="content">
+            <mat-nav-list>
+              <mat-list-item>
+                <mat-form-field appearance="outline">
+                  <mat-label>Filter By Zone</mat-label>
+                  <mat-select (selectionChange)="filterTable(search, selectedZone, selectedStatus ,selectedRequestor)" [(ngModel)]="selectedZone">
+                    <mat-option value="All">All</mat-option>
+                    <mat-option *ngFor="let zone of zones | async" [value]="zone.ZoneName">
+                      {{ zone.ZoneName }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </mat-list-item>
+              <mat-list-item>
+                <mat-form-field appearance="outline">
+                  <mat-label>Filter By Status</mat-label>
+                  <mat-select (selectionChange)="filterTable(search, selectedZone, selectedStatus ,selectedRequestor)" [(ngModel)]="selectedStatus">
+                    <mat-option value="All">All</mat-option>
+                    <mat-option *ngFor="let customer_status of customer_statuses" [value]="customer_status">
+                      {{ customer_status }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </mat-list-item>
+              <mat-list-item>
+                <button id="resetBtn" (click)="resetFilterTable()">Reset</button>
+              </mat-list-item>
+            </mat-nav-list>
+        </div>
+      </div>
+  </div>
+  <mat-form-field appearance="outline" style="padding: 0px 5px;padding-top:20px;">
+    <mat-label>Search</mat-label>
+    <input matInput (keyup)="filterTable(search, selectedZone, selectedStatus ,selectedRequestor)" [(ngModel)]="search" placeholder="Enter Acc. name/number" #input>
+  </mat-form-field>
+
+</div>
+<div class="inline-form" style="padding: 0px 40px;">
+  <mat-chip-row (removed)="closeFilterLabel('Division')" *ngIf="selectedZone != 'All'">
+    {{ selectedZone }}
+    <button matChipRemove aria-label="'remove ' + keyword">
+      <mat-icon>cancel</mat-icon>
+    </button>
+  </mat-chip-row>
+  <mat-chip-row (removed)="closeFilterLabel('Status')" *ngIf="selectedStatus != 'All'">
+    {{ selectedStatus }}
+    <button matChipRemove aria-label="'remove ' + keyword">
+      <mat-icon>cancel</mat-icon>
+    </button>
+  </mat-chip-row>
+  <mat-chip-row (removed)="closeFilterLabel('Reset')" *ngIf="selectedZone != 'All' || selectedStatus != 'All' ||  selectedRequestor != 'All'">
+    Reset
+    <button matChipRemove aria-label="'remove ' + keyword">
+      <mat-icon>cancel</mat-icon>
+    </button>
+  </mat-chip-row>
+</div>

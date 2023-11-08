@@ -1,0 +1,28 @@
+<div class="content">
+  <mat-card-header>
+    <app-content-header [data]="data.headerData"></app-content-header>
+  </mat-card-header>
+  <div class="modal-container">
+    <div class="modal-message">
+      <form [formGroup]="cancelBillForm">
+        <input type="text" placeholder="reference number" formControlName="ReferenceNo" readonly>
+
+        <mat-form-field class="example-full-width" appearance="outline">
+          <input matInput [matDatepicker]="picker" placeholder="Choose a date" formControlName="CurrentDate">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <input type="text" placeholder="Account Number" formControlName="AccountNumber" readonly>
+        <input type="text" placeholder="Consumer Name" formControlName="CustomerName" readonly>
+        <input type="text" placeholder="Bill Number" formControlName="BillNo" readonly>
+        <input type="text" placeholder="Period Covered" formControlName="BillingMonth" readonly>
+        <input type="text" placeholder="Amount" formControlName="AmountDue" readonly>
+        <input type="text" placeholder="Remarks" formControlName="Remarks">
+      </form>
+    </div>
+    <div class="modal-buttons">
+      <button mat-flat-button color="primary" class="modal-confirm" (click)="onSaveCancelBill(cancelBillForm.value)" style="margin-right: 5px;">Save</button>
+    </div>
+  </div>
+</div>

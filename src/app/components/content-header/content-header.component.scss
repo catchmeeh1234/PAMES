@@ -1,0 +1,16 @@
+.title-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: start; /* Align items horizontally */
+  align-items: center; /* Center vertically */
+  gap: 0.5em;
+  // padding: 24px 16px;
+
+  // .left-content {
+  //   display: flex;
+  //   flex-direction: row;
+  //   justify-content: start; /* Align items horizontally */
+  //   align-items: center;
+  //   gap: 5em;
+  // }
+}

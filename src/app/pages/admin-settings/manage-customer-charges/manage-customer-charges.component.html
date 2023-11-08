@@ -1,0 +1,80 @@
+<mat-card class="cardWithShadow">
+  <mat-card-header>
+    <app-content-header [data]="headerData"></app-content-header>
+    <button mat-icon-button (click)="addCustomerCharge(consumerInfo.AccountNo)">
+      <i-tabler name="square-rounded-plus-filled" class="addBtn"></i-tabler>
+    </button>
+  </mat-card-header>
+  <mat-card-content class="b-t-1">
+    <div fxLayout="row">
+      <table mat-table [dataSource]="consumerService.consumerChargesDataSource" class="w-100">
+        <ng-container matColumnDef="DateCreated">
+          <th mat-header-cell *matHeaderCellDef> DateCreated </th>
+          <td mat-cell *matCellDef="let element">{{element.DateCreated}} </td>
+        </ng-container>
+        <ng-container matColumnDef="ChargeType">
+          <th mat-header-cell *matHeaderCellDef> Charge Type </th>
+          <td mat-cell *matCellDef="let element"> {{element.ChargeType}} </td>
+        </ng-container>
+        <ng-container matColumnDef="Category">
+          <th mat-header-cell *matHeaderCellDef> Category </th>
+          <td mat-cell *matCellDef="let element"> {{element.Category}} </td>
+        </ng-container>
+        <ng-container matColumnDef="Particular">
+          <th mat-header-cell *matHeaderCellDef> Particular </th>
+          <td mat-cell *matCellDef="let element" class="cursor-pointer" style="text-decoration: underline;" (click)="openEditConsumerCharges(element)"> {{element.Particular}} </td>
+        </ng-container>
+        <ng-container matColumnDef="Amount">
+          <th mat-header-cell *matHeaderCellDef> Amount/Charge Rate </th>
+          <td mat-cell *matCellDef="let element">
+            <ng-container *ngIf="element.Amount !== '.00'">
+              {{element.Amount}}
+            </ng-container>
+            <ng-container *ngIf="element.ChargeRate !== '.00'">
+              {{element.ChargeRate}}
+            </ng-container>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="Recurring">
+          <th mat-header-cell *matHeaderCellDef> Recurring </th>
+          <td mat-cell *matCellDef="let element"> {{element.Recurring}} </td>
+        </ng-container>
+        <ng-container matColumnDef="BillingMonth">
+          <th mat-header-cell *matHeaderCellDef> Billing Month </th>
+          <td mat-cell *matCellDef="let element"> {{ dateFormat.getMonthName(element.BillingMonth) }} </td>
+        </ng-container>
+        <ng-container matColumnDef="BillingYear">
+          <th mat-header-cell *matHeaderCellDef> Billing Year </th>
+          <td mat-cell *matCellDef="let element"> {{element.BillingYear}} </td>
+        </ng-container>
+        <ng-container matColumnDef="Remarks">
+          <th mat-header-cell *matHeaderCellDef> Remarks </th>
+          <td mat-cell *matCellDef="let element"> {{element.Remarks}} </td>
+        </ng-container>
+        <ng-container matColumnDef="ActiveInactive">
+          <th mat-header-cell *matHeaderCellDef> Active </th>
+          <td mat-cell *matCellDef="let element">
+            <mat-checkbox class="example-margin" [checked]="element.ActiveInactive === '1'" disabled></mat-checkbox>
+          </td>
+        </ng-container>
+        <!-- <ng-container matColumnDef="ComputeRate">
+          <th mat-header-cell *matHeaderCellDef> Compute Rate </th>
+          <td mat-cell *matCellDef="let element"> {{element.ComputeRate}} </td>
+        </ng-container> -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row;
+          let even = even;
+          columns: displayedColumns;"
+          [ngClass]="{gray: even}"
+        >
+        </tr>
+      </table>
+    </div>
+    <mat-paginator [pageSizeOptions]="[5, 10, 20]"
+        showFirstLastButtons
+        aria-label="Select page">
+    </mat-paginator>
+  </mat-card-content>
+</mat-card>

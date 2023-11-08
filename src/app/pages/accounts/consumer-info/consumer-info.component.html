@@ -1,0 +1,142 @@
+<ng-container *ngIf="consumerService.consumerInfo$ | async as consumerInfo; else noConsumerInfo">
+  <mat-card class="cardWithShadow">
+    <mat-card-header>
+      <app-content-header [data]="headerData"></app-content-header>
+    </mat-card-header>
+    <mat-card-content class="b-t-1">
+      <ng-container *ngFor="let info of consumerInfo">
+        <div fxLayout="row">
+          <div fxLayout="column" fxFlex="80">
+            <div class="content">
+              <div fxLayout="row" fxLayoutAlign="space-between center">
+                <h6>{{ info.Firstname }} {{ info.Middlename }} {{ info.Lastname }}</h6>
+                <button mat-icon-button (click)="editConsumerInfo()">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </div>
+              <div fxLayout="row" fxLayoutAlign="space-between start">
+                <div>
+                  <p>{{ info.AccountNo }}</p>
+                  <p>{{ info.ServiceAddress }}</p>
+                  <p>{{ info.ContactNo }}</p>
+                </div>
+                <div style="text-align: center;">
+                  <h6>{{ info.CustomerStatus }}</h6>
+                  <mat-checkbox [checked]="info.IsSenior === 'Yes' ? true : false" disabled>Senior Citizen</mat-checkbox>
+                </div>
+              </div>
+            </div>
+            <div class="content">
+              <!-- consumer's ledger -->
+            <table mat-table [dataSource]="dataSource" class="table-bordered smaller-table" fxFlex="80">
+              <!-- ledger reference number -->
+              <ng-container matColumnDef="LedgerRefNo">
+               <th mat-header-cell *matHeaderCellDef> Ref# </th>
+               <td mat-cell *matCellDef="let element">
+                   {{element.ledgerRefNo}}
+               </td>
+             </ng-container>
+              <!-- Date -->
+              <ng-container matColumnDef="LedgerDate">
+               <th mat-header-cell *matHeaderCellDef> Date </th>
+               <td mat-cell *matCellDef="let element">
+                   {{element.ledgerDate}}
+               </td>
+             </ng-container>
+             <!-- Particulars -->
+             <ng-container matColumnDef="LedgerParticulars">
+               <th mat-header-cell *matHeaderCellDef> Particulars </th>
+               <td mat-cell *matCellDef="let element">
+                   {{element.ledgerParticulars}}
+               </td>
+             </ng-container>
+             <!-- Ledger Meter Reading -->
+             <ng-container matColumnDef="MeterReading">
+               <th mat-header-cell *matHeaderCellDef> Meter Reading </th>
+               <td mat-cell *matCellDef="let element">
+                   {{element.ledgerReading}}
+               </td>
+             </ng-container>
+             <!-- Ledger Consumption  -->
+             <ng-container matColumnDef="Consumption">
+               <th mat-header-cell *matHeaderCellDef> Cons </th>
+               <td mat-cell *matCellDef="let element">
+                   {{element.ledgerConsumption}}
+               </td>
+             </ng-container>
+             <!-- Ledger Billing  -->
+             <ng-container matColumnDef="Billing">
+               <th mat-header-cell *matHeaderCellDef> Billing </th>
+               <td mat-cell *matCellDef="let element">
+                   {{element.ledgerAmount}}
+               </td>
+             </ng-container>
+             <!-- Ledger Credit  -->
+             <ng-container matColumnDef="Discount">
+               <th mat-header-cell *matHeaderCellDef> Credit </th>
+               <td mat-cell *matCellDef="let element">
+                   {{element.ledgerDiscount}}
+             </ng-container>
+             <!-- Ledger Balance  -->
+             <ng-container matColumnDef="Balance">
+               <th mat-header-cell *matHeaderCellDef> Balance </th>
+               <td mat-cell *matCellDef="let element">
+                   {{element.ledgerBalance}}
+               </td>
+             </ng-container>
+             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+             <tr
+               mat-row
+               *matRowDef="let row;
+               let even = even;
+               columns: displayedColumns;"
+               [ngClass]="{gray: even}"
+               class="table-row"
+             >
+             </tr>
+            </table>
+            <div *ngIf="dataSource.data.length === 0;">
+              No Ledger Entry
+            </div>
+          </div>
+          </div>
+          <div fxLayout="column" fxFlex="20" class="scrollable">
+            <mat-card class="b-1 shadow-none" fxFlex="100">
+              <mat-card-header>
+                <mat-card-title>Charges</mat-card-title>
+                <button (click)="manageCharges(info.Consumer_id)">manage charges</button>
+              </mat-card-header>
+              <mat-card-content class="b-t-1">
+                <mat-list *ngIf="consumerCharges?.length !== 0;else noConsumerCharges">
+                  <mat-list-item *ngFor="let consumerCharge of consumerCharges">
+                    <span matListItemTitle class="f-s-12 f-w-600">{{ consumerCharge.Particular }}</span>
+                    <span matListItemLine class="mat-body-1">{{ consumerCharge.Amount }}</span>
+                  </mat-list-item>
+                </mat-list>
+                <ng-template #noConsumerCharges>
+                  No Consumer Charges yet
+                </ng-template>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+
+      </ng-container>
+    </mat-card-content>
+  </mat-card>
+</ng-container>
+
+<ng-template #noConsumerInfo>
+  <!-- <div class="main-content"> -->
+    <div fxLayout="column" fxLayoutAlign="center center" class="main-content">
+      <h3>
+        No Consumer Info to be displayed
+      </h3>
+     </div>
+
+  <!-- </div> -->
+</ng-template>
+
+<!-- <div *ngFor="let item of consumerInfo$ | async">
+  <span>{{ item.AccountNo }}</span>
+</div> -->

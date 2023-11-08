@@ -1,0 +1,86 @@
+<mat-card class="cardWithShadow">
+  <mat-card-header>
+    <app-content-header [data]="headerData"></app-content-header>
+  </mat-card-header>
+  <mat-card-content class="b-t-1">
+    <div class="m-t-16">
+      <form [formGroup]="createAccountForm">
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Account Number</mat-label>
+          <input matInput formControlName="AccountNo" readonly/>
+        </mat-form-field>
+
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Last Name</mat-label>
+          <input matInput formControlName="Lastname" />
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>First Name</mat-label>
+          <input matInput formControlName="Firstname" />
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Middle Name</mat-label>
+          <input matInput formControlName="Middlename" />
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Service Address</mat-label>
+          <input matInput formControlName="ServiceAddress" />
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Land Mark</mat-label>
+          <input matInput formControlName="LandMark" />
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Contact No</mat-label>
+          <input matInput formControlName="ContactNo" />
+        </mat-form-field>
+
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Meter No</mat-label>
+          <input matInput formControlName="MeterNo" />
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Sequence No</mat-label>
+          <input matInput formControlName="ReadingSeqNo" />
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Zone</mat-label>
+          <mat-select formControlName="ZoneName">
+            <mat-option *ngFor="let zone of zones" [value]="zone.ZoneName">{{ zone.ZoneName }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Classification</mat-label>
+          <mat-select formControlName="RateSchedule">
+            <mat-option *ngFor="let rate of rates" [value]="rate.CustomerType">{{ rate.CustomerType }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <input matInput [matDatepicker]="picker1" placeholder="Date Created" formControlName="dateCreated">
+          <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+          <mat-datepicker #picker1></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <input matInput [matDatepicker]="picker2" placeholder="Date Installed" formControlName="dateInstalled">
+          <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+          <mat-datepicker #picker2></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Customer Status</mat-label>
+          <mat-select formControlName="CustomerStatus">
+            <mat-option *ngFor="let customerStatus of customerStatuses" [value]="customerStatus.status_name">{{ customerStatus.status_name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <label for="IsSenior">Senior Citizen</label>
+        <mat-checkbox id="IsSenior" formControlName="IsSenior"></mat-checkbox>
+
+
+      </form>
+      <button mat-flat-button color="primary" (click)="onCreateAccount(createAccountForm.value)">Create Account</button>
+    </div>
+  </mat-card-content>
+</mat-card>

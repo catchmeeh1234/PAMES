@@ -1,0 +1,49 @@
+<div>
+  <form [formGroup]="chargesForm">
+    <mat-form-field appearance="outline" class="w-100 dense-2">
+      <mat-label>Charge Type</mat-label>
+      <mat-select formControlName="ChargeType" (selectionChange)="onSelectChange($event)">
+        <mat-option value="Fixed">Fixed</mat-option>
+        <mat-option value="Amount Percentage">Amount Percentage</mat-option>
+        <mat-option value="Cons. Rate">Cons. Rate</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-100 dense-2">
+      <mat-label>Category</mat-label>
+      <mat-select formControlName="Category">
+        <mat-option value="Charges">Charges</mat-option>
+        <mat-option value="Others">Others</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-100 dense-2">
+      <mat-label>Entry</mat-label>
+      <mat-select formControlName="Entry">
+        <mat-option value="Misc">Misc</mat-option>
+        <mat-option value="Penalty">Penalty</mat-option>
+        <mat-option value="Others">Others</mat-option>
+        <mat-option value="Charges">Charges</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="dense-2">
+      <mat-label>Particular</mat-label>
+      <input matInput type="text" placeholder="Particular" formControlName="Particular"/>
+    </mat-form-field>
+
+    <ng-container *ngIf="chargeType === 'Fixed'; else rate">
+      <mat-form-field appearance="outline" class="dense-2">
+        <mat-label>Amount</mat-label>
+        <input matInput type="text" placeholder="Amount" formControlName="Amount" onkeypress="return (event.charCode === 46 || (event.charCode >= 48 && event.charCode <= 57)) && (!this.value.includes('.') || event.charCode !== 46);"/>
+      </mat-form-field>
+    </ng-container>
+    <ng-template #rate>
+      <mat-form-field appearance="outline" class="dense-2">
+        <mat-label>Compute Rate</mat-label>
+        <input matInput type="text" placeholder="Compute Rate" formControlName="ComputeRate" onkeypress="return (event.charCode === 46 || (event.charCode >= 48 && event.charCode <= 57)) && (!this.value.includes('.') || event.charCode !== 46);"/>
+      </mat-form-field>
+    </ng-template>
+  </form>
+  <button (click)="onSaveCharges(chargesForm.value)">Save</button>
+</div>

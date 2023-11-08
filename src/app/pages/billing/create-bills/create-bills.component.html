@@ -1,0 +1,119 @@
+<mat-card class="cardWithShadow theme-card">
+  <mat-card-header>
+      <mat-card-title>Create Bills</mat-card-title>
+  </mat-card-header>
+  <mat-card-content class="b-t-1">
+    <div>
+      <mat-list>
+        <div mat-subheader>Zones</div>
+        <mat-list-item *ngFor="let zone of zones;let i=index">
+          <!-- <mat-icon mat-list-icon>folder</mat-icon> -->
+          <div mat-line>
+            {{zone.ZoneName}}
+            <mat-checkbox
+             (change)="onCheckboxChange(zone)"
+             [(ngModel)]="zone.checked"
+            ></mat-checkbox>
+          </div>
+        </mat-list-item>
+      </mat-list>
+
+      Bill Settings
+      <mat-form-field appearance="outline" class="w-100">
+        <input
+          matInput [matDatepicker]="picker"
+          placeholder="Billing Period"
+          [(ngModel)]="selectedBillingMonth"
+        >
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      Reader
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Meter Reader</mat-label>
+        <mat-select [(ngModel)]="selectedMeterReader">
+          <mat-option *ngFor="let meterReader of meterReaders" [value]="meterReader.reader_name"> {{ meterReader.reader_name }} </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" (click)="prepareBills(selectedZones, selectedBillingMonth, selectedMeterReader)">Prepare Bills</button>
+      <button mat-flat-button color="primary" (click)="createBills(dataSource, selectedBillingMonth, selectedZones)">Create Bills</button>
+
+      <!-- <button mat-flat-button color="primary">Create Bills History</button> -->
+
+    </div>
+    <div>
+      Announcement
+      <textarea [(ngModel)]="announcementMessage"></textarea>
+    <input type="text" placeholder="Office Contact No." [(ngModel)]="announcementContactNo">
+    <button mat-flat-button color="primary" (click)="onUpdateAnnouncement(announcementMessage, announcementContactNo)">Update</button>
+    </div>
+
+    <div class="col-12 table-responsive m-t-16">
+      <table mat-table [dataSource]="dataSource" class="b-1 shadow-none">
+
+        <!--- Note that these columns can be defined in any order.
+              The actual rendered columns are set as a property on the row definition" -->
+
+        <!-- Position Column -->
+        <ng-container matColumnDef="AccountNo">
+          <th mat-header-cell *matHeaderCellDef> Account No </th>
+          <td mat-cell *matCellDef="let element"> {{element.AccountNumber}} </td>
+        </ng-container>
+
+        <!-- Name Column -->
+        <ng-container matColumnDef="CustomerName">
+          <th mat-header-cell *matHeaderCellDef> Customer Name </th>
+          <td mat-cell *matCellDef="let element"> {{element.CustomerName}} </td>
+        </ng-container>
+
+        <!-- Weight Column -->
+        <ng-container matColumnDef="CustomerAddress">
+          <th mat-header-cell *matHeaderCellDef> Customer Address </th>
+          <td mat-cell *matCellDef="let element"> {{element.CustomerAddress}} </td>
+        </ng-container>
+
+        <!-- Symbol Column -->
+        <ng-container matColumnDef="PreviousReading">
+          <th mat-header-cell *matHeaderCellDef> Previous Reading </th>
+          <td mat-cell *matCellDef="let element"> {{element.LastMeterReading}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="Reading">
+          <th mat-header-cell *matHeaderCellDef> Reading </th>
+          <td mat-cell *matCellDef="let element"> {{element.Reading}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="BillingMonth">
+          <th mat-header-cell *matHeaderCellDef> Billing Month </th>
+          <td mat-cell *matCellDef="let element"> {{element.BillingMonth}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="RateSchedule">
+          <th mat-header-cell *matHeaderCellDef> Rate Schedule </th>
+          <td mat-cell *matCellDef="let element"> {{element.RateSchedule}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="Zone">
+          <th mat-header-cell *matHeaderCellDef> Zone </th>
+          <td mat-cell *matCellDef="let element"> {{element.Zone}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="MeterReader">
+          <th mat-header-cell *matHeaderCellDef> Meter Reader </th>
+          <td mat-cell *matCellDef="let element"> {{element.MeterReader}} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+      <!-- <div *ngIf="!dataSource || dataSource.data.length === 0" fxLayout="row" fxLayoutAlign="center center">
+        <p>No Bills created.</p>
+      </div> -->
+      <mat-paginator [pageSizeOptions]="[5, 10, 20]"
+                 showFirstLastButtons
+                 aria-label="Select page of Bill">
+      </mat-paginator>
+    </div>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,94 @@
+/* CSS to style the mat-card and position the button */
+
+mat-card-content {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.title-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between; /* Align items horizontally */
+  align-items: center; /* Center vertically */
+  gap: 0.5em;
+  background-color: #f8f9fb !important;
+  padding: 24px 16px;
+
+  .left-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start; /* Align items horizontally */
+    align-items: center;
+    gap: 5em;
+
+    .subtitle {
+      display: flex;
+      flex-direction: column;
+      // justify-content: flex-start; /* Align items horizontally */
+      align-items:flex-start;
+
+      .label {
+        font-size: 14px;
+      }
+
+      .count {
+        font-weight: bold;
+        font-size: 18px;
+        color: #007bff;
+      }
+    }
+  }
+}
+
+
+.fab-button {
+  background-color: #007bff; /* Button background color */
+  color: #fff; /* Text color */
+  border: none;
+  border-radius:1em; /* Make it circular */
+  width: auto;
+  height: auto;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  padding: 6px 16px;
+}
+
+.fab-button:hover {
+  background-color: #0056b3; /* Hover background color */
+}
+
+
+.gray {
+  background-color: #f8f9fb;
+}
+
+.table-bordered {
+  border: 1px solid #f8f9fb;
+}
+
+.customerActive {
+  background-color: green;
+  color: #ffffff !important;
+  border-radius: 24px;
+}
+
+.customerDisconnected {
+  background-color: red;
+  color: #ffffff !important;
+  border-radius: 24px;
+
+}
+
+.mat-column-AccountNo {
+  width: 100px;
+}
+
+.mat-column-CustomerStatus {
+  width: 50px;
+}
+
+.mat-column-ServiceAddress {
+  width: 150px;
+}
+

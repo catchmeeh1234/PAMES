@@ -1,0 +1,13 @@
+<div class="content">
+  <mat-card-header>
+    <app-content-header [data]="data.headerData"></app-content-header>
+  </mat-card-header>
+  <div class="modal-container">
+    <i class="fas fa-check-circle"></i>
+    <div class="modal-message">{{data.message}}</div>
+    <div class="modal-buttons">
+      <button mat-flat-button color="primary" class="modal-confirm" (click)="onConfirm()" style="margin-right: 5px;">Yes</button>
+      <button mat-flat-button color="warn" class="modal-cancel" (click)="onCancel()">No</button>
+    </div>
+  </div>
+</div>
