@@ -15,6 +15,7 @@ import { SearchConsumerComponent } from './search-consumer/search-consumer.compo
 import { ConfirmationPromptComponent } from './confirmation-prompt/confirmation-prompt.component';
 import { PasswordPromptComponent } from './password-prompt/password-prompt.component';
 import { CancelBillComponent } from './cancel-bill/cancel-bill.component';
+import { BillFormComponent } from './bill-form/bill-form.component';
 
 @NgModule({
   declarations: [
@@ -29,6 +30,7 @@ import { CancelBillComponent } from './cancel-bill/cancel-bill.component';
     ConfirmationPromptComponent,
     PasswordPromptComponent,
     CancelBillComponent,
+    BillFormComponent,
   ],
   imports: [
     FormsModule,
@@ -42,6 +44,7 @@ import { CancelBillComponent } from './cancel-bill/cancel-bill.component';
     FilterCustomerComponent,
     FormChargesComponent,
     ContentHeaderComponent,
+    BillFormComponent,
   ]
 })
 export class ComponentsModule { }

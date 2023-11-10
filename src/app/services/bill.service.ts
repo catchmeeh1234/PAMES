@@ -13,6 +13,7 @@ export type BillInfo = {
   DateFrom: string;
   ReadingDate: string;
   DiscDate: string;
+  DueDate: string;
   PreviousReading: string;
   Reading: string;
   BillingMonth: string;
@@ -32,6 +33,7 @@ export type BillInfo = {
   postedBy: any;
   dateCreated: string;
   datePaid: any;
+  AverageCons: string;
 }
 
 @Injectable({
@@ -63,6 +65,13 @@ export class BillService {
     let json = JSON.stringify(billInfo);
     params.append('billInfo', json);
     return this.http.post(`${environment.API_URL}/Bills/createBill.php`, params, { responseType: 'json' });
+  }
+
+  updateBill(billInfo:any) {
+    let params = new FormData();
+    let json = JSON.stringify(billInfo);
+    params.append('billInfo', json);
+    return this.http.post(`${environment.API_URL}/Bills/updateBill.php`, params, { responseType: 'json' });
   }
 
   createBills(preparedBills:any, billingMonth:string, zones:string[]) {
@@ -130,6 +139,11 @@ export class BillService {
   computeSeniorDiscount(energyCharge:number, discountPercentage:number) {
     const scDiscount = energyCharge * discountPercentage;
     return parseFloat(scDiscount.toFixed(2));
+  }
+
+  computeConsumption(currentReading:number, lastReading:number) {
+    const consumption = currentReading - lastReading;
+    return consumption;
   }
 
 }

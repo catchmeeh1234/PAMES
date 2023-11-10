@@ -68,7 +68,7 @@ export class BillsComponent {
   ngOnInit(): void {
     this.loadZones();
 
-    console.log(this.billService.dataSource);
+    //console.log(this.billService.dataSource);
 
     // const refreshId = setInterval(() => {
     //   if (this.billService.dataSource) {
@@ -129,6 +129,15 @@ export class BillsComponent {
   }
 
   onCreateBill() {
+    const headerData = {
+      title: "Create bill",
+      url: './billing/bills'
+    };
+
+    const newHeaderData = { myObheaderDataject: JSON.stringify(headerData) };
+
+    //his.router.navigate(['/auth/dashboard'], { queryParams: { id: this.sessionStorageService.getSession('userid') } });
+
     this.router.navigate(['./billing/create-bill']);
 
   }

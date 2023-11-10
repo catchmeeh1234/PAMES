@@ -18,9 +18,16 @@
           Cancel Bill
           </button>
           <button
+            mat-flat-button color="primary"
+            (click)="editBill(billInfo.BillNo)"
+            *ngIf="billInfo?.BillStatus === 'Pending'"
+          >
+          Edit Bill
+          </button>
+          <button
             mat-flat-button
             color="primary"
-            *ngIf="billInfo?.Reading !== null"
+            *ngIf="billInfo?.Reading !== '0'"
           >
             Print
           </button>

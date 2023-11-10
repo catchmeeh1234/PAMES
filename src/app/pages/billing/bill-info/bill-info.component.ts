@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterEvent } from '@angular/router';
 import { CancelBillComponent } from 'src/app/components/cancel-bill/cancel-bill.component';
 import { ConfirmationPromptComponent } from 'src/app/components/confirmation-prompt/confirmation-prompt.component';
 import { PasswordPromptComponent } from 'src/app/components/password-prompt/password-prompt.component';
@@ -10,6 +10,7 @@ import { MeterReaderService } from 'src/app/services/meter-reader.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { PasswordStatus } from 'src/app/services/useraccounts.service';
+import EscPosEncoder from 'esc-pos-encoder.esm.js';
 
 @Component({
   selector: 'app-bill-info',
@@ -45,6 +46,7 @@ export class BillInfoComponent {
     private snackbarService:SnackbarService,
     private route:ActivatedRoute,
     private dialog:MatDialog,
+    private router:Router,
   ) {
     this.billInfoForm = this.fb.group({
       BillNo: ['', Validators.required],
@@ -73,6 +75,7 @@ export class BillInfoComponent {
   }
 
   ngOnInit() {
+
     const bill_no = this.route.snapshot.params['bill_no'];
     //Called after the constructor, initializing input properties, and the first call to ngOnChanges.
     //Add 'implements OnInit' to the class.
@@ -115,6 +118,10 @@ export class BillInfoComponent {
     //console.log(this.billcharges);
   }
 
+  editBill(billno:string) {
+    this.router.navigate(['./billing/edit-bill', billno]);
+  }
+
   async onPostBill(billno:string, accno:string) {
     if (this.user) {
       const res:any = await this.billService.postbill(billno, accno, this.user).toPromise();
@@ -124,8 +131,8 @@ export class BillInfoComponent {
 
         const bill:any = await this.billService.fetchBillByBillNo(billno).toPromise();
         if (bill) {
-          this.billInfo = bill[0];
-          this.loadBillInfo(bill[0]);
+          this.billInfo = bill[0].BillNo;
+          this.loadBillInfo(bill[0].BillNo);
         }
       } else {
         this.snackbarService.showError(res.status);

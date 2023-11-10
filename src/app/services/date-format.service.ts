@@ -51,7 +51,7 @@ export class DateFormatService {
     return value < 10 ? `0${value}` : value.toString();
   }
 
-  formatStringToDate(dateString:string, day:number=1) {
+  formatStringToDate(dateString:string) {
     const months: { [key: string]: number } = {
       January: 0, February: 1, March: 2, April: 3, May: 4, June: 5,
       July: 6, August: 7, September: 8, October: 9, November: 10, December: 11
@@ -64,11 +64,20 @@ export class DateFormatService {
       const year = parseInt(yearStr, 10);
 
       if (!isNaN(year)) {
-        return new Date(year, month, day);
+        return new Date(year, month);
       }
     }
 
     return null; // Invalid input
+  }
+
+  convertStringToDate(dateString:string) {
+    const [year, month, day] = dateString.split('-').map(Number);
+
+    // Create a new Date object
+    const date = new Date(year, month - 1, day);
+
+    return date;
   }
 
   convertToMonthYearString(dateValue:Date) {
@@ -77,6 +86,11 @@ export class DateFormatService {
     // Format the date as "Month YYYY"
     const formattedDate = selectedDate.toLocaleString('en-US', { year: 'numeric', month: 'long' });
     return formattedDate;
+  }
+
+  separateMonthYear(monthYear:string) {
+    const parts = monthYear.split(' ');
+    return parts;
   }
 
 }

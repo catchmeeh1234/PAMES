@@ -1,0 +1,165 @@
+<form [formGroup]="billForm">
+  <mat-form-field appearance="outline">
+    <mat-label>Account No</mat-label>
+    <input matInput formControlName="AccountNumber" readonly/>
+  </mat-form-field>
+  <button mat-flat-button color="primary" (click)="searchConsumer()" *ngIf="formData.action === 'Create'">search</button>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Name</mat-label>
+    <input matInput formControlName="CustomerName" readonly/>
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Address</mat-label>
+    <input matInput formControlName="ServiceAddress" readonly/>
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Meter No</mat-label>
+    <input matInput formControlName="MeterNo" readonly/>
+  </mat-form-field>
+
+  <!-- status -->
+  <div>
+    <p>Pending</p>
+    <mat-checkbox formControlName="IsSenior">Senior Citizen</mat-checkbox>
+
+  </div>
+
+  <!-- meter Reading -->
+  <div>
+    <mat-form-field appearance="outline">
+      <mat-label>Current</mat-label>
+      <input matInput formControlName="CurrentReading" onkeypress="return (event.charCode >= 48 && event.charCode <= 57)"/>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Previous</mat-label>
+      <input matInput formControlName="LastMeterReading" readonly/>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Consumption</mat-label>
+      <input matInput formControlName="Consumption" readonly/>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Average Consumption</mat-label>
+      <input matInput formControlName="AverageCons" readonly/>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Meter Reader</mat-label>
+      <mat-select formControlName="MeterReader">
+        <mat-option *ngFor="let meterreader of meterreaders" [value]="meterreader.reader_name"> {{ meterreader.reader_name }} </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Billing -->
+  <div>
+    <mat-form-field appearance="outline">
+      <mat-label>Amount Due</mat-label>
+      <input matInput formControlName="Amount" readonly/>
+    </mat-form-field>
+    <!-- <mat-form-field appearance="outline">
+      <mat-label>Adjus Due</mat-label>
+      <input matInput formControlName="Amount" />
+    </mat-form-field> -->
+
+    <!-- Discounts -->
+    <mat-form-field appearance="outline">
+      <mat-label>S.C Discount</mat-label>
+      <input matInput formControlName="SeniorDiscount" readonly/>
+    </mat-form-field>
+  </div>
+
+  <!-- Charges List -->
+  <div>
+    <mat-card class="b-1 shadow-none" fxFlex="100">
+      <mat-card-header>
+        <mat-card-title>Charges</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="b-t-1">
+        <mat-list *ngIf="consumerCharges?.length !== 0 && billCharges?.length === 0">
+          <mat-list-item *ngFor="let consumerCharge of consumerCharges">
+            <span matListItemTitle class="f-s-12 f-w-600">{{ consumerCharge.Particular }}</span>
+            <span matListItemLine class="mat-body-1">
+                <!-- <ng-container *ngIf="consumerCharge.Amount !== '.00'">
+                  {{consumerCharge.Amount}}
+                </ng-container>
+                <ng-container *ngIf="consumerCharge.ChargeRate !== '.00'">
+                  {{consumerCharge.TotalAmount}}
+                </ng-container> -->
+                {{ consumerCharge.Amount }}
+            </span>
+          </mat-list-item>
+        </mat-list>
+        <!-- <ng-template #noConsumerCharges>
+          No Consumer Charges for this month
+        </ng-template> -->
+        <mat-list *ngIf="billCharges?.length !== 0">
+          <mat-list-item *ngFor="let billCharge of billCharges">
+            <span matListItemTitle class="f-s-12 f-w-600">{{ billCharge.Particulars }}</span>
+            <span matListItemLine class="mat-body-1">
+                {{ billCharge.Amount }}
+            </span>
+          </mat-list-item>
+        </mat-list>
+        <!-- <ng-template #noBillCharges>
+          No Bill Charges for this month
+        </ng-template> -->
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- period covered -->
+  <div>
+    <mat-form-field appearance="outline" >
+      <mat-label>Month</mat-label>
+      <mat-select formControlName="Month">
+        <mat-option *ngFor="let month of months" [value]="month"> {{ month }} </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Year</mat-label>
+      <mat-select formControlName="Year">
+        <mat-option *ngFor="let year of years" [value]="year"> {{ year }} </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Date from</mat-label>
+      <input matInput [matDatepicker]="picker1" placeholder="Date from" formControlName="DateFrom">
+      <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+      <mat-datepicker #picker1></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Date to</mat-label>
+      <input matInput [matDatepicker]="picker2" placeholder="Date to" formControlName="DateTo">
+      <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+      <mat-datepicker #picker2></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Due Date</mat-label>
+      <input matInput [matDatepicker]="picker3" placeholder="Due Date" formControlName="DueDate">
+      <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+      <mat-datepicker #picker3></mat-datepicker>
+    </mat-form-field>
+  </div>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Total Amount due</mat-label>
+    <input matInput formControlName="TotalAmountDue" readonly/>
+  </mat-form-field>
+</form>
+<button
+  mat-flat-button
+  color="primary"
+  (click)="onCreateBill()"
+  *ngIf="formData.action === 'Create'"
+>
+  Save
+</button>
+<button
+  mat-flat-button
+  color="primary"
+  (click)="onEditBill()"
+  *ngIf="formData.action === 'Edit'"
+>
+  Save
+</button>

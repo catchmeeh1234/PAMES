@@ -22,7 +22,6 @@ export class EditChargesComponent {
     private chargesService:ChargesService,
     private dialogRef: MatDialogRef<EditChargesComponent>,
     private snackbarService:SnackbarService,
-
   ) {}
 
   ngOnInit(): void {

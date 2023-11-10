@@ -11,13 +11,15 @@ import { MaterialModule } from 'src/app/material.module';
 import { ComponentsModule } from 'src/app/components/components.module';
 import { CreateSingleBillComponent } from './create-single-bill/create-single-bill.component';
 import { BillInfoComponent } from './bill-info/bill-info.component';
+import { EditBillComponent } from './edit-bill/edit-bill.component';
 
 @NgModule({
   declarations: [
     BillsComponent,
     CreateBillsComponent,
     CreateSingleBillComponent,
-    BillInfoComponent
+    BillInfoComponent,
+    EditBillComponent
   ],
   imports: [
     FormsModule,
