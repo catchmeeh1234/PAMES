@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+/// <reference types="w3c-web-usb" />
+
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterEvent } from '@angular/router';
@@ -10,7 +12,7 @@ import { MeterReaderService } from 'src/app/services/meter-reader.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { PasswordStatus } from 'src/app/services/useraccounts.service';
-import EscPosEncoder from 'esc-pos-encoder.esm.js';
+import EscPosEncoder from 'esc-pos-encoder';
 
 @Component({
   selector: 'app-bill-info',
@@ -18,6 +20,9 @@ import EscPosEncoder from 'esc-pos-encoder.esm.js';
   styleUrls: ['./bill-info.component.scss']
 })
 export class BillInfoComponent {
+  //@ViewChild("canvas") canvas: ElementRef<HTMLCanvasElement>;
+  encodedImage:any;
+
   headerData = {
     title: "Bill Info",
     url: "./billing/bills",
@@ -178,4 +183,87 @@ export class BillInfoComponent {
       }
     });
   }
+
+  //INSTALL ZADIG KAPAG NAG SESECURITY ERROR
+  async printBill() {
+    const devices = await navigator.usb.getDevices();
+
+    while (!devices) {
+      await this.connectToPrinter();
+    }
+
+    devices.forEach(device => {
+      console.log("DEVICE: ", device);
+    });
+
+    const newDevices = devices.filter(device =>
+      device.manufacturerName === 'EPSON' &&
+      device.productName === 'TM-T88IV'
+    );
+
+    const device = newDevices[0];
+
+    await device.open();
+    await device.selectConfiguration(1);
+
+    if (!device.configuration) {
+      return;
+    } else {
+      await device.claimInterface(
+        device.configuration.interfaces[0].interfaceNumber
+      );
+    }
+
+    let encoder = new EscPosEncoder();
+
+    let result = encoder
+    .initialize()
+    .text('The quick brown fox jumps over the lazy dog')
+    .newline()
+    .qrcode('https://nielsleenheer.com')
+    .encode();
+
+    console.log(result);
+    //device.transferOut(1, result);
+
+    await device.close();
+  }
+
+  async connectToPrinter() {
+    try {
+      const filters = [
+        { vendorId: 1208, productId: 514 } // Replace these values with the specific vendorId and productId of your printer
+      ];
+      await navigator.usb.requestDevice({filters});
+
+    } catch (error) {
+      console.log("Error on connecting to printer: " , error);
+
+    }
+  }
+
+  //DO NOT DELETE REFERENCE FOR FUTURE
+  // loadCanvas() {
+  //   const imageData = [];
+  //   var ctx = this.canvas.nativeElement.getContext("2d");
+  //   const img = new Image();
+  //   // img.onload = () =>
+  //   //  this.onImageLoad(img, ctx, this.canvas.nativeElement, imageData);
+
+  //   const canvas = this.canvas.nativeElement;
+  //   img.onload = () => {
+  //     const posEncoder = new EscPosEncoder();
+  //     this.encodedImage = posEncoder
+  //       .initialize()
+  //       .image(img, 320, 320, "threshold")
+  //       .encode();
+  //   };
+  //   img.crossOrigin = "Anonymous";
+  //   img.src =
+  //     "https://c.staticblitz.com/assets/media/client/homepage/images/logo-b1a300e55fb8d38e1cccab1b7754a10b.png";
+  // }
+
+  // printText(text:any) {
+  //   return new Uint8Array(text.split("").map((char:any) => char.charCodeAt(0)));
+  // }
 }

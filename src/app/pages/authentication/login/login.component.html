@@ -8,7 +8,7 @@
           <div class="text-center">
             <a [routerLink]="['/dashboard']">
               <img
-                src="./assets/images/logos/dark-logo.svg"
+                [src]="logo"
                 class="align-middle m-2"
                 alt="logo"
               />
@@ -54,25 +54,33 @@
               >Username</mat-label
             >
             <mat-form-field appearance="outline" class="w-100" color="primary">
-              <input matInput type="text" name="username" [(ngModel)]="username"/>
+              <input
+                matInput
+                type="text"
+                name="username"
+                [(ngModel)]="username"
+                placeholder="Enter Username"/>
             </mat-form-field>
             <!-- password -->
             <mat-label class="mat-subtitle-2 f-s-14 f-w-600 m-b-12 d-block"
               >Password</mat-label
             >
             <mat-form-field appearance="outline" class="w-100" color="primary">
-              <input matInput type="password" name="password" [(ngModel)]="password"/>
+              <input
+                matInput
+                type="password"
+                name="password"
+                [(ngModel)]="password"
+                placeholder="Enter Password"/>
             </mat-form-field>
 
-            <div class="d-flex align-items-center m-b-12">
-              <mat-checkbox color="primary">Remember this Device</mat-checkbox>
-              <a
-                [routerLink]="['/']"
-                class="text-primary f-w-600 text-decoration-none m-l-auto f-s-14"
-                >Forgot Password ?</a
-              >
-            </div>
-            <button mat-flat-button color="primary" (click)="onLogin()">Sign In</button>
+            <button
+              mat-flat-button
+              color="primary"
+              (click)="onLogin()"
+            >
+              Log In
+            </button>
             <!-- <a [routerLink]="['/']" mat-flat-button color="primary" class="w-100">
               Sign In
             </a> -->

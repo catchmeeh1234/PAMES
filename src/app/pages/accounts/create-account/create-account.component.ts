@@ -1,6 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
+import { MatStepper } from '@angular/material/stepper';
 import { MatTable } from '@angular/material/table';
 import { Router } from '@angular/router';
 import { Consumer, ConsumerInput, ConsumerService } from 'src/app/services/consumer.service';
@@ -25,8 +26,20 @@ type CustomerStatus = {
 })
 
 export class CreateAccountComponent {
-  createAccountForm:FormGroup;
-  createAccountOriginalValues:ConsumerInput;
+  @ViewChild('stepper') stepper: MatStepper;
+
+  errorMessage:string[] = [];
+  accountNumber:string;
+  userName:string = this.sessionStorageService.getSession("username")!;
+
+  createAccountForm:ConsumerInput;
+  consumerInfoFormGroup:FormGroup; //stepper 1
+  addressFormGroup:FormGroup;   //stepper 2
+  installationFormGroup:FormGroup;  //stepper 3
+
+  orgConsumerInfoFormGroup:FormGroup;
+  orgAddressFormGroup:FormGroup;
+  orgInstallationFormGroup:FormGroup;
 
   customerStatuses:CustomerStatus[];
   zones:any;
@@ -51,32 +64,41 @@ export class CreateAccountComponent {
   ngOnInit(): void {
     //Called after the constructor, initializing input properties, and the first call to ngOnChanges.
     //Add 'implements OnInit' to the class.
-    this.createAccountForm = this.formBuilder.group({
-      AccountNo: ['', Validators.required],
+    this.consumerInfoFormGroup = this.formBuilder.group({
       Lastname: ['', Validators.required],
       Firstname: ['', Validators.required],
       Middlename: [''],
+      IsSenior: [false, Validators.required],
+      ContactNo: ['', [Validators.required, this.numberValidator]],
+    });
+
+    this.addressFormGroup = this.formBuilder.group({
       ServiceAddress: ['', Validators.required],
       LandMark: ['', Validators.required],
-      ContactNo: ['', Validators.required],
+    });
+
+    this.installationFormGroup = this.formBuilder.group({
       MeterNo: ['', Validators.required],
-      ReadingSeqNo: ['', Validators.required],
+      ReadingSeqNo: ['', [Validators.required, this.numberValidator]],
       ZoneName: ['', Validators.required],
       RateSchedule: ['', Validators.required],
-      dateCreated: [new Date(), Validators.required],
+      dateCreated: [{value: new Date(), disabled: true}, Validators.required],
       dateInstalled: [new Date(), Validators.required],
-      CustomerStatus: ['', Validators.required],
-      IsSenior: [false, Validators.required],
-      Username: [this.sessionStorageService.getSession("username"), Validators.required],
     });
-    this.createAccountOriginalValues = this.createAccountForm.value;
-    this.createAccountForm.get("dateCreated")?.disable();
 
     this.loadCustomerStatuses();
     this.loadZones();
     this.loadRates();
 
     this.onZoneAndClassChange();
+
+    this.setOriginalValues();
+  }
+
+  setOriginalValues() {
+    this.orgConsumerInfoFormGroup = this.consumerInfoFormGroup;
+    this.orgAddressFormGroup = this.consumerInfoFormGroup;
+    this.orgInstallationFormGroup = this.consumerInfoFormGroup;
   }
 
   async loadCustomerStatuses() {
@@ -101,9 +123,9 @@ export class CreateAccountComponent {
   }
 
   onZoneAndClassChange() {
-    this.createAccountForm.get("ZoneName")?.valueChanges
+    this.installationFormGroup.get("ZoneName")?.valueChanges
     .subscribe(zone => {
-      let rateName = this.createAccountForm.get("RateSchedule")?.value;
+      let rateName = this.installationFormGroup.get("RateSchedule")?.value;
       if (rateName === "") {
         return;
       }
@@ -112,14 +134,17 @@ export class CreateAccountComponent {
 
       if (newZone.length === 1 && newRate.length === 1) {
         //console.log(newZone, newRate);
-        const accno = this.generateAccountNumber(newZone[0].ZoneID, newZone[0].LastNumber, newRate[0].RateSchedulesID);
-        this.createAccountForm.patchValue({AccountNo: accno});
+        const {ZoneID, LastNumber} = newZone[0];
+        const {RateSchedulesID} = newRate[0];
+
+        const accno = this.generateAccountNumber(ZoneID, LastNumber, RateSchedulesID);
+        this.accountNumber = accno;
       }
     });
 
-    this.createAccountForm.get("RateSchedule")?.valueChanges
+    this.installationFormGroup.get("RateSchedule")?.valueChanges
     .subscribe(rateName => {
-      let zone = this.createAccountForm.get("ZoneName")?.value;
+      let zone = this.installationFormGroup.get("ZoneName")?.value;
       if (zone === "") {
         return;
       }
@@ -128,8 +153,11 @@ export class CreateAccountComponent {
 
       if (newZone.length === 1 && newRate.length === 1) {
         //console.log(newZone, newRate);
-        const accno = this.generateAccountNumber(newZone[0].ZoneID, newZone[0].LastNumber, newRate[0].RateSchedulesID);
-        this.createAccountForm.patchValue({AccountNo: accno});
+        const {ZoneID, LastNumber} = newZone[0];
+        const {RateSchedulesID} = newRate[0];
+
+        const accno = this.generateAccountNumber(ZoneID, LastNumber, RateSchedulesID);
+        this.accountNumber = accno;
       }
     });
   }
@@ -140,40 +168,154 @@ export class CreateAccountComponent {
     return `${newZoneID}-${newLastNumber}-${type}`;
   }
 
-  async onCreateAccount(consumerInfo:ConsumerInput) {
-    if (this.createAccountForm.valid) {
-      //console.log(consumerInfo);
-      const newDateCreated = this.dateFormatService.formatDate(this.createAccountForm.get("dateCreated")?.value);
-      consumerInfo.dateCreated = newDateCreated;
+  //CUSTOM FORM VALIDATORS
+  numberValidator(control: AbstractControl): { [key: string]: any } | null {
+    const valid = /^\d+$/.test(control.value);
 
-      const newDateInstalled = this.dateFormatService.formatDate(this.createAccountForm.get("dateInstalled")?.value);
-      consumerInfo.dateInstalled = newDateInstalled;
+    if (!valid) {
+      return { onlyNumbers: true };
+    }
+    return null;
+  }
 
-      const res:any = await this.consumerService.addConsumers(consumerInfo).toPromise();
-      let status: Status = res.status;
-      if (status === "Consumer Added") {
-        this.snackbarService.showSuccess(status);
+  validateFormData(formGroup:FormGroup) {
+    this.errorMessage = [];
 
-        this.loadZones();
-        this.createAccountForm.reset(this.createAccountOriginalValues);
-        // const newDataSource:any = this.createAccountForm.value;
-        // newDataSource.push(this.createAccountForm.value);
-        // this.consumerService.fetchConsumers().subscribe(data => {
-        //   this.consumerService.dataSource.data = data;
-        // });
 
-        // this.consumerService.loadConsumerSummary();
+    //validation for consumer's personal information STEPPER 1
+    if (formGroup.get("Lastname")?.hasError('required')) {
+      const message = "Last name is required";
+      this.errorMessage.push(message);
+    }
 
-      } else {
-        console.log(status);
-      }
+    if (formGroup.get("Firstname")?.hasError('required')) {
+      const message = "First name is required";
+      this.errorMessage.push(message);
+    }
+
+    if (formGroup.get("ContactNo")?.hasError('required')) {
+      const message = "Contact Number is required";
+      this.errorMessage.push(message);
+    }
+
+    if (formGroup.get("ContactNo")?.hasError('onlyNumbers')) {
+      const message = "Contact Number must contain only numbers";
+      this.errorMessage.push(message);
+    }
+
+
+    //validation for consumer's address  STEPPER 2
+
+    if (formGroup.get("ServiceAddress")?.hasError('required')) {
+      const message = "Service Address is required";
+      this.errorMessage.push(message);
+    }
+
+    if (formGroup.get("LandMark")?.hasError('required')) {
+      const message = "Land mark is required";
+      this.errorMessage.push(message);
+    }
+
+    //validation for consumer's installation details  STEPPER 2
+
+    if (formGroup.get("MeterNo")?.hasError('required')) {
+      const message = "Meter Number is required";
+      this.errorMessage.push(message);
+    }
+
+    if (formGroup.get("ReadingSeqNo")?.hasError('required')) {
+      const message = "Reading Sequnece Number is required";
+      this.errorMessage.push(message);
+    }
+
+    if (formGroup.get("ReadingSeqNo")?.hasError('onlyNumbers')) {
+      const message = "Reading Sequnece Number must contain only numbers";
+      this.errorMessage.push(message);
+    }
+
+    if (formGroup.get("ZoneName")?.hasError('required')) {
+      const message = "Zone is required";
+      this.errorMessage.push(message);
+    }
+
+    if (formGroup.get("RateSchedule")?.hasError('required')) {
+      const message = "Customer type is required";
+      this.errorMessage.push(message);
+    }
+
+    if (formGroup.get("dateCreated")?.hasError('required')) {
+      const message = "Date Created is required";
+      this.errorMessage.push(message);
+    }
+
+    if (formGroup.get("dateInstalled")?.hasError('required')) {
+      const message = "Date Installed is required";
+      this.errorMessage.push(message);
+    }
+
+    //console.log(this.errorMessage);
+
+  }
+
+  async onCreateAccount() {
+
+    if (!this.consumerInfoFormGroup.valid || !this.addressFormGroup.valid || !this.installationFormGroup.valid) {
+      return;
+    }
+
+    if (this.accountNumber === "" || !this.accountNumber) {
+      this.snackbarService.showError("No account number provided please contact admin");
+      return;
+    }
+
+    const allFormData = {
+      ...this.consumerInfoFormGroup.getRawValue(),
+      ...this.addressFormGroup.getRawValue(),
+      ...this.installationFormGroup.getRawValue(),
+      CustomerStatus: 'Closed',
+      AccountNo: this.accountNumber,
+      Username: this.userName,
+      // Add other steps' form values similarly
+    };
+
+    //console.log(consumerInfo);
+    const newDateCreated = this.dateFormatService.formatDate(this.installationFormGroup.get("dateCreated")?.value);
+    allFormData.dateCreated = newDateCreated;
+
+    const newDateInstalled = this.dateFormatService.formatDate(this.installationFormGroup.get("dateInstalled")?.value);
+    allFormData.dateInstalled = newDateInstalled;
+
+    const res:any = await this.consumerService.addConsumers(allFormData).toPromise();
+    let status: Status = res.status;
+    if (status === "Consumer Added") {
+      this.snackbarService.showSuccess(status);
+
+      this.loadZones();
+
+      this.consumerInfoFormGroup.reset(this.orgConsumerInfoFormGroup);
+      this.addressFormGroup.reset(this.orgAddressFormGroup);
+      this.installationFormGroup.reset(this.orgInstallationFormGroup);
+      this.stepper.reset();
+
+      this.accountNumber = "";
+      // const newDataSource:any = this.createAccountForm.value;
+      // newDataSource.push(this.createAccountForm.value);
+      // this.consumerService.fetchConsumers().subscribe(data => {
+      //   this.consumerService.dataSource.data = data;
+      // });
+
+      // this.consumerService.loadConsumerSummary();
 
     } else {
-      this.snackbarService.showError("Please Fill up all needed information");
+      console.log(status);
     }
   }
 
   backButton() {
     this.router.navigate(['./acounts/manage-accounts']);
+  }
+
+  stepperBack() {
+    this.errorMessage = [];
   }
 }

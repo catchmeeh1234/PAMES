@@ -17,7 +17,9 @@ export const environment = {
   },
   mailApi: '/assets/list.json',
   API_URL: 'http://127.0.0.1:4901',
+  //API_URL: "http://192.168.1.79:4901",
   logo: './assets/images/logos/dark-logo.svg',
+
 };
 export const palete = {
     primary: '#D32F2F',

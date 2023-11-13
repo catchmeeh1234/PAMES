@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { UseraccountsService } from 'src/app/services/useraccounts.service';
+import { environment } from 'src/environments/environment';
 
 type User = {
   userid: string;
@@ -18,6 +19,8 @@ type User = {
 export class AppSideLoginComponent {
   username:string | null;
   password:string | null;
+
+  logo = environment.logo;
 
   constructor(
     private user:UseraccountsService,

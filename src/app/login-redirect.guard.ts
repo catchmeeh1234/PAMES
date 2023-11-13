@@ -19,7 +19,7 @@ export class LoginRedirectGuard implements CanActivate {
       if (username && uid) {
         //console.log("1")
         // Credentials are stored in cookies, so redirect to dashboard
-        this.router?.navigate(['/dashboard']);
+        this.router?.navigate(['/accounts/manage-accounts']);
         return false;
       } else {
         console.log(uid, username)

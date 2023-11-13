@@ -28,6 +28,7 @@
             mat-flat-button
             color="primary"
             *ngIf="billInfo?.Reading !== '0'"
+            (click)="printBill()"
           >
             Print
           </button>
@@ -188,6 +189,6 @@
     </form>
   </mat-card-content>
 </mat-card>
-
+<!-- <canvas #canvas></canvas> -->
 
 

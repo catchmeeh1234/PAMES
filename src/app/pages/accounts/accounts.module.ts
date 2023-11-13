@@ -8,7 +8,7 @@ import { RouterModule } from '@angular/router';
 import { MaterialModule } from 'src/app/material.module';
 import { TablerIconsModule } from 'angular-tabler-icons';
 import { ManageAccountsComponent } from './manage-accounts/manage-accounts.component';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from "@angular/flex-layout";
 import { ComponentsModule } from 'src/app/components/components.module';
 import { ConsumerInfoComponent } from './consumer-info/consumer-info.component';
@@ -28,6 +28,7 @@ import { ConsumerInfoComponent } from './consumer-info/consumer-info.component';
     ReactiveFormsModule,
     FlexLayoutModule,
     ComponentsModule,
+    FormsModule,
   ]
 })
 export class AccountsModule { }
