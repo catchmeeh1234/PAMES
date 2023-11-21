@@ -186,15 +186,27 @@ export class BillInfoComponent {
 
   //INSTALL ZADIG KAPAG NAG SESECURITY ERROR
   async printBill() {
-    const devices = await navigator.usb.getDevices();
+    let devices = await navigator.usb.getDevices();
 
-    while (!devices) {
+    if (!devices || devices.length === 0) {
       await this.connectToPrinter();
+      devices = await navigator.usb.getDevices();
     }
 
     devices.forEach(device => {
       console.log("DEVICE: ", device);
     });
+
+    let encoder = new EscPosEncoder();
+
+    let result = encoder
+    .initialize()
+    .text('The quick brown fox jumps over the lazy dog')
+    .newline()
+    .qrcode('https://nielsleenheer.com')
+    .encode();
+
+    console.log(JSON.stringify(result));
 
     const newDevices = devices.filter(device =>
       device.manufacturerName === 'EPSON' &&
@@ -214,16 +226,7 @@ export class BillInfoComponent {
       );
     }
 
-    let encoder = new EscPosEncoder();
 
-    let result = encoder
-    .initialize()
-    .text('The quick brown fox jumps over the lazy dog')
-    .newline()
-    .qrcode('https://nielsleenheer.com')
-    .encode();
-
-    console.log(result);
     //device.transferOut(1, result);
 
     await device.close();

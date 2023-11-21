@@ -30,9 +30,21 @@ $mat-warn: (
   ),
 );
 
+$mat-success: (
+  100: white,
+  500: #5d87ff,
+  700: #5d87ff,
+  contrast: (
+    100: white,
+    500: white,
+    700: white,
+  ),
+);
+
 $theme-primary: mat.define-palette($mat-primary, 500);
 $theme-accent: mat.define-palette($mat-secondary, 500);
 $theme-warn: mat.define-palette($mat-warn, 500);
+$theme-success: mat.define-palette($mat-success, 500);
 
 $bluetheme: mat.define-light-theme(
   (
@@ -40,6 +52,7 @@ $bluetheme: mat.define-light-theme(
       primary: $theme-primary,
       accent: $theme-accent,
       warn: $theme-warn,
+      success: $theme-primary
     ),
     typography:
       mat.define-typography-config(

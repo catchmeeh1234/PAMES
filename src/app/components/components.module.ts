@@ -4,7 +4,6 @@ import { MaterialModule } from '../material.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FilterCustomerComponent } from './filter-customer/filter-customer.component';
-import { EditAccountComponentComponent } from './edit-account-component/edit-account-component.component';
 import { AddChargesComponent } from './add-charges/add-charges.component';
 import { FormChargesComponent } from './form-charges/form-charges.component';
 import { ContentHeaderComponent } from './content-header/content-header.component';
@@ -16,11 +15,11 @@ import { ConfirmationPromptComponent } from './confirmation-prompt/confirmation-
 import { PasswordPromptComponent } from './password-prompt/password-prompt.component';
 import { CancelBillComponent } from './cancel-bill/cancel-bill.component';
 import { BillFormComponent } from './bill-form/bill-form.component';
+import { AccountFormComponent } from './account-form/account-form.component';
 
 @NgModule({
   declarations: [
     FilterCustomerComponent,
-    EditAccountComponentComponent,
     AddChargesComponent,
     FormChargesComponent,
     ContentHeaderComponent,
@@ -31,6 +30,7 @@ import { BillFormComponent } from './bill-form/bill-form.component';
     PasswordPromptComponent,
     CancelBillComponent,
     BillFormComponent,
+    AccountFormComponent,
   ],
   imports: [
     FormsModule,
@@ -45,6 +45,7 @@ import { BillFormComponent } from './bill-form/bill-form.component';
     FormChargesComponent,
     ContentHeaderComponent,
     BillFormComponent,
+    AccountFormComponent,
   ]
 })
 export class ComponentsModule { }

@@ -2,6 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { Observable, Subscription, map } from 'rxjs';
 import { Consumer, ConsumerService } from 'src/app/services/consumer.service';
 
 @Component({
@@ -16,6 +17,8 @@ export class SearchConsumerComponent {
   displayedColumns: string[] = ['AccountNo', 'FullName', 'Zone', 'ContactNo'];
   dataSource:MatTableDataSource<Consumer>;
 
+  consumersSubcription:Subscription;
+
   constructor(
     private consumerService:ConsumerService,
     private dialogRef:MatDialogRef<SearchConsumerComponent>,
@@ -27,12 +30,19 @@ export class SearchConsumerComponent {
     this.onLoadConsumers();
   }
 
-  async onLoadConsumers() {
-    const consumers = await this.consumerService.fetchConsumers().toPromise();
-    //console.log(consumers);
-    const filteredConsumers = consumers?.filter(consumers => consumers.CustomerStatus === "Active");
-    this.dataSource = new MatTableDataSource(filteredConsumers);
-    this.dataSource.paginator = this.paginator;
+  onLoadConsumers() {
+    const numbersOfSelection = "TOP 100";
+    this.consumersSubcription = this.consumerService.fetchConsumers(numbersOfSelection)
+    .subscribe(consumer => {
+      this.dataSource = new MatTableDataSource(consumer);
+      this.dataSource.paginator = this.paginator;
+    });
+
+
+    //const consumers = await this.consumerService.fetchConsumers(numbersOfSelection).toPromise();
+    // const filteredConsumers = consumers?.filter(consumers => consumers.CustomerStatus === "Active");
+    // this.dataSource = new MatTableDataSource(filteredConsumers);
+    // this.dataSource.paginator = this.paginator;
   }
 
   selectConsumer(consumerInfo:Consumer) {
@@ -40,13 +50,36 @@ export class SearchConsumerComponent {
     this.dialogRef.close(consumerInfo);
   }
 
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
-  }
+  // applyFilter(event: Event) {
+  //   const filterValue = (event.target as HTMLInputElement).value;
+  //   this.dataSource.filter = filterValue.trim().toLowerCase();
+  // }
 
   openCreateAccount(){
 
+  }
+
+  async loadData(search:string) {
+    if (search === "") {
+      this.onLoadConsumers();
+    }
+
+    if (search.length < 4) {
+      return;
+    }
+
+    const searchedAccounts:any = await this.consumerService.searchConsumer(search).toPromise();
+
+    if (!searchedAccounts) {
+      return;
+    }
+    this.dataSource.data = searchedAccounts;
+  }
+
+  ngOnDestroy(): void {
+    //Called once, before the instance is destroyed.
+    //Add 'implements OnDestroy' to the class.
+    this.consumersSubcription.unsubscribe();
   }
 
 }

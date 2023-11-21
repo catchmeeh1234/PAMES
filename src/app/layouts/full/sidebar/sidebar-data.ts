@@ -19,35 +19,35 @@ export const navItems: NavItem[] = [
   // },
   {
     displayName: 'Accounts',
-    iconName: 'person',
+    iconName: 'users',
     route: '/accounts/manage-accounts',
   },
 
-  {
-    displayName: 'Badge',
-    iconName: 'rosette',
-    route: '/ui-components/badge',
-  },
-  {
-    displayName: 'Chips',
-    iconName: 'poker-chip',
-    route: '/ui-components/chips',
-  },
-  {
-    displayName: 'Lists',
-    iconName: 'list',
-    route: '/ui-components/lists',
-  },
-  {
-    displayName: 'Menu',
-    iconName: 'layout-navbar-expand',
-    route: '/ui-components/menu',
-  },
-  {
-    displayName: 'Tooltips',
-    iconName: 'tooltip',
-    route: '/ui-components/tooltips',
-  },
+  // {
+  //   displayName: 'Badge',
+  //   iconName: 'rosette',
+  //   route: '/ui-components/badge',
+  // },
+  // {
+  //   displayName: 'Chips',
+  //   iconName: 'poker-chip',
+  //   route: '/ui-components/chips',
+  // },
+  // {
+  //   displayName: 'Lists',
+  //   iconName: 'list',
+  //   route: '/ui-components/lists',
+  // },
+  // {
+  //   displayName: 'Menu',
+  //   iconName: 'layout-navbar-expand',
+  //   route: '/ui-components/menu',
+  // },
+  // {
+  //   displayName: 'Tooltips',
+  //   iconName: 'tooltip',
+  //   route: '/ui-components/tooltips',
+  // },
 
   {
     navCap: 'Billing',
@@ -73,7 +73,7 @@ export const navItems: NavItem[] = [
   },
   {
     displayName: 'Post OR',
-    iconName: 'file-post',
+    iconName: 'checklist',
     route: '',
   },
 
@@ -85,11 +85,11 @@ export const navItems: NavItem[] = [
     iconName: 'receipt',
     route: '/admin-settings/charges',
   },
-  {
-    displayName: 'Icons',
-    iconName: 'mood-smile',
-    route: '/extra/icons',
-  },
+  // {
+  //   displayName: 'Icons',
+  //   iconName: 'mood-smile',
+  //   route: '/extra/icons',
+  // },
 
   // {
   //   navCap: 'Auth',

@@ -26,7 +26,7 @@ export type Consumer = {
   CompanyName?: any
   CreatedBy: any
   LastMeterReading: number
-  LandMark?: any
+  LandMark: string
   MeterSize?: any
   LastBill?: any
   LasReadingDate?: any
@@ -153,15 +153,23 @@ export class ConsumerService {
 
   constructor(private http:HttpClient) { }
 
-  fetchConsumers(): Observable<Consumer[]> {
-    return this.http.get<Consumer[]>(`${environment.API_URL}/Consumers/viewConsumers.php`, {responseType: 'json'})
+  fetchConsumers(top=""): Observable<Consumer[]> {
+    return this.http.get<Consumer[]>(`${environment.API_URL}/Consumers/viewConsumers.php?top=${top}`, {responseType: 'json'})
     .pipe(
       catchError(() => of([]))
     );
   }
 
+  searchConsumer(search:string, zone:string="", status:string="") {
+    return this.http.get(`${environment.API_URL}/Consumers/searchConsumer.php?search=${search}&status=${status}&zone=${zone}`, { responseType: 'json' });
+  }
+
   fetchConsumerInfo(consumer_id:string) {
     return this.http.get<Consumer[]>(`${environment.API_URL}/Consumers/viewConsumerInfo.php?consumer_id=${consumer_id}`, {responseType: 'json'})
+  }
+
+  fetchConsumerInfoByAccNo(accountNo:string) {
+    return this.http.get<Consumer>(`${environment.API_URL}/Consumers/viewConsumerInfoByAccNo.php?accountNo=${accountNo}`, {responseType: 'json'})
   }
 
   fetchConsumerLedger(accno:string) {

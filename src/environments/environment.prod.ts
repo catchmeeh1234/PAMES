@@ -11,8 +11,9 @@ export const environment = {
     measurementId: "G-NYGXB63DCC"
   },
   mailApi: '/assets/list.json',
-  API_URL: "http://127.0.0.1:4901",
-  //API_URL: "http://192.168.1.79:4901",
+  //API_URL: "http://192.168.10.37:4902",
+
+  API_URL: "http://192.168.1.79:4901",
 
   // domain: "https://srwd.eprms.home/",
   logo: './assets/pantabangan.png',

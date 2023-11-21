@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Consumer, ConsumerLedgerData, ConsumerService, ScheduleCharges } from 'src/app/services/consumer.service';
-import { Subscription, from, switchMap } from 'rxjs';
+import { Subscription, first, from, map, switchMap, take, pipe } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
-import { EditAccountComponentComponent } from 'src/app/components/edit-account-component/edit-account-component.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
+import { EditAccountComponent } from '../edit-account/edit-account.component';
 
 
 
@@ -19,14 +19,15 @@ export class ConsumerInfoComponent {
   private ConsumerLedgerDataSubscribe:Subscription;
   consumerCharges:ScheduleCharges[];
   headerData = {
-    title: "Consumer Info",
+    title: `Consumer`,
     url: "./acounts/manage-accounts",
   };
 
-  displayedColumns = ["LedgerRefNo", "LedgerDate",
-                        "LedgerParticulars", "MeterReading", "Consumption",
-                        "Billing", "Discount", "Balance"
-                      ];
+  displayedColumns = [
+    "LedgerRefNo", "LedgerDate",
+    "LedgerParticulars", "MeterReading", "Consumption",
+    "Billing", "Discount", "Balance"
+  ];
 
 
   constructor(
@@ -49,38 +50,58 @@ export class ConsumerInfoComponent {
     // })
   }
 
-  async loadCustomerInfo(consumer_id:string) {
-    const consumers= await this.consumerService.fetchConsumerInfo(consumer_id).toPromise();
+  loadCustomerInfo(consumer_id:string) {
+    //this.consumerService.consumerInfo$
+     this.consumerService.consumerInfo$ = this.consumerService.fetchConsumerInfo(consumer_id);
 
-    const consumerInfo = consumers?.filter(consumers => consumers.Consumer_id === consumer_id);
-    //console.log(consumerInfo);
+     this.consumerService.consumerLedger$ = this.consumerService.consumerInfo$
+     .pipe(
+      switchMap(consumerInfo => {
+        if (Array.isArray(consumerInfo) && consumerInfo.length === 1) {
+          const obj = consumerInfo[0]; // Accessing the single object from the array
+          this.onLoadConsumerCharges(obj.AccountNo);
+          return this.consumerService.fetchConsumerLedger(obj.AccountNo)
+        } else {
+          return of([]);
+        }
+      })
+     )
 
-    if (consumerInfo?.length === 1) {
-      this.consumerService.consumerInfo$ = of(consumerInfo);
-      this.consumerService.consumerLedger$ = this.consumerService.consumerInfo$
-      .pipe(
-        switchMap(consumerInfo => {
-          return from(consumerInfo)
-        }),
-        switchMap(consumerLedgerData => {
-          return this.consumerService.fetchConsumerLedger(consumerLedgerData.AccountNo)
-        })
-      );
-
-      this.onLoadConsumerCharges(consumerInfo[0].AccountNo);
-
-      this.ConsumerLedgerDataSubscribe = this.consumerService.consumerLedger$.subscribe(data => {
+     this.ConsumerLedgerDataSubscribe = this.consumerService.consumerLedger$.subscribe(data => {
         this.dataSource.data = data;
       });
 
-    } else {
-      //this.consumerService.consumerInfo$ = of([]);
-    }
+
+    // const consumers= await this.consumerService.fetchConsumerInfo(consumer_id).toPromise();
+
+    // const consumerInfo = consumers?.filter(consumers => consumers.Consumer_id === consumer_id);
+    // //console.log(consumerInfo);
+
+    // if (consumerInfo?.length === 1) {
+    //   this.consumerService.consumerInfo$ = of(consumerInfo);
+    //   this.consumerService.consumerLedger$ = this.consumerService.consumerInfo$
+    //   .pipe(
+    //     switchMap(consumerInfo => {
+    //       return from(consumerInfo)
+    //     }),
+    //     switchMap(consumerLedgerData => {
+    //       return this.consumerService.fetchConsumerLedger(consumerLedgerData.AccountNo)
+    //     })
+    //   );
+
+
+    //   this.ConsumerLedgerDataSubscribe = this.consumerService.consumerLedger$.subscribe(data => {
+    //     this.dataSource.data = data;
+    //   });
+
+    // } else {
+    //   //this.consumerService.consumerInfo$ = of([]);
+    // }
 
   }
 
   editConsumerInfo() {
-    const dialogRef = this.dialog.open(EditAccountComponentComponent, {
+    const dialogRef = this.dialog.open(EditAccountComponent, {
       // panelClass: ['no-padding'],
       data: {
         consumer_info: this.consumerService.consumerInfo$

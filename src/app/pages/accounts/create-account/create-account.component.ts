@@ -26,20 +26,24 @@ type CustomerStatus = {
 })
 
 export class CreateAccountComponent {
+
+  formData = {
+    action: "Create"
+  }
+
   @ViewChild('stepper') stepper: MatStepper;
 
   errorMessage:string[] = [];
   accountNumber:string;
   userName:string = this.sessionStorageService.getSession("username")!;
 
-  createAccountForm:ConsumerInput;
   consumerInfoFormGroup:FormGroup; //stepper 1
   addressFormGroup:FormGroup;   //stepper 2
   installationFormGroup:FormGroup;  //stepper 3
 
-  orgConsumerInfoFormGroup:FormGroup;
-  orgAddressFormGroup:FormGroup;
-  orgInstallationFormGroup:FormGroup;
+  orgConsumerInfoFormGroup:any;
+  orgAddressFormGroup:any;
+  orgInstallationFormGroup:any;
 
   customerStatuses:CustomerStatus[];
   zones:any;
@@ -79,7 +83,7 @@ export class CreateAccountComponent {
 
     this.installationFormGroup = this.formBuilder.group({
       MeterNo: ['', Validators.required],
-      ReadingSeqNo: ['', [Validators.required, this.numberValidator]],
+      ReadingSeqNo: ['', [Validators.required]],
       ZoneName: ['', Validators.required],
       RateSchedule: ['', Validators.required],
       dateCreated: [{value: new Date(), disabled: true}, Validators.required],
@@ -90,15 +94,21 @@ export class CreateAccountComponent {
     this.loadZones();
     this.loadRates();
 
-    this.onZoneAndClassChange();
+    //this.onZoneAndClassChange();
 
     this.setOriginalValues();
+
+    //listen to reading seq no valuechanges
+    this.installationFormGroup.get("ReadingSeqNo")?.valueChanges
+    .subscribe(readingSeqNo => {
+      this.accountNumber = readingSeqNo;
+    });
   }
 
   setOriginalValues() {
-    this.orgConsumerInfoFormGroup = this.consumerInfoFormGroup;
-    this.orgAddressFormGroup = this.consumerInfoFormGroup;
-    this.orgInstallationFormGroup = this.consumerInfoFormGroup;
+    this.orgConsumerInfoFormGroup = { ...this.consumerInfoFormGroup.getRawValue() };
+    this.orgAddressFormGroup = { ...this.addressFormGroup.getRawValue() };
+    this.orgInstallationFormGroup = { ...this.installationFormGroup.getRawValue() };
   }
 
   async loadCustomerStatuses() {
@@ -290,12 +300,13 @@ export class CreateAccountComponent {
     if (status === "Consumer Added") {
       this.snackbarService.showSuccess(status);
 
-      this.loadZones();
-
-      this.consumerInfoFormGroup.reset(this.orgConsumerInfoFormGroup);
-      this.addressFormGroup.reset(this.orgAddressFormGroup);
-      this.installationFormGroup.reset(this.orgInstallationFormGroup);
+      //this.loadZones();
       this.stepper.reset();
+
+      this.consumerInfoFormGroup.setValue(this.orgConsumerInfoFormGroup);
+      this.addressFormGroup.setValue(this.orgAddressFormGroup);
+      this.installationFormGroup.setValue(this.orgInstallationFormGroup);
+
 
       this.accountNumber = "";
       // const newDataSource:any = this.createAccountForm.value;

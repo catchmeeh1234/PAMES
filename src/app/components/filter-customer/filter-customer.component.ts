@@ -1,4 +1,5 @@
 import { Component, ElementRef, HostListener } from '@angular/core';
+import { MatTableDataSource } from '@angular/material/table';
 import { ConsumerService } from 'src/app/services/consumer.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { ZoneService } from 'src/app/services/zone.service';
@@ -50,28 +51,28 @@ export class FilterCustomerComponent {
   ngOnInit(): void {
     this.onLoadFilterOptions();
       //this.pr.dataSourcePRTable.filterPredicate = null;
-    const refreshId = setInterval(() => {
-      console.log("wala");
+    // const refreshId = setInterval(() => {
+    //   console.log("wala");
 
-      if (this.consumerService.dataSource) {
-        console.log("meron");
+    //   if (this.consumerService.dataSource) {
+    //     console.log("meron");
 
-        this.consumerService.dataSource.filterPredicate = (data: any, filter: string) => {
-          const filters = JSON.parse(filter);
-          //console.log(data, filters);
+    //     this.consumerService.dataSource.filterPredicate = (data: any, filter: string) => {
+    //       const filters = JSON.parse(filter);
+    //       //console.log(data, filters);
 
-          //if(data.Zone === null || data.search === null || data.AccountNo === null || data.Lastname === null) return true;
+    //       //if(data.Zone === null || data.search === null || data.AccountNo === null || data.Lastname === null) return true;
 
-          return (
-            (!filters.zone || data.Zone.toLowerCase() === filters.zone.toLowerCase()) &&
-            (!filters.status || data.CustomerStatus.toLowerCase() === filters.status.toLowerCase()) &&
-            (!filters.search || (data.AccountNo.includes(filters.search) || data.Lastname.toLowerCase().includes(filters.search)))
-          );
-        };
+    //       return (
+    //         (!filters.zone || data.Zone.toLowerCase() === filters.zone.toLowerCase()) &&
+    //         (!filters.status || data.CustomerStatus.toLowerCase() === filters.status.toLowerCase()) &&
+    //         (!filters.search || (data.AccountNo.includes(filters.search) || data.Lastname.toLowerCase().includes(filters.search)))
+    //       );
+    //     };
 
-        clearInterval(refreshId);
-      }
-    }, 1000);
+    //     clearInterval(refreshId);
+    //   }
+    // }, 1000);
 
 
   }
@@ -95,8 +96,8 @@ export class FilterCustomerComponent {
     } else {
       return;
     }
-
-    this.filterTable(this.search, this.selectedZone, this.selectedStatus, this.selectedRequestor);
+    this.loadData(this.search, this.selectedZone, this.selectedStatus);
+    //this.filterTable(this.search, this.selectedZone, this.selectedStatus, this.selectedRequestor);
 
   }
 
@@ -106,7 +107,8 @@ export class FilterCustomerComponent {
     this.selectedRequestor = 'All';
     this.search = "";
 
-    this.filterTable(this.search, this.selectedZone, this.selectedStatus, this.selectedRequestor);
+    this.consumerService.dataSource.data = [];
+    //this.filterTable(this.search, this.selectedZone, this.selectedStatus, this.selectedRequestor);
   }
 
   filterTable(search:string, filterZone:string, filterStatus:string ,filterRequestor:string) {
@@ -129,5 +131,35 @@ export class FilterCustomerComponent {
       status: filterStatus,
       search: search,
     });
+  }
+
+  async loadData(search:string, selectedZone:string, selectedStatus:string) {
+    let zone:string;
+    let status:string;
+
+    if (search.length < 4) {
+      return;
+    }
+
+    if (selectedZone === "All") {
+      zone = "";
+    } else {
+      zone = selectedZone;
+    }
+
+    if (selectedStatus === "All") {
+      status = "";
+    } else {
+      status = selectedStatus;
+    }
+
+    console.log(search, status, zone);
+
+    const searchedAccounts:any = await this.consumerService.searchConsumer(search, zone, status).toPromise();
+
+    if (!searchedAccounts) {
+      return;
+    }
+    this.consumerService.dataSource.data = searchedAccounts;
   }
 }

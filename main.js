@@ -3,7 +3,12 @@ const { app, BrowserWindow } = require('electron');
 let win;
 
 function createWindow() {
-  win = new BrowserWindow({ width: 800, height: 600 });
+  win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    // Other window options
+  });
+  win.maximize()
   win.loadFile('dist/modernize/index.html'); // Path to your Angular's index.html in the 'dist' folder after building
   win.on('closed', () => {
     win = null;
@@ -33,3 +38,4 @@ app.on('activate', () => {
 // npm run electron-build
 //install electron packager for deployment
 //electron-packager . --platform=win32 --overwrite
+

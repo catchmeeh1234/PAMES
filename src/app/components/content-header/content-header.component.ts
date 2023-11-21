@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 
 interface data {
   title: string,
-  url: string,
+  url?: string,
 }
 
 @Component({

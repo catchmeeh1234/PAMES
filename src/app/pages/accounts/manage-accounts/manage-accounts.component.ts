@@ -36,7 +36,9 @@ export class ManageAccountsComponent {
   }
 
   async loadConsumers() {
-    this.res$ = this.consumerService.fetchConsumers();
+    const numbersOfSelection = "TOP 100";
+
+    this.res$ = this.consumerService.fetchConsumers(numbersOfSelection);
 
     //load the actual table
     const resToPromise = await this.res$.toPromise();
@@ -100,6 +102,5 @@ export class ManageAccountsComponent {
 
     console.log(this.products$);
   }
-
 
 }
