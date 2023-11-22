@@ -17,5 +17,8 @@ export const environment = {
 
   // domain: "https://srwd.eprms.home/",
   logo: './assets/pantabangan.png',
+  COMPANY_NAME: 'Pantabangan Municipal Electric System',
+  COMPANY_ADDRESS1: 'Barangay East Poblacion',
+  COMPANY_ADDRESS2: 'Pantabangan, Nueva Ecija',
 
 };

@@ -13,6 +13,7 @@ import { SessionStorageServiceService } from 'src/app/services/session-storage-s
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { PasswordStatus } from 'src/app/services/useraccounts.service';
 import EscPosEncoder from 'esc-pos-encoder';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-bill-info',
@@ -184,53 +185,67 @@ export class BillInfoComponent {
     });
   }
 
-  //INSTALL ZADIG KAPAG NAG SESECURITY ERROR
-  async printBill() {
-    let devices = await navigator.usb.getDevices();
-
-    if (!devices || devices.length === 0) {
-      await this.connectToPrinter();
-      devices = await navigator.usb.getDevices();
+  printBill(billInfo:BillInfo) {
+    const receipt = {
+      companyName: environment.COMPANY_NAME,
+      companyAddress1: environment.COMPANY_ADDRESS1,
+      companyAddress2: environment.COMPANY_ADDRESS2,
+      billInfo: billInfo,
     }
 
-    devices.forEach(device => {
-      console.log("DEVICE: ", device);
+    this.billService.printBill(receipt).subscribe(data => {
+      console.log(data);
     });
 
-    let encoder = new EscPosEncoder();
-
-    let result = encoder
-    .initialize()
-    .text('The quick brown fox jumps over the lazy dog')
-    .newline()
-    .qrcode('https://nielsleenheer.com')
-    .encode();
-
-    console.log(JSON.stringify(result));
-
-    const newDevices = devices.filter(device =>
-      device.manufacturerName === 'EPSON' &&
-      device.productName === 'TM-T88IV'
-    );
-
-    const device = newDevices[0];
-
-    await device.open();
-    await device.selectConfiguration(1);
-
-    if (!device.configuration) {
-      return;
-    } else {
-      await device.claimInterface(
-        device.configuration.interfaces[0].interfaceNumber
-      );
-    }
-
-
-    //device.transferOut(1, result);
-
-    await device.close();
   }
+
+  //INSTALL ZADIG KAPAG NAG SESECURITY ERROR OLD
+  // async printBill() {
+  //   let devices = await navigator.usb.getDevices();
+
+  //   if (!devices || devices.length === 0) {
+  //     await this.connectToPrinter();
+  //     devices = await navigator.usb.getDevices();
+  //   }
+
+  //   devices.forEach(device => {
+  //     console.log("DEVICE: ", device);
+  //   });
+
+  //   let encoder = new EscPosEncoder();
+
+  //   let result = encoder
+  //   .initialize()
+  //   .text('The quick brown fox jumps over the lazy dog')
+  //   .newline()
+  //   .qrcode('https://nielsleenheer.com')
+  //   .encode();
+
+  //   console.log(JSON.stringify(result));
+
+  //   const newDevices = devices.filter(device =>
+  //     device.manufacturerName === 'EPSON' &&
+  //     device.productName === 'TM-T88IV'
+  //   );
+
+  //   const device = newDevices[0];
+
+  //   await device.open();
+  //   await device.selectConfiguration(1);
+
+  //   if (!device.configuration) {
+  //     return;
+  //   } else {
+  //     await device.claimInterface(
+  //       device.configuration.interfaces[0].interfaceNumber
+  //     );
+  //   }
+
+
+  //   //device.transferOut(1, result);
+
+  //   await device.close();
+  // }
 
   async connectToPrinter() {
     try {

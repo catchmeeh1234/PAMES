@@ -28,7 +28,7 @@
             mat-flat-button
             color="primary"
             *ngIf="billInfo?.Reading !== '0'"
-            (click)="printBill()"
+            (click)="printBill(billInfo)"
           >
             Print
           </button>

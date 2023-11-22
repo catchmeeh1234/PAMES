@@ -119,6 +119,13 @@ export class BillService {
     return this.http.get(`${environment.API_URL}/Bills/searchBill.php?billingMonth=${billingMonth}&billStatus=${billStatus}&zone=${zone}`, { responseType: 'json' });
   }
 
+  printBill(receipt:any) {
+    let params = new FormData();
+    let json = JSON.stringify(receipt);
+    params.append('receipt', json);
+    return this.http.post(`${environment.API_URL}/Bills/printBill.php`, params, { responseType: 'json' });
+
+  }
 
   //non http methods
   computeTotalAmountDue(energyCharge:number, consumerCharges:number, seniorDiscount:number) {
