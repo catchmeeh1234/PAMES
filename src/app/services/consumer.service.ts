@@ -33,6 +33,7 @@ export type Consumer = {
   AdvancePayment?: any
   PicturePath?: any
   ConsImage?: any
+  Fullname?: string
 }
 
 export interface ConsumerInput {
@@ -136,6 +137,20 @@ export interface ScheduleChargesAdding {
   AccountNumber?: string
   CreatedBy?: string
 }
+
+export interface AccountStatus {
+  ID: string
+  AccountNo: string
+  StatusDate: string
+  Status: string
+  StatusType: string
+  MeterStatus: string
+  LastReading: string
+  Remarks: string
+  DiscBy: string
+  UpdatedBy: string
+}
+
 
 
 @Injectable({
@@ -248,5 +263,17 @@ export class ConsumerService {
     params.append('consumerInfo', json);
 
     return this.http.post<RequestStatus>(`${environment.API_URL}/Consumers/updateConsumerInfo.php`, params, {responseType: "json"});
+  }
+
+  updateAccountStatus(accountStatusInfo:any) {
+    let params = new FormData();
+    let json = JSON.stringify(accountStatusInfo);
+    params.append('accountStatusInfo', json);
+
+    return this.http.post<RequestStatus>(`${environment.API_URL}/Consumers/updateAccountStatus.php`, params, {responseType: "json"});
+  }
+
+  fetchAccountStatusTable(accountNo:string) {
+    return this.http.get<AccountStatus[]>(`${environment.API_URL}/Consumers/viewAccountStatusTable.php?accountNo=${accountNo}`, {responseType: 'json'});
   }
 }

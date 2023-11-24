@@ -1,0 +1,33 @@
+<mat-list>
+  <mat-list-item>
+    <div fxLayout="row" fxLayoutAlign="space-between start">
+      <div>
+        <span matListItemTitle>Name</span>
+        <span>{{ data.consumerInfo?.Firstname }} {{ data.consumerInfo?.Middlename }} {{ data.consumerInfo?.Lastname }}</span>
+      </div>
+      <button
+        mat-icon-button
+        matTooltip="Edit"
+        (click)="editConsumerInfo()"
+        *ngIf="data.hideEditBtn === false">
+        <mat-icon>edit</mat-icon>
+      </button>
+    </div>
+  </mat-list-item>
+  <mat-list-item>
+    <span matListItemTitle>Address</span>
+    <span>{{ data.consumerInfo?.ServiceAddress }}</span>
+  </mat-list-item>
+  <mat-list-item>
+    <span matListItemTitle>Reading Seq No.</span>
+    <span>{{ data.consumerInfo?.ReadingSeqNo }}</span>
+  </mat-list-item>
+  <mat-list-item>
+    <span matListItemTitle>Meter No.</span>
+    <span>{{ data.consumerInfo?.MeterNo }}</span>
+  </mat-list-item>
+  <mat-list-item>
+    <span matListItemTitle>Contact No.</span>
+    <span>{{ data.consumerInfo?.ContactNo }}</span>
+  </mat-list-item>
+</mat-list>

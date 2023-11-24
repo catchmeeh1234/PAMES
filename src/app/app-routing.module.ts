@@ -48,6 +48,11 @@ const routes: Routes = [
           import('./pages/billing/billing.module').then((m) => m.BillingModule),
       },
       {
+        path: 'collection',
+        loadChildren: () =>
+          import('./pages/collection/collection.module').then((m) => m.CollectionModule),
+      },
+      {
         path: 'admin-settings',
         loadChildren: () =>
           import('./pages/admin-settings/admin-settings.module').then((m) => m.AdminSettingsModule),

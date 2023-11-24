@@ -1,0 +1,128 @@
+<mat-form-field class="w-100" appearance="outline">
+  <mat-label>Account Number</mat-label>
+  <!-- <input matInput formControlName="AccountNo" readonly/> -->
+  <input matInput [(ngModel)]="accountNumber" [disabled]="formData.action === 'Create' ? false : true"/>
+</mat-form-field>
+
+<mat-stepper linear #stepper>
+  <mat-step [stepControl]="consumerInfoFormGroup">
+    <div class="m-t-16">
+      <form [formGroup]="consumerInfoFormGroup">
+        <ng-template matStepLabel>Consumer's information</ng-template>
+          <mat-form-field class="w-100" appearance="outline">
+            <mat-label>Last Name</mat-label>
+            <input matInput formControlName="Lastname" />
+          </mat-form-field>
+          <mat-form-field class="w-100" appearance="outline">
+            <mat-label>First Name</mat-label>
+            <input matInput formControlName="Firstname" />
+          </mat-form-field>
+          <mat-form-field class="w-100" appearance="outline">
+            <mat-label>Middle Initial</mat-label>
+            <input matInput formControlName="Middlename" />
+          </mat-form-field>
+
+        <mat-label for="IsSenior">Senior Citizen</mat-label>
+        <mat-checkbox id="IsSenior" formControlName="IsSenior"></mat-checkbox>
+
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Contact No</mat-label>
+          <input matInput formControlName="ContactNo" onkeypress="return (event.charCode >= 48 && event.charCode <= 57)"/>
+        </mat-form-field>
+        <div>
+          <button
+             mat-button matStepperNext
+             color="primary"
+             (click)="validateFormData(consumerInfoFormGroup)"
+             >Next</button>
+          <div class="is-danger" *ngIf="this.errorMessage.length !== 0">
+            <ul>
+              <li *ngFor="let error of this.errorMessage">{{ error }}</li>
+            </ul>
+          </div>
+        </div>
+      </form>
+    </div>
+  </mat-step>
+  <mat-step [stepControl]="addressFormGroup">
+    <div class="m-t-16">
+      <form [formGroup]="addressFormGroup">
+        <ng-template matStepLabel>Consumer's address</ng-template>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Service Address</mat-label>
+          <input matInput formControlName="ServiceAddress" />
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Land Mark</mat-label>
+          <input matInput formControlName="LandMark" />
+        </mat-form-field>
+        <div>
+          <button mat-button matStepperPrevious (click)="stepperBack()">Back</button>
+          <button
+            mat-button
+            matStepperNext
+            color="primary"
+            (click)="validateFormData(addressFormGroup)">Next</button>
+          <div class="is-danger" *ngIf="this.errorMessage.length !== 0">
+            <ul>
+              <li *ngFor="let error of this.errorMessage">{{ error }}</li>
+            </ul>
+          </div>
+        </div>
+      </form>
+    </div>
+  </mat-step>
+  <mat-step [stepControl]="installationFormGroup">
+    <div class="m-t-16">
+      <form [formGroup]="installationFormGroup">
+        <ng-template matStepLabel>Consumer's installation details</ng-template>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Meter No</mat-label>
+          <input matInput formControlName="MeterNo" />
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Sequence No</mat-label>
+          <input matInput formControlName="ReadingSeqNo" />
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Zone</mat-label>
+          <mat-select formControlName="ZoneName">
+            <mat-option *ngFor="let zone of zones" [value]="zone.ZoneName">{{ zone.ZoneName }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="w-100" appearance="outline">
+          <mat-label>Classification</mat-label>
+          <mat-select formControlName="RateSchedule">
+            <mat-option *ngFor="let rate of rates" [value]="rate.CustomerType">{{ rate.CustomerType }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date Created</mat-label>
+          <input matInput [matDatepicker]="picker1" placeholder="Date Created" formControlName="dateCreated">
+          <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+          <mat-datepicker #picker1></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date Installed</mat-label>
+          <input matInput [matDatepicker]="picker2" placeholder="Date Installed" formControlName="dateInstalled">
+          <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+          <mat-datepicker #picker2></mat-datepicker>
+        </mat-form-field>
+
+        <div>
+          <button mat-button matStepperPrevious (click)="stepperBack()">Back</button>
+          <!-- <button mat-button (click)="stepper.reset();stepperBack()">Start over</button> -->
+          <button mat-flat-button color="primary" (click)="validateFormData(installationFormGroup);onCreateOrEditAccount(formData)" *ngIf="formData.action === 'Create'">Create Account</button>
+          <button mat-flat-button color="primary" (click)="validateFormData(installationFormGroup);onCreateOrEditAccount(formData)" *ngIf="formData.action === 'Edit'">Save</button>
+          <div class="is-danger" *ngIf="this.errorMessage.length !== 0">
+            <ul>
+              <li *ngFor="let error of this.errorMessage">{{ error }}</li>
+            </ul>
+          </div>
+        </div>
+      </form>
+    </div>
+  </mat-step>
+</mat-stepper>

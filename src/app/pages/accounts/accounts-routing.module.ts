@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { CreateAccountComponent } from './create-account/create-account.component';
 import { ManageAccountsComponent } from './manage-accounts/manage-accounts.component';
 import { ConsumerInfoComponent } from './consumer-info/consumer-info.component';
+import { ConsumerStatusUpdateComponent } from './consumer-status-update/consumer-status-update.component';
 
 const routes: Routes = [
   {
@@ -19,6 +20,10 @@ const routes: Routes = [
       {
         path: 'manage-accounts',
         component: ManageAccountsComponent,
+      },
+      {
+        path: 'update-account-status/:accountNo',
+        component: ConsumerStatusUpdateComponent,
       }
     ],
   }

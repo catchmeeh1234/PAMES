@@ -9,35 +9,7 @@
           <div fxLayout="column" fxLayoutAlign="space-between start" fxFlex="35" fxLayoutGap="20">
             <h3>Consumer Details</h3>
             <div class="consInfo">
-              <mat-list>
-                <mat-list-item>
-                  <div fxLayout="row" fxLayoutAlign="space-between start">
-                    <div>
-                      <span matListItemTitle>Name</span>
-                      <span>{{ info.Firstname }} {{ info.Middlename }} {{ info.Lastname }}</span>
-                    </div>
-                    <button mat-icon-button matTooltip="Edit" (click)="editConsumerInfo()">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                  </div>
-                </mat-list-item>
-                <mat-list-item>
-                  <span matListItemTitle>Address</span>
-                  <span>{{ info.ServiceAddress }}</span>
-                </mat-list-item>
-                <mat-list-item>
-                  <span matListItemTitle>Reading Seq No.</span>
-                  <span>{{ info.ReadingSeqNo }}</span>
-                </mat-list-item>
-                <mat-list-item>
-                  <span matListItemTitle>Meter No.</span>
-                  <span>{{ info.MeterNo }}</span>
-                </mat-list-item>
-                <mat-list-item>
-                  <span matListItemTitle>Contact No.</span>
-                  <span>{{ info.ContactNo }}</span>
-                </mat-list-item>
-              </mat-list>
+              <app-consumer-info-summary [data]="data"></app-consumer-info-summary>
             </div>
             <h3>Customer Status</h3>
             <div class="consInfo">
@@ -53,8 +25,11 @@
                 <mat-list-item>
                   <span matListItemTitle fxLayout="row" fxLayoutAlign="space-between center">
                     <p>Status</p>
-                    <button mat-flat-button extended color="primary">
-                      <mat-icon>check_circle_outline</mat-icon>
+                    <button mat-flat-button extended color="primary"  [matTooltip]="'Click to update status'" (click)="updateConsumerStatus(info.AccountNo)">
+                      <mat-icon *ngIf="info.CustomerStatus === 'Active';else notActive">check_circle_outline</mat-icon>
+                      <ng-template #notActive>
+                        <mat-icon>cancel</mat-icon>
+                      </ng-template>
                       {{ info.CustomerStatus }}
                     </button>
                   </span>

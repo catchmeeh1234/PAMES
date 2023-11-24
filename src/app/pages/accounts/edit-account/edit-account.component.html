@@ -1,0 +1,10 @@
+<mat-card class="cardWithShadow">
+  <mat-card-header>
+    <app-content-header [data]="headerData"></app-content-header>
+  </mat-card-header>
+  <mat-card-content class="b-t-1">
+    <div class="m-t-16">
+      <app-account-form [formData]="formData" (response)="onEditAccountResponse($event)"></app-account-form>
+    </div>
+  </mat-card-content>
+</mat-card>

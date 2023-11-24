@@ -58,9 +58,21 @@
         </ng-container>
 
         <!-- Symbol Column -->
-        <ng-container matColumnDef="ContactNo">
-          <th mat-header-cell *matHeaderCellDef> Contact No </th>
-          <td mat-cell *matCellDef="let element"> {{element.ContactNo}} </td>
+        <ng-container matColumnDef="Action">
+          <th mat-header-cell *matHeaderCellDef> Action </th>
+          <td mat-cell *matCellDef="let element">
+            <div class="select-container">
+              <select (change)="selectAction($event, element)" class="custom-select">
+                <option value="action">action</option>
+                <option value="view">view</option>
+                <option value="update status">update status</option>
+              </select>
+              <span class="icon-container">
+                <!-- Your icon (example: using Material Icons) -->
+                <i class="material-icons">arrow_drop_down</i>
+              </span>
+            </div>
+          </td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

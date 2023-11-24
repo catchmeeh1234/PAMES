@@ -13,6 +13,7 @@ import { FlexLayoutModule } from "@angular/flex-layout";
 import { ComponentsModule } from 'src/app/components/components.module';
 import { ConsumerInfoComponent } from './consumer-info/consumer-info.component';
 import { EditAccountComponent } from './edit-account/edit-account.component';
+import { ConsumerStatusUpdateComponent } from './consumer-status-update/consumer-status-update.component';
 
 @NgModule({
   declarations: [
@@ -20,6 +21,7 @@ import { EditAccountComponent } from './edit-account/edit-account.component';
     ManageAccountsComponent,
     ConsumerInfoComponent,
     EditAccountComponent,
+    ConsumerStatusUpdateComponent,
   ],
   imports: [
     CommonModule,

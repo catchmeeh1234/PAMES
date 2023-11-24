@@ -1,0 +1,27 @@
+<mat-card class="cardWithShadow">
+  <mat-card-header>
+    <app-content-header [data]="headerData"></app-content-header>
+  </mat-card-header>
+  <mat-card-content class="b-t-1">
+    <div class="row align-items-baseline">
+      <div class="col-8">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Account Number</mat-label>
+          <input matInput type="text" placeholder="Account No." [(ngModel)]="account_no" readonly/>
+        </mat-form-field>
+      </div>
+      <div class="col-3">
+        <button mat-flat-button color="primary" (click)="searchConsumer()">Search</button>
+      </div>
+    </div>
+
+    <ng-container *ngIf="data.consumerInfo">
+      <h3>OR Number: {{1}}</h3>
+
+      <h3>Consumer Details</h3>
+      <div class="consInfo" >
+        <app-consumer-info-summary [data]="data"></app-consumer-info-summary>
+      </div>
+    </ng-container>
+  </mat-card-content>
+</mat-card>

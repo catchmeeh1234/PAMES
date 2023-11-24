@@ -16,6 +16,7 @@ import { PasswordPromptComponent } from './password-prompt/password-prompt.compo
 import { CancelBillComponent } from './cancel-bill/cancel-bill.component';
 import { BillFormComponent } from './bill-form/bill-form.component';
 import { AccountFormComponent } from './account-form/account-form.component';
+import { ConsumerInfoSummaryComponent } from './consumer-info-summary/consumer-info-summary.component';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { AccountFormComponent } from './account-form/account-form.component';
     CancelBillComponent,
     BillFormComponent,
     AccountFormComponent,
+    ConsumerInfoSummaryComponent,
   ],
   imports: [
     FormsModule,
@@ -46,6 +48,7 @@ import { AccountFormComponent } from './account-form/account-form.component';
     ContentHeaderComponent,
     BillFormComponent,
     AccountFormComponent,
+    ConsumerInfoSummaryComponent,
   ]
 })
 export class ComponentsModule { }

@@ -6,6 +6,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { EditAccountComponent } from '../edit-account/edit-account.component';
+import { Data } from '../../collection/create-or/create-or.component';
 
 
 
@@ -15,8 +16,11 @@ import { EditAccountComponent } from '../edit-account/edit-account.component';
   styleUrls: ['./consumer-info.component.scss']
 })
 export class ConsumerInfoComponent {
+
   dataSource = new MatTableDataSource<ConsumerLedgerData>();
   private ConsumerLedgerDataSubscribe:Subscription;
+  private consumerInfoSubscribe:Subscription;
+
   consumerCharges:ScheduleCharges[];
   headerData = {
     title: `Consumer`,
@@ -29,6 +33,9 @@ export class ConsumerInfoComponent {
     "Billing", "Discount", "Balance"
   ];
 
+  data:Data = {
+    hideEditBtn: false,
+  }
 
   constructor(
     public consumerService:ConsumerService,
@@ -53,6 +60,10 @@ export class ConsumerInfoComponent {
   loadCustomerInfo(consumer_id:string) {
     //this.consumerService.consumerInfo$
      this.consumerService.consumerInfo$ = this.consumerService.fetchConsumerInfo(consumer_id);
+
+     this.consumerInfoSubscribe = this.consumerService.consumerInfo$.subscribe(data => {
+      this.data.consumerInfo = data[0];
+     });
 
      this.consumerService.consumerLedger$ = this.consumerService.consumerInfo$
      .pipe(
@@ -100,14 +111,15 @@ export class ConsumerInfoComponent {
 
   }
 
-  editConsumerInfo() {
-    const dialogRef = this.dialog.open(EditAccountComponent, {
-      // panelClass: ['no-padding'],
-      data: {
-        consumer_info: this.consumerService.consumerInfo$
-      }
-    });
-  }
+  // editConsumerInfo() {
+  //   const dialogRef = this.dialog.open(EditAccountComponent, {
+  //     // panelClass: ['no-padding'],
+  //     data: {
+  //       consumer_info: this.consumerService.consumerInfo$
+  //     }
+  //   });
+
+  // }
 
   manageCharges(consumer_id:string) {
     this.router.navigate(['./admin-settings/manage-consumer-charges', consumer_id])
@@ -121,11 +133,19 @@ export class ConsumerInfoComponent {
 
   }
 
+  updateConsumerStatus(accountNo:string) {
+    this.router.navigate(['./accounts/update-account-status', accountNo]);
+  }
+
   ngOnDestroy(): void {
     //Called once, before the instance is destroyed.
     //Add 'implements OnDestroy' to the class.
     if (this.ConsumerLedgerDataSubscribe) {
       this.ConsumerLedgerDataSubscribe.unsubscribe();
+    }
+
+    if (this.consumerInfoSubscribe) {
+      this.consumerInfoSubscribe.unsubscribe();
     }
   }
 

@@ -12,7 +12,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./manage-accounts.component.scss']
 })
 export class ManageAccountsComponent {
-  displayedColumns: string[] = ['CustomerStatus', 'AccountNo', 'FullName', 'ServiceAddress', 'Zone', 'ContactNo'];
+  displayedColumns: string[] = ['CustomerStatus', 'AccountNo', 'FullName', 'ServiceAddress', 'Zone', 'Action'];
 
   //dataSource:Consumer[] = [];
   products$:Observable<ProductInfo[]>;
@@ -57,6 +57,17 @@ export class ManageAccountsComponent {
   //   this.consumerSummary = res;
   //   console.log(res);
   // }
+
+  selectAction(event: Event, consumerInfo:Consumer) {
+    const selectedValue = (event.target as HTMLSelectElement).value;
+    if (selectedValue === 'view') {
+      this.viewConsumerInfo(consumerInfo.Consumer_id);
+    } else if(selectedValue === 'update status') {
+      this.router.navigate(['./accounts/update-account-status', consumerInfo.AccountNo]);
+    } else {
+      console.log('Selected value:', selectedValue);
+    }
+  }
 
   openCreateAccount() {
     this.router.navigate(['./accounts/create-account']);

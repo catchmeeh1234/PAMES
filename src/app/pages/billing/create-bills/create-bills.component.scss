@@ -1,0 +1,30 @@
+
+// mat-list-item {
+//   text-align: right;
+// }
+.zoneContainer {
+  border: 1px solid #f2f2f2;
+  max-height: 150px;
+  overflow: auto;
+  margin-bottom: 1em;
+}
+ .container {
+//   background-color: #c4a2a2;
+  border: 1px solid #f2f2f2;
+  padding: 1.5em;
+ }
+
+ .actionButtons {
+  display: flex;
+  gap: 1em;
+  justify-content: end;
+ }
+
+ #announcement {
+  margin-top: 1em;
+  height: 150px;
+ }
+
+ textarea {
+  resize: none;
+}

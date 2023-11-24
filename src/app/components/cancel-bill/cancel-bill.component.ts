@@ -55,6 +55,7 @@ export class CancelBillComponent {
         Remarks: ['', Validators.required],
         BillStatus: ['', Validators.required],
         Username: [this.sessionStorageService.getSession("username"), Validators.required],
+        isPaid: ['', Validators.required],
       });
 
       this.cancelBillForm.get("CurrentDate")?.disable();
