@@ -17,6 +17,22 @@
 
     }
   }
+
+  .header {
+    text-align: center;
+
+    h1, h2, h3, h4, h5, h6{
+      line-height: 5px;
+    }
+  }
+
+  .receiptBody {
+    padding: 0 30px;
+
+    h1, h2, h3, h4, h5, h6{
+      line-height: 0 ;
+    }
+  }
 }
 
 .transInfo {
@@ -26,3 +42,21 @@
   //  height: auto;
   // overflow: auto;
 }
+.billingMonth {
+  color: blue !important;
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  box-sizing: border-box;
+  place-content: start;
+  align-items: baseline;
+}
+
+.grey {
+  color: #8a7d7d;
+  font-weight: bold;
+}
+
+

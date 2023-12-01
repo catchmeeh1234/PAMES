@@ -44,7 +44,7 @@
             <!-- <button mat-flat-button color="primary">Create Bills History</button> -->
           </div>
         </div>
-        <div >
+        <div>
           <div>
             <label for="announcement"><h3>Announcement</h3></label>
             <textarea [(ngModel)]="announcementMessage" class="w-100" id="announcement"></textarea>
@@ -55,6 +55,7 @@
           </div>
         </div>
       </div>
+      <mat-divider [vertical]="true"></mat-divider>
       <div fxFlex="70">
         <div class="col-12 table-responsive m-t-16">
           <table mat-table [dataSource]="dataSource" class="b-1 shadow-none">

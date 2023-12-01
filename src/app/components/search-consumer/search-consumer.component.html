@@ -4,10 +4,10 @@
       <mat-card-title>Search Consumer</mat-card-title>
     </mat-card-header>
     <mat-card-content class="b-t-1">
-      <div class="table-responsive m-t-16">
-        <mat-form-field appearance="outline">
+      <div class="table-responsive m-t-16 tableContainer">
+        <mat-form-field appearance="outline" class="w-100">
           <mat-label>Search</mat-label>
-          <input matInput (keyup)="loadData(search)" [(ngModel)]="search" placeholder="PR Number" #input>
+          <input matInput (input)="loadData(search)" [(ngModel)]="search" placeholder="PR Number" #input>
         </mat-form-field>
         <table mat-table [dataSource]="dataSource" class="table-bordered">
 

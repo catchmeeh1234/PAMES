@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { AccountsRoutingModule } from './accounts-routing.module';
 import { CreateAccountComponent } from './create-account/create-account.component';
 import { ExtraRoutes } from '../extra/extra.routing';
@@ -12,8 +11,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from "@angular/flex-layout";
 import { ComponentsModule } from 'src/app/components/components.module';
 import { ConsumerInfoComponent } from './consumer-info/consumer-info.component';
-import { EditAccountComponent } from './edit-account/edit-account.component';
 import { ConsumerStatusUpdateComponent } from './consumer-status-update/consumer-status-update.component';
+import { EditAccountComponent } from './edit-account/edit-account.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +20,7 @@ import { ConsumerStatusUpdateComponent } from './consumer-status-update/consumer
     ManageAccountsComponent,
     ConsumerInfoComponent,
     EditAccountComponent,
-    ConsumerStatusUpdateComponent,
+    ConsumerStatusUpdateComponent
   ],
   imports: [
     CommonModule,

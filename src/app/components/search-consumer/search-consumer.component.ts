@@ -1,8 +1,8 @@
-import { Component, ViewChild } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, ViewChild, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { Observable, Subscription, map } from 'rxjs';
+import { Observable, Subscription, filter, map } from 'rxjs';
 import { Consumer, ConsumerService } from 'src/app/services/consumer.service';
 
 @Component({
@@ -18,8 +18,10 @@ export class SearchConsumerComponent {
   dataSource:MatTableDataSource<Consumer>;
 
   consumersSubcription:Subscription;
+  activeConsumersSubcription:Subscription;
 
   constructor(
+    @Inject(MAT_DIALOG_DATA) public data: any,
     private consumerService:ConsumerService,
     private dialogRef:MatDialogRef<SearchConsumerComponent>,
   ) {}
@@ -32,11 +34,24 @@ export class SearchConsumerComponent {
 
   onLoadConsumers() {
     const numbersOfSelection = "TOP 100";
-    this.consumersSubcription = this.consumerService.fetchConsumers(numbersOfSelection)
-    .subscribe(consumer => {
-      this.dataSource = new MatTableDataSource(consumer);
-      this.dataSource.paginator = this.paginator;
-    });
+    let consumers$ = this.consumerService.fetchConsumers(numbersOfSelection);
+
+    if (this.data.type === 'create bill') {
+      this.consumersSubcription = consumers$.pipe(
+        map(consumers => consumers.filter(consumer => consumer.CustomerStatus === 'Active'))
+      ).subscribe(consumer => {
+
+        this.dataSource = new MatTableDataSource(consumer);
+        this.dataSource.paginator = this.paginator;
+      });
+    } else {
+      this.consumersSubcription = consumers$
+      .subscribe(consumer => {
+
+        this.dataSource = new MatTableDataSource(consumer);
+        this.dataSource.paginator = this.paginator;
+      });
+    }
 
 
     //const consumers = await this.consumerService.fetchConsumers(numbersOfSelection).toPromise();
@@ -59,7 +74,7 @@ export class SearchConsumerComponent {
 
   }
 
-  async loadData(search:string) {
+  loadData(search:string) {
     if (search === "") {
       this.onLoadConsumers();
     }
@@ -68,18 +83,33 @@ export class SearchConsumerComponent {
       return;
     }
 
-    const searchedAccounts:any = await this.consumerService.searchConsumer(search).toPromise();
-
-    if (!searchedAccounts) {
-      return;
+    if (this.data.type === 'create bill') {
+      this.activeConsumersSubcription = this.consumerService.searchConsumer(search)
+      .pipe(
+        map(consumers => consumers.filter(consumer => consumer.CustomerStatus === 'Active'))
+      ).subscribe(data => {
+        this.dataSource.data = data;
+      });
+    } else {
+      this.activeConsumersSubcription = this.consumerService.searchConsumer(search)
+      .subscribe(data => {
+        this.dataSource.data = data;
+      });
     }
-    this.dataSource.data = searchedAccounts;
+
   }
 
   ngOnDestroy(): void {
     //Called once, before the instance is destroyed.
     //Add 'implements OnDestroy' to the class.
-    this.consumersSubcription.unsubscribe();
+    if (this.consumersSubcription) {
+      this.consumersSubcription.unsubscribe();
+
+    }
+    if (this.activeConsumersSubcription) {
+      this.activeConsumersSubcription.unsubscribe();
+
+    }
   }
 
 }

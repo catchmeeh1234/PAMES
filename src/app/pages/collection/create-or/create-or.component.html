@@ -3,25 +3,154 @@
     <app-content-header [data]="headerData"></app-content-header>
   </mat-card-header>
   <mat-card-content class="b-t-1">
-    <div class="row align-items-baseline">
-      <div class="col-8">
+    <form [formGroup]="orFormGroup">
+      <div class="content m-t-16" fxLayoutGap="1em">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Account Number</mat-label>
-          <input matInput type="text" placeholder="Account No." [(ngModel)]="account_no" readonly/>
+          <input matInput type="text" placeholder="Account No." formControlName="accountNumber" readonly/>
         </mat-form-field>
+        <div>
+          <button mat-flat-button color="primary" (click)="searchConsumer()">Search</button>
+        </div>
       </div>
-      <div class="col-3">
-        <button mat-flat-button color="primary" (click)="searchConsumer()">Search</button>
+      <div class="content" fxLayoutAlign="space-between center" fxLayoutGap="0.5em" *ngIf="isPaid">
+        <h2>OR Number: {{orNumber | async}}</h2>
+        <div fxLayoutGap="0.5em">
+          <button mat-flat-button color="primary">Post</button>
+          <button mat-flat-button color="primary">Cancel</button>
+          <button mat-flat-button color="primary">Print</button>
+        </div>
       </div>
-    </div>
 
-    <ng-container *ngIf="data.consumerInfo">
-      <h3>OR Number: {{1}}</h3>
+      <div fxLayout="row" fxLayoutGap="3em" *ngIf="isPaid">
+        <div fxLayout="column" fxFlex="30">
+          <ng-container *ngIf="data.consumerInfo">
+            <h2>Consumer Details</h2>
+            <div class="consInfo" >
+              <app-consumer-info-summary [data]="data"></app-consumer-info-summary>
+            </div>
+          </ng-container>
+        </div>
+        <div fxLayout="column" fxFlex="30">
+          <h2>Bills</h2>
+          <div class="consInfo" style="padding: 0 14px;">
+            <div fxLayout="column" >
+              <ng-container formArrayName="billingMonth">
+                <div fxLayout="row" fxLayoutAlign="space-between center" *ngFor="let bill of billingMonthFormArray.controls;let i = index" [formGroupName]="i">
+                  <span>
+                    <h3 class="billingMonth cursor-pointer l-0" (click)="loadBill(bill.get('billNumber')?.value)" >{{bill.get('monthYear')?.value}}</h3>
+                  </span>
+                  <span>
+                    <mat-checkbox formControlName="Checked"></mat-checkbox>
+                  </span>
+                </div>
+              </ng-container>
+              <div fxLayout="row" fxLayoutAlign="space-between center">
+                <h3 class="l-0">Reconnection Fee({{reconnectionFee}})</h3>
+                <mat-checkbox formControlName="reconnectionFee"></mat-checkbox>
+              </div>
+                <!-- <h3 class="billingMonth" *ngIf="unpaidBills.length === 0">No unpaid bills at the moment.</h3> -->
+              </div>
+          </div>
+          <h2>Discounts</h2>
+          <div class="consInfo" style="padding: 0 14px;">
+            <div fxLayout="column" >
+              <div fxLayout="row" fxLayoutAlign="space-between center">
+                <h4 class="l-0">{{(earlyPaymentDiscount | async)?.DiscountName }}({{calculateEarlyPaymentDiscount((earlyPaymentDiscount | async)?.DiscountPercent, latestBillAmountDue)}})</h4>
+                <mat-checkbox formControlName="earlyPaymentDiscount"></mat-checkbox>
+              </div>
+                <!-- <h3 class="billingMonth" *ngIf="unpaidBills.length === 0">No unpaid bills at the moment.</h3> -->
+              </div>
+          </div>
+          <h2>Payment</h2>
 
-      <h3>Consumer Details</h3>
-      <div class="consInfo" >
-        <app-consumer-info-summary [data]="data"></app-consumer-info-summary>
+          <h3>Total Amount Due:   <span>{{totalAmountDueAllUnPaidBills}}</span></h3>
+
+          <mat-form-field class="w-100" appearance="outline">
+            <mat-label>Mode of payment</mat-label>
+            <mat-select formControlName="modeOfPayment">
+              <mat-option *ngFor="let modeOfPayment of modeOfPayments" [value]="modeOfPayment">{{ modeOfPayment }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div *ngIf="isCheck">
+            <mat-form-field class="w-100" appearance="outline">
+              <mat-label>Reference Number</mat-label>
+              <input matInput formControlName="referenceNumber" />
+            </mat-form-field>
+            <mat-form-field class="w-100" appearance="outline">
+              <mat-label>Check Date</mat-label>
+              <input matInput formControlName="checkDate" />
+            </mat-form-field>
+          </div>
+          <mat-form-field class="w-100" appearance="outline">
+            <mat-label>Amount Paid</mat-label>
+            <input matInput formControlName="amountPaid" />
+          </mat-form-field>
+          <button mat-flat-button color="primary" (click)="saveOR(orFormGroup)">Save</button>
+        </div>
+        <div fxLayout="column" fxFlex="40">
+          <ng-container *ngIf="billDetails">
+            <h2>Bill</h2>
+            <div class="consInfo" style="padding: 14px 0;">
+              <div class="header">
+                <h3>{{companyName}}</h3>
+                <h4>{{companyAddress1}}</h4>
+                <h4>{{companyAddress2}}</h4>
+                <br>
+
+                <h3>BILLING DETAILS</h3>
+              </div>
+
+              <div  class="receiptBody">
+                <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="0.5em">
+                  <h4>Bill No <span class="grey">{{billDetails.BillNo}}</span></h4>
+                  <h4>Previous Reading: <span class="grey">{{billDetails.PreviousReading}}</span></h4>
+                  <h4>Current Reading:  <span class="grey">{{billDetails.Reading}}</span></h4>
+                  <h4>Consumption:  <span class="grey">{{billDetails.Consumption}}</span></h4>
+                </div>
+                <mat-divider></mat-divider>
+                <h3 style="text-align: center;">PERIOD COVERED</h3>
+                <div fxLayout="row" fxLayoutAlign="space-around center">
+                  <div fxLayout="column" fxLayoutAlign="start center" fxLayoutGap="0.5em" >
+                    <h4>FROM</h4>
+                    <span class="grey">{{ billDetails.DateFrom }}</span>
+                    <!-- <h4>Due Date</h4>
+                    <span class="grey">{{ billDetails.DueDate }}</span> -->
+
+                  </div>
+                  <div fxLayout="column" fxLayoutAlign="start center" fxLayoutGap="0.5em" >
+                    <h4>TO</h4>
+                    <span class="grey">{{ billDetails.ReadingDate }}</span>
+                    <!-- <h4>Disconnection Date</h4>
+                    <span class="grey">{{ billDetails.DueDate }}</span> -->
+
+                  </div>
+                </div>
+                <mat-divider></mat-divider>
+                  <div fxLayout="row" fxLayoutAlign="space-around start">
+                    <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="0.5em" class="billSummary">
+                      <h4>BILLING SUMMARY</h4>
+                      <h4>Current Billing</h4>
+                      <h4>Senior Citizen Discount</h4>
+                      <br>
+                      <h4>Total Amount Due</h4>
+                    </div>
+                    <div fxLayout="column" fxLayoutAlign="center end" fxLayoutGap="0.5em" class="billSummary">
+                      <h4>Amount</h4>
+                      <h4 class="grey">{{billDetails.AmountDue}}</h4>
+                      <h4 class="grey">{{billDetails.SeniorDiscount}}</h4>
+                      <br>
+                      <h4 class="grey">{{billAmountDue}}</h4>
+
+                    </div>
+                  </div>
+              </div>
+
+            </div>
+            <!-- <p>{{billDetails.AmountDue}}</p> -->
+          </ng-container>
+        </div>
       </div>
-    </ng-container>
+    </form>
   </mat-card-content>
 </mat-card>

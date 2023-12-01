@@ -19,9 +19,9 @@ export const environment = {
   API_URL: 'http://127.0.0.1:4901',
   //API_URL: "http://192.168.1.79:4901",
   logo: './assets/images/logos/dark-logo.svg',
-  COMPANY_NAME: 'Pantabangan Municipal Electric System',
-  COMPANY_ADDRESS1: 'Barangay East Poblacion',
-  COMPANY_ADDRESS2: 'Pantabangan, Nueva Ecija',
+  COMPANY_NAME: 'Santa Rosa Water District',
+  COMPANY_ADDRESS1: 'Barangay Rizal',
+  COMPANY_ADDRESS2: 'Santa Rosa, Nueva Ecija',
 
 };
 export const palete = {

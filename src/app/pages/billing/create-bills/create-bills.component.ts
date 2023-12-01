@@ -131,7 +131,23 @@ export class CreateBillsComponent {
     }
 
     const res:any = await this.billService.createBills(preparedBills.data, newBillingMonth, zones).toPromise();
-    console.log(res);
+
+    if (res.status === "Bills Created") {
+      this.snackbarService.showSuccess(res.status);
+      this.selectedMeterReader = "";
+      //clear datasource table
+      this.dataSource.data = [];
+      //clear zones check list
+      if (this.zones) {
+        const newZones = this.zones.map(zone => {
+          return { ...zone, checked: false };
+        });
+
+        this.zones = newZones;
+      }
+    } else {
+      this.snackbarService.showError(res.status);
+    }
 
 
     //CLEAR PREPARED BILLS TABLE AFTER SUCCESSFUL CREATION OF BILL

@@ -176,7 +176,7 @@ export class ConsumerService {
   }
 
   searchConsumer(search:string, zone:string="", status:string="") {
-    return this.http.get(`${environment.API_URL}/Consumers/searchConsumer.php?search=${search}&status=${status}&zone=${zone}`, { responseType: 'json' });
+    return this.http.get<Consumer[]>(`${environment.API_URL}/Consumers/searchConsumer.php?search=${search}&status=${status}&zone=${zone}`, { responseType: 'json' });
   }
 
   fetchConsumerInfo(consumer_id:string) {

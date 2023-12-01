@@ -1,6 +1,14 @@
 .container {
   width: auto;
-  min-width: 700px;
+  max-width: 705px;
+  min-width: 705px;
+
   height: auto;
-  min-height: 600px;
+  min-height: 555px;
+  max-height: 555px;
+}
+
+.tableContainer {
+  height: auto;
+  min-height: 460px;
 }

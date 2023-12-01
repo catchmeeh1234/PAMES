@@ -35,7 +35,7 @@ export class FilterCustomerComponent {
 
 
     const clickedInside = this.elementRef.nativeElement.contains(targetElement);
-    console.log(clickedInside);
+    //console.log(clickedInside);
 
     if (!clickedInside) {
         this.isOpen = false;
@@ -124,7 +124,7 @@ export class FilterCustomerComponent {
     if (filterStatus === "All") {
       filterStatus = "";
     }
-    console.log(this.consumerService.dataSource)
+    //console.log(this.consumerService.dataSource)
     //this.pr.dataSourcePRTable.filter = filterZone.trim().toLowerCase();
     this.consumerService.dataSource.filter = JSON.stringify({
       zone: filterZone,
@@ -153,7 +153,7 @@ export class FilterCustomerComponent {
       status = selectedStatus;
     }
 
-    console.log(search, status, zone);
+    //console.log(search, status, zone);
 
     const searchedAccounts:any = await this.consumerService.searchConsumer(search, zone, status).toPromise();
 

@@ -98,7 +98,9 @@ export class BillsComponent {
   }
 
   async searchConsumer() {
-    const dialogRef = this.dialog.open(SearchConsumerComponent);
+    const dialogRef = this.dialog.open(SearchConsumerComponent, {
+      data: { type: 'search-bill'}
+    });
 
     dialogRef.afterClosed().subscribe(async (result:Consumer) => {
       if (result) {

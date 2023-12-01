@@ -252,7 +252,11 @@ export class BillFormComponent {
   }
 
   async searchConsumer() {
-    const dialogRef = this.dialog.open(SearchConsumerComponent);
+    const dialogRef = this.dialog.open(SearchConsumerComponent, {
+      data: {
+        type: 'create bill'
+      }
+    });
 
     dialogRef.afterClosed().subscribe(async (result:Consumer) => {
       if (result) {

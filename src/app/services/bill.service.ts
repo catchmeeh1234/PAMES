@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { ScheduleCharges } from './consumer.service';
 import { Zone } from './zone.service';
+import { BehaviorSubject } from 'rxjs';
 
 export type BillInfo = {
   billid: string;
@@ -34,12 +35,15 @@ export type BillInfo = {
   dateCreated: string;
   datePaid: any;
   AverageCons: string;
+  checked?: boolean;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class BillService {
+  //selectedBill = new BehaviorSubject<any>(null);
+
   dataSource:any;
 
   constructor(private http:HttpClient) { }
@@ -151,6 +155,10 @@ export class BillService {
   computeConsumption(currentReading:number, lastReading:number) {
     const consumption = currentReading - lastReading;
     return consumption;
+  }
+
+  fetchUnpaidBills(accountNo:string) {
+    return this.http.get<BillInfo[]>(`${environment.API_URL}/Bills/loadUnpaidBills.php?accountNo=${accountNo}`, { responseType: 'json' });
   }
 
 }
