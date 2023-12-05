@@ -36,7 +36,7 @@ export class SearchConsumerComponent {
     const numbersOfSelection = "TOP 100";
     let consumers$ = this.consumerService.fetchConsumers(numbersOfSelection);
 
-    if (this.data.type === 'create bill') {
+    if (this.data.type === 'create bill' || this.data.type === 'create or') {
       this.consumersSubcription = consumers$.pipe(
         map(consumers => consumers.filter(consumer => consumer.CustomerStatus === 'Active'))
       ).subscribe(consumer => {

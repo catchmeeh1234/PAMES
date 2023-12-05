@@ -7,33 +7,14 @@ import { BillInfo, BillService } from 'src/app/services/bill.service';
 import { ChargesService } from 'src/app/services/charges.service';
 import { Consumer } from 'src/app/services/consumer.service';
 import { Discount, DiscountsService } from 'src/app/services/discounts.service';
-import { OfficialReceiptService } from 'src/app/services/official-receipt.service';
+import { ORFormGroup, OfficialReceiptService } from 'src/app/services/official-receipt.service';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { environment } from 'src/environments/environment';
 
 export interface Data {
   hideEditBtn:boolean,
   consumerInfo?:Consumer
-}
-
-export interface billMonthFormGroup {
-  Checked: boolean
-  billNumber: string
-  monthYear: string
-  amountDue: number
-  billDetails: BillInfo
-}
-
-export interface ORFormGroup {
-  accountNumber:string
-  billingMonth: billMonthFormGroup[]
-  reconnectionFee:boolean
-  earlyPaymentDiscount:boolean
-  modeOfPayment:string
-  referenceNumber:string
-  checkDate:string
-  amountPaid: string
-  totalAmountDue:string
 }
 
 @Component({
@@ -88,6 +69,7 @@ export class CreateOrComponent {
     private officialReceiptService:OfficialReceiptService,
     private discountService:DiscountsService,
     private snackbarService:SnackbarService,
+    private sessionStorageService:SessionStorageServiceService,
   ) {}
 
   ngOnInit(): void {
@@ -105,15 +87,18 @@ export class CreateOrComponent {
     }));
 
     this.orFormGroup = this.formBuilder.group({
+      orNumber: ['', Validators.required],
       accountNumber: ['', Validators.required],
       billingMonth: this.formBuilder.array([]),
       reconnectionFee: [true, Validators.required],
       earlyPaymentDiscount: [true, Validators.required],
+      earlyPaymentDiscountAmount: [0.00, Validators.required],
       modeOfPayment: ['Cash', Validators.required],
       referenceNumber: [''],
       checkDate: [''],
       amountPaid: ['', Validators.required],
-      totalAmountDue: ["0.00", Validators.required]
+      totalAmountDue: ["0.00", Validators.required],
+      username: this.sessionStorageService.getSession("fullname"),
     });
 
     //save default form value
@@ -251,7 +236,7 @@ export class CreateOrComponent {
   }
 
   loadEarlyPaymentDiscount() {
-    const earlyPayment = this.discountService.loadDiscounts("EarlyPayment Discount")
+    const earlyPayment = this.discountService.loadDiscounts("Early Payment Discount")
     .pipe(map((response) => {
       return response.length > 0 ? response[0] : undefined;
     })
@@ -368,14 +353,13 @@ export class CreateOrComponent {
 
   searchConsumer() {
     const dialogRef = this.dialog.open(SearchConsumerComponent, {
-      data: { type: 'create-or' }
+      data: { type: 'create or' }
     });
 
     dialogRef.afterClosed().subscribe(async (result:Consumer) => {
       if (result) {
         //clear fields
-        this.billingMonthFormArray.clear();
-        this.orFormGroup.patchValue(this.orFormGroupValue);
+        this.clearFields();
 
         //validate if the concessionaire has any unpaid bill
         const bills = await this.billService.fetchUnpaidBills(result.AccountNo).toPromise();
@@ -391,8 +375,16 @@ export class CreateOrComponent {
 
         this.isPaid = true;
         this.orFormGroup.patchValue({
-          accountNumber: result.AccountNo
-        })
+          accountNumber: result.AccountNo,
+        });
+
+        //set or number value
+        this.orNumber.subscribe((data) => {
+          this.orFormGroup.patchValue({
+            orNumber: data,
+          });
+        });
+
         //DISPLAY CONSUMER'S INFORMATION
         this.data.consumerInfo = result;
 
@@ -468,11 +460,49 @@ export class CreateOrComponent {
       return;
     }
 
-    if (orDetails.valid) {
-      console.log(orDetails.value);
+    const amountPaid:number = orDetails.value.amountPaid;
+    const totalAmountDue:number = orDetails.value.totalAmountDue;
 
+    if (amountPaid < totalAmountDue) {
+      this.snackbarService.showError("Insufficient Payment");
+      return;
     }
 
+    if (orDetails.valid) {
+      console.log(orDetails.value);
+      this.officialReceiptService.createOR(orDetails.value)
+      .subscribe((response:any) => {
+        if (response.status === "OR Created") {
+          alert(response.status);
+          //this.snackbarService.showSuccess(response.status);
+          this.clearFields();
+          this.calculateChange(amountPaid, totalAmountDue);
+        } else {
+          this.snackbarService.showError(response.status);
+        }
+      });
+    }
+
+  }
+
+  clearFields() {
+    console.log(this.orFormGroupValue);
+
+    this.data.consumerInfo = undefined;
+    this.billingMonthFormArray.clear();
+    this.orFormGroup.reset(this.orFormGroupValue);
+    this.isPaid = false;
+  }
+
+  calculateChange(amountPaid:number, totalAmountDue:number) {
+    const change = amountPaid - totalAmountDue;
+    if (change < 0) {
+      alert("Insufficient Payment");
+      //this.snackbarService.showError("Insufficient Payment");
+      return;
+    } else {
+      alert(`Customer Change is ${change.toFixed(2)} pesos`);
+    }
   }
 
   ngOnDestroy(): void {
