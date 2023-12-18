@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { BehaviorSubject, Observable, Subscription, map, of } from 'rxjs';
@@ -7,7 +7,7 @@ import { BillInfo, BillService } from 'src/app/services/bill.service';
 import { ChargesService } from 'src/app/services/charges.service';
 import { Consumer } from 'src/app/services/consumer.service';
 import { Discount, DiscountsService } from 'src/app/services/discounts.service';
-import { ORFormGroup, OfficialReceiptService } from 'src/app/services/official-receipt.service';
+import { ORFormGroup, OfficialReceiptService, ReceiptDetails } from 'src/app/services/official-receipt.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { environment } from 'src/environments/environment';
@@ -23,6 +23,8 @@ export interface Data {
   styleUrls: ['./create-or.component.scss']
 })
 export class CreateOrComponent {
+  @ViewChild('print-area') printableArea!: ElementRef;
+
   public companyName = environment.COMPANY_NAME;
   public companyAddress1 = environment.COMPANY_ADDRESS1;
   public companyAddress2 = environment.COMPANY_ADDRESS2;
@@ -60,6 +62,8 @@ export class CreateOrComponent {
   unpaidBillsSubscription:Subscription;
 
   isPaid = false;
+
+  receiptDetails:ReceiptDetails;
 
   constructor(
     private dialog:MatDialog,
@@ -486,8 +490,6 @@ export class CreateOrComponent {
   }
 
   clearFields() {
-    console.log(this.orFormGroupValue);
-
     this.data.consumerInfo = undefined;
     this.billingMonthFormArray.clear();
     this.orFormGroup.reset(this.orFormGroupValue);
@@ -502,6 +504,42 @@ export class CreateOrComponent {
       return;
     } else {
       alert(`Customer Change is ${change.toFixed(2)} pesos`);
+    }
+  }
+
+  onPrintOR(orDetails:FormGroup, consumerInfo?:Consumer) {
+    const newORDetails:ORFormGroup = orDetails.value;
+    this.receiptDetails = this.createReceiptDetails(newORDetails, this.billingMonthFormArray.value, consumerInfo);
+
+    //this.officialReceiptService.setPrintableContent();
+    this.officialReceiptService.printContent();
+    //this.officialReceiptService.printOR();
+  }
+
+  createReceiptDetails(orDetails:ORFormGroup, bills:any, consumerInfo?:Consumer):ReceiptDetails {
+    let [, ...previousBills] = bills;
+    const fullName = `${consumerInfo?.Firstname} ${consumerInfo?.Middlename} ${consumerInfo?.Lastname}`;
+
+    return {
+      town: environment.TOWN_NAME,
+      orNumber: orDetails.orNumber,
+      customerInfo: {
+        accountName: fullName,
+        accountNumber: consumerInfo?.AccountNo,
+        accountAddress: consumerInfo?.ServiceAddress
+      },
+      currentBill: {
+        billNumber: bills[0].billNumber,
+        billingMonth: bills[0].monthYear,
+        amount: bills[0].amountDue,
+      },
+      earlyPaymentDiscount: this.calculateEarlyPaymentDiscount(parseFloat(this.earlyPaymentRate), this.latestBillAmountDue),
+      reconnectionFee: this.reconnectionFee,
+      previousBills: previousBills,
+      amountInWords: "TO DO LATER",
+      username: this.sessionStorageService.getSession("fullname")!,
+      actingMunTreasurer1: "Acting Mun-Treasurer",
+      actingMunTreasurer2: "By: Ruby L. Patling"
     }
   }
 

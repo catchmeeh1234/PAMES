@@ -38,6 +38,12 @@ export type BillInfo = {
   checked?: boolean;
 }
 
+export interface BillingMonth {
+  billNumber: string,
+  billingMonth: string,
+  amount: string,
+}
+
 @Injectable({
   providedIn: 'root'
 })

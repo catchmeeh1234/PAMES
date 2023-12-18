@@ -2,3 +2,37 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+  // #print-area {
+  //   /* hide the printing component from @media screen */
+  //   display: none;
+  // }
+
+// @media print {
+//   /* invert the display (show/hide) properties of the main */
+//   /* aplication component and the printing component       */
+
+//   body * {
+//     display: block;
+//   }
+
+//   #print-area, #print-area * {
+//     /* hide the printing component from @media screen */
+//     display: block;
+//   }
+
+//   #print-area {
+//     position: absolute;
+//     left: 0;
+//     top: 0;
+//   }
+
+//   .mat-drawer-side {
+//     border-right: 0px solid black !important;
+//   }
+
+//   // app-receipt {
+//   //   display: block;
+//   // }
+
+// }

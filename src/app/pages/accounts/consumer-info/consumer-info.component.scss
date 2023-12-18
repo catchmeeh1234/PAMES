@@ -12,10 +12,7 @@
       span {
         font-weight: bolder;
         white-space: normal;
-
-
       }
-
     }
   }
 }
@@ -37,6 +34,7 @@ mat-card {
   margin: 0 !important;
   padding: 0 !important;
 }
+
 //mat-card-content {
   // background-color: #f8f9fb;
 //}
@@ -67,7 +65,6 @@ mat-card {
 .smaller-table th, .smaller-table td {
   padding: 5px;    /* Adjust cell padding */
   font-size: 0.5rem; /* Adjust the font size */
-
 }
 
 .gray {

@@ -3,22 +3,22 @@
     <app-content-header [data]="headerData"></app-content-header>
   </mat-card-header>
   <mat-card-content class="b-t-1">
-    <form [formGroup]="orFormGroup">
+    <form [formGroup]="orFormGroup" (ngSubmit)="saveOR(orFormGroup)">
       <div class="content m-t-16" fxLayoutGap="1em">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Account Number</mat-label>
           <input matInput type="text" placeholder="Account No." formControlName="accountNumber" readonly/>
         </mat-form-field>
         <div>
-          <button mat-flat-button color="primary" (click)="searchConsumer()">Search</button>
+          <button type="button" mat-flat-button color="primary" (click)="searchConsumer()">Search</button>
         </div>
       </div>
       <div class="content" fxLayoutAlign="space-between center" fxLayoutGap="0.5em" *ngIf="isPaid">
         <h2>OR Number: {{orNumber | async}}</h2>
         <div fxLayoutGap="0.5em">
-          <button mat-flat-button color="primary">Post</button>
-          <button mat-flat-button color="primary">Cancel</button>
-          <button mat-flat-button color="primary">Print</button>
+          <button type="button" mat-flat-button color="primary">Post</button>
+          <button type="button" mat-flat-button color="primary">Cancel</button>
+          <button type="button" mat-flat-button color="primary" (click)="onPrintOR(orFormGroup, data.consumerInfo)">Print</button>
         </div>
       </div>
 
@@ -86,7 +86,7 @@
             <mat-label>Amount Paid</mat-label>
             <input matInput formControlName="amountPaid" />
           </mat-form-field>
-          <button mat-flat-button color="primary" (click)="saveOR(orFormGroup)">Save</button>
+          <button type="submit" mat-flat-button color="primary">Save</button>
         </div>
         <div fxLayout="column" fxFlex="40">
           <ng-container *ngIf="billDetails">
@@ -154,3 +154,4 @@
     </form>
   </mat-card-content>
 </mat-card>
+<app-receipt [receipt]="receiptDetails"></app-receipt>

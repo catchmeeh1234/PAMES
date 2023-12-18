@@ -1,0 +1,28 @@
+
+  <div id="printableArea" #printableArea>
+    <!-- Your content to be printed -->
+    <ng-container *ngIf="receipt">
+      <h3>{{receipt.town}}</h3>
+      <h3>{{currentDate}}</h3> <p>{{receipt.orNumber}}</p>
+
+      <h3>{{receipt.customerInfo.accountName}}</h3>
+      <h3>{{receipt.customerInfo.accountNumber}}</h3>
+      <h3>{{receipt.customerInfo.accountAddress}}</h3>
+
+      <h3>PAMES Bills {{receipt.currentBill.billingMonth}}</h3> <h3>{{receipt.currentBill.amount}}</h3>
+      <h3>{{receipt.earlyPaymentDiscount}}</h3>
+      <h3>{{receipt.reconnectionFee}}</h3>
+
+      <h2>Previous Unpaid Bills</h2>
+      <ng-container *ngFor="let bill of receipt.previousBills">
+        <h3>{{bill.billingMonth}}</h3>
+        <h3>{{bill.amount}}</h3>
+      </ng-container>
+      <h2>{{receipt.amountInWords}}</h2>
+
+
+      <h2>{{receipt.username}}</h2>
+      <h2>{{receipt.actingMunTreasurer1}}</h2>
+      <h2>{{receipt.actingMunTreasurer2}}</h2>
+    </ng-container>
+  </div>

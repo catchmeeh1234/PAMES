@@ -20,6 +20,7 @@ export const environment = {
   //API_URL: "http://192.168.1.79:4901",
   logo: './assets/images/logos/dark-logo.svg',
   COMPANY_NAME: 'Santa Rosa Water District',
+  TOWN_NAME: 'Santa Rosa',
   COMPANY_ADDRESS1: 'Barangay Rizal',
   COMPANY_ADDRESS2: 'Santa Rosa, Nueva Ecija',
 
