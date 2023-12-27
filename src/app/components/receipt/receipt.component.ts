@@ -9,7 +9,7 @@ import { OfficialReceiptService, ReceiptDetails } from 'src/app/services/officia
 })
 export class ReceiptComponent {
   @ViewChild('printableArea') printableArea!: ElementRef;
-  @Input() receipt: ReceiptDetails;
+  @Input() receipt: ReceiptDetails | undefined;
 
   currentDate:string;
 
@@ -22,7 +22,7 @@ export class ReceiptComponent {
     //this.receipt = this.officialReceiptService.receipt;
     //console.log(this.receipt);
 
-    //this.currentDate = this.dateFormatService.generateCurrentDateAndTime();
+    this.currentDate = this.dateFormatService.generateCurrentDateAndTime();
 
     //Called after ngOnInit when the component's or directive's content has been initialized.
     //Add 'implements AfterContentInit' to the class.

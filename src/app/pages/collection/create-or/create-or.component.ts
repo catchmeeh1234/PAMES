@@ -3,7 +3,7 @@ import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { BehaviorSubject, Observable, Subscription, map, of } from 'rxjs';
 import { SearchConsumerComponent } from 'src/app/components/search-consumer/search-consumer.component';
-import { BillInfo, BillService } from 'src/app/services/bill.service';
+import { BillInfo, BillMonthGroup, BillService } from 'src/app/services/bill.service';
 import { ChargesService } from 'src/app/services/charges.service';
 import { Consumer } from 'src/app/services/consumer.service';
 import { Discount, DiscountsService } from 'src/app/services/discounts.service';
@@ -12,7 +12,7 @@ import { SessionStorageServiceService } from 'src/app/services/session-storage-s
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { environment } from 'src/environments/environment';
 
-export interface Data {
+export interface Data1 {
   hideEditBtn:boolean,
   consumerInfo?:Consumer
 }
@@ -23,7 +23,7 @@ export interface Data {
   styleUrls: ['./create-or.component.scss']
 })
 export class CreateOrComponent {
-  @ViewChild('print-area') printableArea!: ElementRef;
+  @ViewChild('printReceipt1') printReceipt!: ElementRef;
 
   public companyName = environment.COMPANY_NAME;
   public companyAddress1 = environment.COMPANY_ADDRESS1;
@@ -35,7 +35,7 @@ export class CreateOrComponent {
     title: `Create OR`,
   };
 
-  data: Data = {
+  data: Data1 = {
     hideEditBtn: true,
   };
 
@@ -63,7 +63,7 @@ export class CreateOrComponent {
 
   isPaid = false;
 
-  receiptDetails:ReceiptDetails;
+  receiptDetails:ReceiptDetails | undefined;
 
   constructor(
     private dialog:MatDialog,
@@ -75,6 +75,7 @@ export class CreateOrComponent {
     private snackbarService:SnackbarService,
     private sessionStorageService:SessionStorageServiceService,
   ) {}
+
 
   ngOnInit(): void {
     //get latest or number from the database
@@ -367,13 +368,26 @@ export class CreateOrComponent {
 
         //validate if the concessionaire has any unpaid bill
         const bills = await this.billService.fetchUnpaidBills(result.AccountNo).toPromise();
+
         if (!bills) {
           return;
         }
         const billLength = bills.length;
         if (billLength <= 0) {
           this.isPaid = false;
-          this.snackbarService.showSuccess("All bills are paid");
+
+
+          //get last customer payment
+          const lastPaidOR = await this.officialReceiptService.fetchLastPaidORByAccountNo(result.AccountNo).toPromise();
+
+          if (lastPaidOR?.length === 1) {
+            const message = `All bills are paid. \nLast Payment Details: \nCRNo: ${lastPaidOR[0].CRNo} \nAmount: ${lastPaidOR[0].TotalAmountDue} \nDate: ${lastPaidOR[0].PaymentDate}`;
+            alert(message);
+            //this.snackbarService.showSuccess(message, 0);
+          } else {
+            alert("No Bills for this account yet");
+          }
+
           return;
         }
 
@@ -450,7 +464,7 @@ export class CreateOrComponent {
     });
   }
 
-  saveOR(orDetails:FormGroup) {
+  async saveOR(orDetails:FormGroup) {
     //there should atleast be one bill selected
     const newORDetails:ORFormGroup = orDetails.value;
     const billingMonth = newORDetails.billingMonth;
@@ -474,17 +488,27 @@ export class CreateOrComponent {
 
     if (orDetails.valid) {
       console.log(orDetails.value);
-      this.officialReceiptService.createOR(orDetails.value)
-      .subscribe((response:any) => {
-        if (response.status === "OR Created") {
-          alert(response.status);
-          //this.snackbarService.showSuccess(response.status);
-          this.clearFields();
+
+      const createOR:any = await this.officialReceiptService.createOR(orDetails.value).toPromise();
+      if (createOR.status === "OR Created") {
+        alert(createOR.status);
           this.calculateChange(amountPaid, totalAmountDue);
-        } else {
-          this.snackbarService.showError(response.status);
-        }
-      });
+          //this.snackbarService.showSuccess(response.status);
+          //print OR
+          this.receiptDetails = this.createReceiptDetails(newORDetails, this.billingMonthFormArray.value, this.data.consumerInfo);
+
+          if (this.printReceipt && this.printReceipt.nativeElement) {
+            setTimeout(() => {
+              this.printReceipt.nativeElement.click();
+              this.clearFields();
+            }, 500);
+          } else {
+            console.log('Button element not found.');
+          }
+
+      } else {
+        this.snackbarService.showError(createOR.status);
+      }
     }
 
   }
@@ -507,18 +531,52 @@ export class CreateOrComponent {
     }
   }
 
-  onPrintOR(orDetails:FormGroup, consumerInfo?:Consumer) {
-    const newORDetails:ORFormGroup = orDetails.value;
-    this.receiptDetails = this.createReceiptDetails(newORDetails, this.billingMonthFormArray.value, consumerInfo);
+  createReceiptDetails(orDetails:ORFormGroup, bills:BillMonthGroup[], consumerInfo?:Consumer):ReceiptDetails | undefined {
+    const billingMonth = orDetails.billingMonth;
+    const atLeastOneHasTrue = billingMonth.some(bill =>
+      Object.values(bill).some(value => value === true)
+    );
 
-    //this.officialReceiptService.setPrintableContent();
-    this.officialReceiptService.printContent();
-    //this.officialReceiptService.printOR();
-  }
+    if (!atLeastOneHasTrue) {
+      this.snackbarService.showError("please select atleast one bill");
+      return undefined;
+    }
 
-  createReceiptDetails(orDetails:ORFormGroup, bills:any, consumerInfo?:Consumer):ReceiptDetails {
-    let [, ...previousBills] = bills;
+    //remove bills that are not marked as checked
+    // Filtering objects with checked === true
+    const newBills = bills.filter((bill) => bill.Checked === true);
+    let previousBills:any = [];
+
+    newBills.forEach((bill, index) => {
+      if (index > 0) {
+        const prevBill = {
+          billNumber: bill.billNumber,
+          billingMonth: bill.monthYear,
+          amount: bill.amountDue,
+        };
+
+        previousBills.push(prevBill);
+      }
+    });
+
     const fullName = `${consumerInfo?.Firstname} ${consumerInfo?.Middlename} ${consumerInfo?.Lastname}`;
+
+    //convert amount to words
+    const amountToWords = this.officialReceiptService.floatToWords(parseFloat(orDetails.totalAmountDue));
+
+    //variables
+    let reconnectionFeeAmount = "0";
+    let earlyPaymentDiscountTotal = 0;
+
+    //check if reconnection fee is ticked
+    if (orDetails.reconnectionFee === true) {
+      reconnectionFeeAmount = this.reconnectionFee;
+    }
+
+    //check if early payment discount is ticked
+    if (orDetails.earlyPaymentDiscount === true) {
+      earlyPaymentDiscountTotal = this.calculateEarlyPaymentDiscount(parseFloat(this.earlyPaymentRate), this.latestBillAmountDue)
+    }
 
     return {
       town: environment.TOWN_NAME,
@@ -529,17 +587,31 @@ export class CreateOrComponent {
         accountAddress: consumerInfo?.ServiceAddress
       },
       currentBill: {
-        billNumber: bills[0].billNumber,
-        billingMonth: bills[0].monthYear,
-        amount: bills[0].amountDue,
+        billNumber: newBills[0].billNumber,
+        billingMonth: newBills[0].monthYear,
+        amount: newBills[0].amountDue,
       },
-      earlyPaymentDiscount: this.calculateEarlyPaymentDiscount(parseFloat(this.earlyPaymentRate), this.latestBillAmountDue),
-      reconnectionFee: this.reconnectionFee,
+      earlyPaymentDiscount: earlyPaymentDiscountTotal,
+      reconnectionFee: reconnectionFeeAmount,
       previousBills: previousBills,
-      amountInWords: "TO DO LATER",
+      amountInWords: amountToWords,
+      totalAmountDue: orDetails.totalAmountDue,
       username: this.sessionStorageService.getSession("fullname")!,
       actingMunTreasurer1: "Acting Mun-Treasurer",
       actingMunTreasurer2: "By: Ruby L. Patling"
+    }
+  }
+
+  async cancelOR() {
+    this.receiptDetails = this.createReceiptDetails(this.orFormGroup.value, this.billingMonthFormArray.value, this.data.consumerInfo);
+
+    // Access the buttonToClick element here
+    if (this.printReceipt && this.printReceipt.nativeElement) {
+      setTimeout(() => {
+        this.printReceipt.nativeElement.click();
+      }, 500);
+    } else {
+      console.log('Button element not found.');
     }
   }
 

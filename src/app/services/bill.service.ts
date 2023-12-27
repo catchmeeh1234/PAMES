@@ -44,6 +44,14 @@ export interface BillingMonth {
   amount: string,
 }
 
+export interface BillMonthGroup {
+  billNumber: string,
+  monthYear: string,
+  Checked: boolean,
+  amountDue: string,
+  billDetails: BillInfo,
+}
+
 @Injectable({
   providedIn: 'root'
 })

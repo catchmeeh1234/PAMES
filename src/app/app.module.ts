@@ -26,6 +26,7 @@ import { AppNavItemComponent } from './layouts/full/sidebar/nav-item/nav-item.co
 
 import { MatNativeDateModule } from '@angular/material/core';
 import { ComponentsModule } from './components/components.module';
+import { NgxPrintModule } from 'ngx-print';
 
 @NgModule({
   declarations: [
@@ -48,8 +49,9 @@ import { ComponentsModule } from './components/components.module';
     TablerIconsModule.pick(TablerIcons),
     MatNativeDateModule,
     ComponentsModule,
+    NgxPrintModule
   ],
-  exports: [TablerIconsModule],
+  exports: [TablerIconsModule, NgxPrintModule],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

@@ -28,7 +28,7 @@
         <ng-container matColumnDef="CustomerStatus">
           <th mat-header-cell *matHeaderCellDef> Status </th>
           <td mat-cell *matCellDef="let element" style="text-align: center;">
-            <button (click)="test()" mat-flat-button [ngClass]="{'customerActive': element.CustomerStatus === 'Active', 'customerDisconnected': element.CustomerStatus === 'Disconnected'}">
+            <button (click)="updateConsumerStatus(element.AccountNo)" mat-flat-button [ngClass]="{'customerActive': element.CustomerStatus === 'Active', 'customerDisconnected': element.CustomerStatus === 'Disconnected'}">
               {{element.CustomerStatus}}
             </button>
           </td>

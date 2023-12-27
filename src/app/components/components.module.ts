@@ -18,6 +18,7 @@ import { BillFormComponent } from './bill-form/bill-form.component';
 import { AccountFormComponent } from './account-form/account-form.component';
 import { ConsumerInfoSummaryComponent } from './consumer-info-summary/consumer-info-summary.component';
 import { ReceiptComponent } from './receipt/receipt.component';
+import { BillDetailsComponent } from './bill-details/bill-details.component';
 
 @NgModule({
   declarations: [
@@ -35,6 +36,7 @@ import { ReceiptComponent } from './receipt/receipt.component';
     AccountFormComponent,
     ConsumerInfoSummaryComponent,
     ReceiptComponent,
+    BillDetailsComponent,
   ],
   imports: [
     FormsModule,
@@ -52,6 +54,7 @@ import { ReceiptComponent } from './receipt/receipt.component';
     AccountFormComponent,
     ConsumerInfoSummaryComponent,
     ReceiptComponent,
+    BillDetailsComponent,
   ]
 })
 export class ComponentsModule { }

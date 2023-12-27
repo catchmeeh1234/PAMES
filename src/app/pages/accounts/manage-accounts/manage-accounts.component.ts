@@ -102,6 +102,10 @@ export class ManageAccountsComponent {
 
   }
 
+  updateConsumerStatus(accountNo:string) {
+    this.router.navigate(['./accounts/update-account-status', accountNo]);
+  }
+
   test() {
     this.products$ = this.consumerService.fetchProducts()
     .pipe(

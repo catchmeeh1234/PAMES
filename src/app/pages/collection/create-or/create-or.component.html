@@ -16,9 +16,9 @@
       <div class="content" fxLayoutAlign="space-between center" fxLayoutGap="0.5em" *ngIf="isPaid">
         <h2>OR Number: {{orNumber | async}}</h2>
         <div fxLayoutGap="0.5em">
-          <button type="button" mat-flat-button color="primary">Post</button>
-          <button type="button" mat-flat-button color="primary">Cancel</button>
-          <button type="button" mat-flat-button color="primary" (click)="onPrintOR(orFormGroup, data.consumerInfo)">Print</button>
+          <button type="button" mat-flat-button color="primary" (click)="cancelOR()">Cancel</button>
+          <button type="button" #printReceipt1 style="display:none;" printSectionId="print-section" ngxPrint [useExistingCss]="true">print</button>
+
         </div>
       </div>
 
@@ -89,69 +89,13 @@
           <button type="submit" mat-flat-button color="primary">Save</button>
         </div>
         <div fxLayout="column" fxFlex="40">
-          <ng-container *ngIf="billDetails">
-            <h2>Bill</h2>
-            <div class="consInfo" style="padding: 14px 0;">
-              <div class="header">
-                <h3>{{companyName}}</h3>
-                <h4>{{companyAddress1}}</h4>
-                <h4>{{companyAddress2}}</h4>
-                <br>
-
-                <h3>BILLING DETAILS</h3>
-              </div>
-
-              <div  class="receiptBody">
-                <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="0.5em">
-                  <h4>Bill No <span class="grey">{{billDetails.BillNo}}</span></h4>
-                  <h4>Previous Reading: <span class="grey">{{billDetails.PreviousReading}}</span></h4>
-                  <h4>Current Reading:  <span class="grey">{{billDetails.Reading}}</span></h4>
-                  <h4>Consumption:  <span class="grey">{{billDetails.Consumption}}</span></h4>
-                </div>
-                <mat-divider></mat-divider>
-                <h3 style="text-align: center;">PERIOD COVERED</h3>
-                <div fxLayout="row" fxLayoutAlign="space-around center">
-                  <div fxLayout="column" fxLayoutAlign="start center" fxLayoutGap="0.5em" >
-                    <h4>FROM</h4>
-                    <span class="grey">{{ billDetails.DateFrom }}</span>
-                    <!-- <h4>Due Date</h4>
-                    <span class="grey">{{ billDetails.DueDate }}</span> -->
-
-                  </div>
-                  <div fxLayout="column" fxLayoutAlign="start center" fxLayoutGap="0.5em" >
-                    <h4>TO</h4>
-                    <span class="grey">{{ billDetails.ReadingDate }}</span>
-                    <!-- <h4>Disconnection Date</h4>
-                    <span class="grey">{{ billDetails.DueDate }}</span> -->
-
-                  </div>
-                </div>
-                <mat-divider></mat-divider>
-                  <div fxLayout="row" fxLayoutAlign="space-around start">
-                    <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="0.5em" class="billSummary">
-                      <h4>BILLING SUMMARY</h4>
-                      <h4>Current Billing</h4>
-                      <h4>Senior Citizen Discount</h4>
-                      <br>
-                      <h4>Total Amount Due</h4>
-                    </div>
-                    <div fxLayout="column" fxLayoutAlign="center end" fxLayoutGap="0.5em" class="billSummary">
-                      <h4>Amount</h4>
-                      <h4 class="grey">{{billDetails.AmountDue}}</h4>
-                      <h4 class="grey">{{billDetails.SeniorDiscount}}</h4>
-                      <br>
-                      <h4 class="grey">{{billAmountDue}}</h4>
-
-                    </div>
-                  </div>
-              </div>
-
-            </div>
-            <!-- <p>{{billDetails.AmountDue}}</p> -->
-          </ng-container>
+          <app-bill-details [billDetails]="billDetails"></app-bill-details>
         </div>
       </div>
     </form>
   </mat-card-content>
 </mat-card>
-<app-receipt [receipt]="receiptDetails"></app-receipt>
+
+<div id="print-section" style="display: none;">
+  <app-receipt [receipt]="receiptDetails"></app-receipt>
+</div>

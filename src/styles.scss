@@ -3,6 +3,31 @@
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
+
+// .statusSuccess {
+//   color: blue;
+//   font-size: 12px;
+//   margin-bottom: 10px;
+//   background-color: yellow !important;
+//   padding: 14px 20px;
+// }
+
+.mat-mdc-snack-bar-container {
+  &.statusSuccess {
+    --mdc-snackbar-container-color: green;
+    --mat-mdc-snack-bar-button-color: #fff;
+    --mdc-snackbar-supporting-text-color: #fff;
+  }
+}
+
+.mat-mdc-snack-bar-container {
+  &.statusFailed {
+    --mdc-snackbar-container-color: red;
+    --mat-mdc-snack-bar-button-color: #fff;
+    --mdc-snackbar-supporting-text-color: #fff;
+  }
+}
+
   // #print-area {
   //   /* hide the printing component from @media screen */
   //   display: none;

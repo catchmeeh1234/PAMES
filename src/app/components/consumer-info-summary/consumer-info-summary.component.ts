@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { EditAccountComponent } from 'src/app/pages/accounts/edit-account/edit-account.component';
-import { Data } from 'src/app/pages/collection/create-or/create-or.component';
+import { Data1 } from 'src/app/pages/collection/create-or/create-or.component';
 import { Consumer, ConsumerService } from 'src/app/services/consumer.service';
 
 @Component({
@@ -10,7 +10,7 @@ import { Consumer, ConsumerService } from 'src/app/services/consumer.service';
   styleUrls: ['./consumer-info-summary.component.scss']
 })
 export class ConsumerInfoSummaryComponent {
-  @Input() data: Data;
+  @Input() data: Data1;
 
   constructor(
     private dialog:MatDialog,

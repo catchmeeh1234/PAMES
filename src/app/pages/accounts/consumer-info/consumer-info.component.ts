@@ -6,7 +6,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { EditAccountComponent } from '../edit-account/edit-account.component';
-import { Data } from '../../collection/create-or/create-or.component';
+import { Data1 } from '../../collection/create-or/create-or.component';
 
 
 
@@ -33,7 +33,7 @@ export class ConsumerInfoComponent {
     "Billing", "Discount", "Balance"
   ];
 
-  data:Data = {
+  data:Data1 = {
     hideEditBtn: false,
   }
 

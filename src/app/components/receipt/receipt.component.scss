@@ -4,3 +4,53 @@
   border: 1px solid black;
   position: absolute !important;
 }
+
+#printableArea {
+  margin: 0;
+  padding: 3em;
+  box-sizing: border-box;
+}
+.content {
+
+  width: 3.85in;
+  border: 1px solid black;
+}
+
+.center {
+  text-align: center;
+}
+
+.accountInfo {
+  margin-left: 1em;
+}
+
+// .body, .accountInfo {
+//   span {
+//     margin: 0;
+//     padding: 0;
+//   }
+
+// }
+
+.receipt-text {
+  color: black;
+  font-size: 10px;
+  line-height: 1 !important;
+  font-weight: bolder;
+}
+
+.spacer1 {
+  height: 30px;
+}
+
+.spacer2 {
+  height: 50px;
+}
+
+.spacer3 {
+  height: 40px;
+}
+
+.spacer4 {
+  height: 50px;
+}

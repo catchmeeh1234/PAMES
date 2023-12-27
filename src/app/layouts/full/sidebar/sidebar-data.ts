@@ -72,9 +72,14 @@ export const navItems: NavItem[] = [
     route: '/collection/create-or',
   },
   {
+    displayName: 'View OR',
+    iconName: 'receipt',
+    route: '/collection/view-or',
+  },
+  {
     displayName: 'Post OR',
     iconName: 'checklist',
-    route: '',
+    route: '/collection/post-or',
   },
 
   {

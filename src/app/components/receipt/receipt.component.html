@@ -1,28 +1,69 @@
 
-  <div id="printableArea" #printableArea>
+  <div id="printableArea" #printableArea class="content">
     <!-- Your content to be printed -->
     <ng-container *ngIf="receipt">
-      <h3>{{receipt.town}}</h3>
-      <h3>{{currentDate}}</h3> <p>{{receipt.orNumber}}</p>
+      <div class="spacer1">
 
-      <h3>{{receipt.customerInfo.accountName}}</h3>
-      <h3>{{receipt.customerInfo.accountNumber}}</h3>
-      <h3>{{receipt.customerInfo.accountAddress}}</h3>
-
-      <h3>PAMES Bills {{receipt.currentBill.billingMonth}}</h3> <h3>{{receipt.currentBill.amount}}</h3>
-      <h3>{{receipt.earlyPaymentDiscount}}</h3>
-      <h3>{{receipt.reconnectionFee}}</h3>
-
-      <h2>Previous Unpaid Bills</h2>
-      <ng-container *ngFor="let bill of receipt.previousBills">
-        <h3>{{bill.billingMonth}}</h3>
-        <h3>{{bill.amount}}</h3>
-      </ng-container>
-      <h2>{{receipt.amountInWords}}</h2>
-
-
-      <h2>{{receipt.username}}</h2>
-      <h2>{{receipt.actingMunTreasurer1}}</h2>
-      <h2>{{receipt.actingMunTreasurer2}}</h2>
+      </div>
+      <h5 class="center">{{receipt.town}}</h5>
+      <div class="spacer2">
+      </div>
+      <div fxLayout="row" fxLayoutAlign="space-between center">
+        <span class="receipt-text">{{currentDate}}</span>
+        <span class="receipt-text">{{receipt.orNumber}}</span>
+      </div>
+      <div class="spacer3">
+      </div>
+      <div class="accountInfo" fxLayout="column" fxLayoutGap="0">
+        <span class="receipt-text">{{receipt.customerInfo.accountName}}</span>
+        <span class="receipt-text">{{receipt.customerInfo.accountNumber}}</span>
+        <span class="receipt-text">{{receipt.customerInfo.accountAddress}}</span>
+      </div>
+      <div class="spacer4">
+      </div>
+      <div class="body" fxLayout="column" fxLayoutGap="0">
+        <div fxLayout="row" fxLayoutAlign="space-between center">
+          <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="0">
+            <span class="receipt-text">PAMES Bills {{receipt.currentBill.billingMonth}}</span>
+            <span class="receipt-text" *ngIf="receipt.earlyPaymentDiscount > 0">Early Payment Discount</span>
+            <span class="receipt-text" *ngIf="receipt.reconnectionFee !== '0'">Reconnection Fee</span>
+          </div>
+          <div fxLayout="column" fxLayoutAlign="center end" fxLayoutGap="0">
+            <span class="receipt-text">{{receipt.currentBill.amount}}</span>
+            <span class="receipt-text" *ngIf="receipt.earlyPaymentDiscount > 0">{{receipt.earlyPaymentDiscount}}</span>
+            <span class="receipt-text" *ngIf="receipt.reconnectionFee !== '0'">{{receipt.reconnectionFee}}</span>
+          </div>
+        </div>
+        <ng-container *ngIf="receipt.previousBills.length != 0">
+          <h5>Previous Unpaid Bills</h5>
+          <div fxLayout="row" fxLayoutAlign="space-between center">
+            <ng-container *ngFor="let bill of receipt.previousBills">
+              <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="0">
+                <span class="receipt-text">{{bill.billingMonth}}</span>
+              </div>
+              <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="0">
+                <span class="receipt-text">{{bill.amount}}</span>
+              </div>
+            </ng-container>
+          </div>
+        </ng-container>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <h5 style="text-align: right;">{{receipt.totalAmountDue}}</h5>
+        <h5>{{receipt.amountInWords}}</h5>
+        <br>
+        <br>
+        <br>
+        <div fxLayout="column" fxLayoutAlign="center end" fxLayoutGap="0">
+          <div class="center" fxLayout="column">
+            <span class="receipt-text">{{receipt.username}}</span>
+            <span class="receipt-text">{{receipt.actingMunTreasurer1}}</span>
+            <span class="receipt-text">{{receipt.actingMunTreasurer2}}</span>
+          </div>
+        </div>
+      </div>
     </ng-container>
   </div>

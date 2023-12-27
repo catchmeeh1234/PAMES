@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
 
 @Injectable({
   providedIn: 'root'
@@ -8,19 +8,23 @@ export class SnackbarService {
 
   constructor(private snackBar:MatSnackBar) { }
 
-  showSuccess(message: string): void {
-    this.snackBar.open(message, 'Close', {
+  showSuccess(message: string, duration=3000): void {
+    const config: MatSnackBarConfig = {
       verticalPosition: 'top',
-      duration: 3000, // Adjust the duration as needed
-      panelClass: ['statusSuccess'], // You can define custom CSS classes for styling
-    });
+      duration: duration,
+      panelClass: ['statusSuccess'],
+    };
+
+    this.snackBar.open(message, 'Dismiss', config);
   }
 
-  showError(message: string): void {
-    this.snackBar.open(message, 'Close', {
+  showError(message: string, duration=5000): void {
+    const config: MatSnackBarConfig = {
       verticalPosition: 'top',
-      duration: 5000, // Adjust the duration as needed
-      panelClass: ['statusFailed'], // You can define custom CSS classes for styling
-    });
+      duration: duration,
+      panelClass: ['statusFailed'],
+    };
+
+    this.snackBar.open(message, 'Dismiss', config);
   }
 }

@@ -137,9 +137,9 @@ export class FilterCustomerComponent {
     let zone:string;
     let status:string;
 
-    if (search.length < 4) {
-      return;
-    }
+    // if (search.length < 4) {
+    //   return;
+    // }
 
     if (selectedZone === "All") {
       zone = "";
@@ -156,6 +156,7 @@ export class FilterCustomerComponent {
     //console.log(search, status, zone);
 
     const searchedAccounts:any = await this.consumerService.searchConsumer(search, zone, status).toPromise();
+    console.log(searchedAccounts);
 
     if (!searchedAccounts) {
       return;

@@ -1,0 +1,119 @@
+<mat-card class="cardWithShadow">
+  <mat-card-header>
+    <app-content-header [data]="headerData"></app-content-header>
+  </mat-card-header>
+  <mat-card-content class="b-t-1">
+    <div class="content m-t-16" fxLayoutAlign="space-between baseline" fxLayoutGap="0.5em">
+      <div fxLayout="row" fxLayoutGap="1em" style="align-items: baseline;" fxFlex="70">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Account Number</mat-label>
+          <input matInput type="text" placeholder="Account No." readonly/>
+        </mat-form-field>
+        <div fxFlex="30">
+          <button type="button" mat-flat-button color="primary" (click)="searchConsumer()">Search</button>
+        </div>
+      </div>
+      <div fxLayoutGap="0.5em">
+        <button *ngIf="collectionBillings && collectionBillings.length > 0" mat-flat-button color="primary" printSectionId="print-section" ngxPrint [useExistingCss]="true" [previewOnly]="true">print</button>
+        <button mat-flat-button color="primary" *ngIf="collectionBillings && collectionBillings.length != 0" (click)="openCollectionCancel()">cancel</button>
+      </div>
+    </div>
+    <div fxLayout="row" fxLayoutGap="1.5em">
+      <div fxLayout="column" fxFlex="30">
+        <ng-container *ngIf="collectionDetails && collectionDetails?.length !== 0">
+          <h2>Official Receipts({{collectionDetails.length}})</h2>
+          <div class="consInfo">
+            <mat-list>
+              <mat-list-item *ngFor="let or of collectionDetails" (click)="viewORDetails(or)">
+                <span matListItemTitle class="mat-body-1 cursor-pointer">ORNo:{{ or.CRNo }}</span>
+                <span matListItemLine class="mat-body-1 cursor-pointer">{{ or.AccountName }}</span>
+                <span matListItemLine class="f-s-12 f-w-600 text-right cursor-pointer">Amount Due:{{ or.TotalAmountDue }}</span>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </ng-container>
+        <div>
+          <ng-container *ngIf="data.consumerInfo">
+            <h2>Consumer Details</h2>
+            <div class="consInfo" >
+              <app-consumer-info-summary [data]="data"></app-consumer-info-summary>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+      <ng-container *ngIf="collectionBillings && collectionBillings.length != 0">
+        <div fxLayout="column" fxFlex="40">
+          <div>
+            <h2>Bills</h2>
+            <div class="consInfo">
+              <mat-accordion multi class="example-headers-align" *ngIf="collectionBillings && collectionBillings.length != 0">
+                <mat-expansion-panel *ngFor="let collectionBilling of collectionBillings" hideToggle>
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      Bill Number {{ collectionBilling.BillNo }}
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      {{ collectionBilling.BillingDate }}
+                      <mat-icon>keyboard_arrow_down</mat-icon>
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+                  <div fxLayout="row" fxLayoutAlign="space-between center" >
+                    <span>Amount Due</span>
+                    <span>{{collectionBilling.AmountDue}}</span>
+                  </div>
+                  <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.Discount === '0.00'">
+                    <span>Senior Discount</span>
+                    <span>{{collectionBilling.Discount}}</span>
+                  </div>
+                  <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.earlyPaymentDiscount === '0.00'">
+                    <span>Early Payment Discount</span>
+                    <span>{{collectionBilling.earlyPaymentDiscount}}</span>
+                  </div>
+                  <div fxLayout="row" fxLayoutAlign="space-between center">
+                    <span>View Bill</span>
+                    <button mat-icon-button matTooltip="view bill" (click)="loadBill(collectionBilling.BillNo)">
+                      <mat-icon>remove_red_eye</mat-icon>
+                    </button>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+          </div>
+          <div *ngIf="collectionCharges && collectionCharges.length != 0">
+            <h2>Charges</h2>
+            <div fxLayout="row" fxLayoutAlign="space-between center" *ngFor="let collectionCharge of collectionCharges">
+              <span>{{ collectionCharge.Particulars }}</span>
+              <span>{{ collectionCharge.Amount }}</span>
+            </div>
+          </div>
+          <div *ngIf="collectionDetails?.length !== 0">
+            <h2>Payment</h2>
+            <ng-container *ngFor="let or of collectionDetails">
+              <div fxLayout="row" fxLayoutAlign="space-between center" >
+                <span>Total Amount Due</span>
+                <span>{{or.TotalAmountDue}}</span>
+              </div>
+              <div fxLayout="row" fxLayoutAlign="space-between center" >
+                <span>Payment type</span>
+                <span>{{ or.PaymentType }}</span>
+              </div>
+              <div fxLayout="row" fxLayoutAlign="space-between center" >
+                <span>Amount Paid</span>
+                <span>{{amountPaid}}</span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+        <div fxLayout="column" fxFlex="30">
+          <div>
+            <app-bill-details [billDetails]="billDetails"></app-bill-details>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<div id="print-section" style="display: none;">
+  <app-receipt [receipt]="receiptDetails"></app-receipt>
+</div>

@@ -115,10 +115,10 @@ export class BillFormComponent {
 
 
     this.billForm.get("CurrentReading")?.valueChanges
-    .subscribe((currentReading:number) => {
+    .subscribe((currentReading:string) => {
       const lastreading = this.billForm.get("LastMeterReading")?.value;
 
-      if (currentReading < lastreading) {
+      if (parseInt(currentReading) < parseInt(lastreading)) {
         console.log("current reading is less than last reading");
         return;
       }
@@ -126,7 +126,7 @@ export class BillFormComponent {
         console.log("rate name or rate multipler or consumer charges is undefined");
         return;
       }
-      const consumption = this.billService.computeConsumption(currentReading, lastreading);
+      const consumption = this.billService.computeConsumption(parseInt(currentReading), lastreading);
       this.billForm.patchValue({Consumption: consumption});
 
       const energyCharge = this.billService.computeAmountDue(consumption, this.rateKwh);
