@@ -366,13 +366,21 @@ export class CreateOrComponent {
         //clear fields
         this.clearFields();
 
+        const data = {
+          AccountNumber: result.AccountNo,
+          IsPaid: "No",
+          BillStatus: "Posted",
+          IsCollectionCreated: "Yes",
+        };
+        const newData = JSON.stringify(data);
         //validate if the concessionaire has any unpaid bill
-        const bills = await this.billService.fetchUnpaidBills(result.AccountNo).toPromise();
+        const bills = await this.billService.fetchUnpaidBills(newData).toPromise();
 
         if (!bills) {
           return;
         }
         const billLength = bills.length;
+
         if (billLength <= 0) {
           this.isPaid = false;
 
@@ -407,7 +415,7 @@ export class CreateOrComponent {
         this.data.consumerInfo = result;
 
         //DISPLAY CONSUMER'S UNPAID BILLS
-        this.unpaidBillsSubscription = this.billService.fetchUnpaidBills(result.AccountNo)
+        this.unpaidBillsSubscription = this.billService.fetchUnpaidBills(newData)
         .pipe(
           map(bills => bills.map(bill => ({ ...bill, checked: true })))
         )

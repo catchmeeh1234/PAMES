@@ -19,6 +19,7 @@ import { AccountFormComponent } from './account-form/account-form.component';
 import { ConsumerInfoSummaryComponent } from './consumer-info-summary/consumer-info-summary.component';
 import { ReceiptComponent } from './receipt/receipt.component';
 import { BillDetailsComponent } from './bill-details/bill-details.component';
+import { CancelOrComponent } from './cancel-or/cancel-or.component';
 
 @NgModule({
   declarations: [
@@ -37,6 +38,7 @@ import { BillDetailsComponent } from './bill-details/bill-details.component';
     ConsumerInfoSummaryComponent,
     ReceiptComponent,
     BillDetailsComponent,
+    CancelOrComponent,
   ],
   imports: [
     FormsModule,

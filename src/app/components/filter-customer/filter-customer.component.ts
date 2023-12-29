@@ -79,7 +79,7 @@ export class FilterCustomerComponent {
 
   onLoadFilterOptions() {
     this.zones = this.zoneService.fetchZones();
-    this.customer_statuses = ["Active", "Disconnected"];
+    this.customer_statuses = ["Active", "Disconnected", "Closed"];
   }
 
   closeFilterLabel(filterlabel:string) {

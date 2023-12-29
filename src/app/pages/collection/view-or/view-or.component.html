@@ -15,7 +15,7 @@
       </div>
       <div fxLayoutGap="0.5em">
         <button *ngIf="collectionBillings && collectionBillings.length > 0" mat-flat-button color="primary" printSectionId="print-section" ngxPrint [useExistingCss]="true" [previewOnly]="true">print</button>
-        <button mat-flat-button color="primary" *ngIf="collectionBillings && collectionBillings.length != 0" (click)="openCollectionCancel()">cancel</button>
+        <button mat-flat-button color="primary" *ngIf="collectionBillings && collectionBillings.length != 0" (click)="openCollectionCancel(this.collectionDetails)">cancel</button>
       </div>
     </div>
     <div fxLayout="row" fxLayoutGap="1.5em">

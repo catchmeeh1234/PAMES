@@ -8,6 +8,7 @@ import { BillInfo, BillService, BillingMonth } from 'src/app/services/bill.servi
 import { Subscription } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
+import { CancelOrComponent } from 'src/app/components/cancel-or/cancel-or.component';
 
 @Component({
   selector: 'app-view-or',
@@ -47,6 +48,7 @@ export class ViewOrComponent {
     });
 
     dialogRef.afterClosed().subscribe(async (result:Consumer) => {
+      this.data.consumerInfo = undefined;
       this.clearFields();
       if (result) {
         //populate consumer summary section
@@ -148,12 +150,33 @@ export class ViewOrComponent {
     }
   }
 
-  openCollectionCancel() {
-    
+  openCollectionCancel(orDetails:CollectionDetails[]) {
+    const dialogRef = this.dialog.open(CancelOrComponent, {
+      data: {
+        headerData: {
+          title: "Cancel OR",
+        },
+        orDetails: orDetails[0]
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(async result => {
+      if (result === undefined) {
+        return;
+      }
+      if (result.status === "OR Cancelled") {
+        const collectionDetails = await this.officialReceiptService.fetchORDetailsByAccountNo(orDetails[0].AccountNo).toPromise();
+        if (collectionDetails) {
+          this.clearFields();
+          this.collectionDetails = collectionDetails;
+
+        }
+      }
+
+    });
   }
 
   clearFields() {
-    this.data.consumerInfo = undefined;
     this.collectionDetails = [];
     this.collectionBillings = [];
     this.collectionCharges = [];

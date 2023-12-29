@@ -153,7 +153,14 @@ export class OfficialReceiptService {
     params.append('orDetails', json);
 
     return this.http.post(`${environment.API_URL}/OfficialReceipt/postOR.php`, params, { responseType: 'json' });
+  }
 
+  cancelOR(orDetails:any) {
+    let params = new FormData();
+    let json = JSON.stringify(orDetails);
+    params.append('orDetails', json);
+
+    return this.http.post(`${environment.API_URL}/OfficialReceipt/cancelOR.php`, params, { responseType: 'json' });
   }
 
   printOR() {

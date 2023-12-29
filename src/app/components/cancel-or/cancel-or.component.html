@@ -1,0 +1,49 @@
+<div class="content">
+  <mat-card class="cardWithShadow">
+    <mat-card-header>
+      <app-content-header [data]="data.headerData"></app-content-header>
+    </mat-card-header>
+    <mat-card-content class="b-t-1">
+      <div class="modal-container m-t-16">
+        <div class="modal-message">
+          <form [formGroup]="cancelORForm">
+            <mat-form-field appearance="outline">
+              <mat-label>Reference #</mat-label>
+              <input matInput type="text" placeholder="reference number" formControlName="ReferenceNo" readonly>
+            </mat-form-field>
+
+            <mat-form-field class="w-100" appearance="outline">
+              <input matInput [matDatepicker]="picker" placeholder="Choose a date" formControlName="CurrentDate">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Account #</mat-label>
+              <input matInput type="text" placeholder="Account Number" formControlName="AccountNo" readonly>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Consumer name</mat-label>
+              <input matInput type="text" placeholder="Consumer Name" formControlName="AccountName" readonly>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>CR Number</mat-label>
+              <input matInput type="text" placeholder="CR Number" formControlName="CRNo" readonly>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Amount due</mat-label>
+              <input matInput type="text" placeholder="Amount" formControlName="TotalAmountDue" readonly>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Remarks</mat-label>
+              <input matInput type="text" placeholder="Remarks" formControlName="Remarks">
+            </mat-form-field>
+          </form>
+        </div>
+        <div class="modal-buttons">
+          <button mat-flat-button color="primary" class="modal-confirm" (click)="onSave(cancelORForm.value)" style="margin-right: 5px;">Save</button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

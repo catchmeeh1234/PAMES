@@ -171,8 +171,8 @@ export class BillService {
     return consumption;
   }
 
-  fetchUnpaidBills(accountNo:string) {
-    return this.http.get<BillInfo[]>(`${environment.API_URL}/Bills/loadUnpaidBills.php?accountNo=${accountNo}`, { responseType: 'json' });
+  fetchUnpaidBills(data:string) {
+    return this.http.get<BillInfo[]>(`${environment.API_URL}/Bills/loadUnpaidBills.php?data=${data}`, { responseType: 'json' });
   }
 
 }
