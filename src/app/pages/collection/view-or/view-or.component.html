@@ -7,10 +7,20 @@
       <div fxLayout="row" fxLayoutGap="1em" style="align-items: baseline;" fxFlex="70">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Account Number</mat-label>
-          <input matInput type="text" placeholder="Account No." readonly/>
+          <input
+            matInput type="text"
+            placeholder="Account No."
+            [(ngModel)]="accountNumber"
+            (keyup.enter)="viewORDetailsByAccNo(accountNumber)"
+            #searchAccount/>
         </mat-form-field>
         <div fxFlex="30">
-          <button type="button" mat-flat-button color="primary" (click)="searchConsumer()">Search</button>
+          <button
+            type="button"
+            mat-flat-button
+            color="primary"
+            (click)="searchConsumer()"
+            >Search</button>
         </div>
       </div>
       <div fxLayoutGap="0.5em">
@@ -18,98 +28,125 @@
         <button mat-flat-button color="primary" *ngIf="collectionBillings && collectionBillings.length != 0" (click)="openCollectionCancel(this.collectionDetails)">cancel</button>
       </div>
     </div>
-    <div fxLayout="row" fxLayoutGap="1.5em">
-      <div fxLayout="column" fxFlex="30">
-        <ng-container *ngIf="collectionDetails && collectionDetails?.length !== 0">
-          <h2>Official Receipts({{collectionDetails.length}})</h2>
-          <div class="consInfo">
+    <div fxLayout="row" fxLayoutGap="1em">
+      <div fxLayout="column" fxFlex="30" fxLayoutGap="1em">
+        <mat-card class="b-1 shadow-none collectionDetails" *ngIf="collectionDetails && collectionDetails?.length !== 0">
+          <mat-card-header>
+            <mat-card-title>Official Receipts({{collectionDetails.length}})</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="b-t-1">
             <mat-list>
-              <mat-list-item *ngFor="let or of collectionDetails" (click)="viewORDetails(or)">
-                <span matListItemTitle class="mat-body-1 cursor-pointer">ORNo:{{ or.CRNo }}</span>
-                <span matListItemLine class="mat-body-1 cursor-pointer">{{ or.AccountName }}</span>
-                <span matListItemLine class="f-s-12 f-w-600 text-right cursor-pointer">Amount Due:{{ or.TotalAmountDue }}</span>
-              </mat-list-item>
+              <ng-container *ngFor="let or of collectionDetails" (click)="viewORDetails(or)">
+                <br>
+                <mat-list-item>
+                  <span matListItemTitle class="mat-body-1 cursor-pointer">
+                    <span [className]="or.CollectionStatus">{{or.CollectionStatus}}</span>
+                  </span>
+                  <span matListItemLine class="mat-body-1 cursor-pointer">ORNo:{{ or.CRNo }}</span>
+                  <span matListItemLine class="mat-body-1 cursor-pointer">{{ or.AccountName }}</span>
+                  <span matListItemLine class="f-s-12 f-w-600 text-right cursor-pointer">Amount Due:{{ or.TotalAmountDue }}</span>
+                </mat-list-item>
+                <br>
+                <mat-divider></mat-divider>
+              </ng-container>
             </mat-list>
-          </div>
-        </ng-container>
-        <div>
-          <ng-container *ngIf="data.consumerInfo">
-            <h2>Consumer Details</h2>
-            <div class="consInfo" >
-              <app-consumer-info-summary [data]="data"></app-consumer-info-summary>
-            </div>
-          </ng-container>
-        </div>
+          </mat-card-content>
+        </mat-card>
+        <mat-card class="b-1 shadow-none" *ngIf="data.consumerInfo">
+          <mat-card-header>
+            <mat-card-title>Consumer Details</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="b-t-1">
+            <app-consumer-info-summary [data]="data"></app-consumer-info-summary>
+          </mat-card-content>
+        </mat-card>
       </div>
-      <ng-container *ngIf="collectionBillings && collectionBillings.length != 0">
-        <div fxLayout="column" fxFlex="40">
-          <div>
-            <h2>Bills</h2>
-            <div class="consInfo">
-              <mat-accordion multi class="example-headers-align" *ngIf="collectionBillings && collectionBillings.length != 0">
-                <mat-expansion-panel *ngFor="let collectionBilling of collectionBillings" hideToggle>
-                  <mat-expansion-panel-header>
-                    <mat-panel-title>
-                      Bill Number {{ collectionBilling.BillNo }}
-                    </mat-panel-title>
-                    <mat-panel-description>
-                      {{ collectionBilling.BillingDate }}
-                      <mat-icon>keyboard_arrow_down</mat-icon>
-                    </mat-panel-description>
-                  </mat-expansion-panel-header>
-                  <div fxLayout="row" fxLayoutAlign="space-between center" >
-                    <span>Amount Due</span>
-                    <span>{{collectionBilling.AmountDue}}</span>
-                  </div>
-                  <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.Discount === '0.00'">
-                    <span>Senior Discount</span>
-                    <span>{{collectionBilling.Discount}}</span>
-                  </div>
-                  <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.earlyPaymentDiscount === '0.00'">
-                    <span>Early Payment Discount</span>
-                    <span>{{collectionBilling.earlyPaymentDiscount}}</span>
-                  </div>
-                  <div fxLayout="row" fxLayoutAlign="space-between center">
-                    <span>View Bill</span>
-                    <button mat-icon-button matTooltip="view bill" (click)="loadBill(collectionBilling.BillNo)">
-                      <mat-icon>remove_red_eye</mat-icon>
-                    </button>
-                  </div>
-                </mat-expansion-panel>
-              </mat-accordion>
-            </div>
-          </div>
-          <div *ngIf="collectionCharges && collectionCharges.length != 0">
-            <h2>Charges</h2>
-            <div fxLayout="row" fxLayoutAlign="space-between center" *ngFor="let collectionCharge of collectionCharges">
+      <div fxLayout="column" fxFlex="40" fxLayoutGap="1em">
+        <mat-card class="b-1 shadow-none" *ngIf="collectionBillings && collectionBillings.length != 0">
+          <mat-card-header>
+            <mat-card-title>Bills</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="b-t-1">
+            <br>
+            <mat-accordion multi class="example-headers-align" *ngIf="collectionBillings && collectionBillings.length != 0">
+              <mat-expansion-panel *ngFor="let collectionBilling of collectionBillings" hideToggle class="mat-elevation-z0">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    Bill Number {{ collectionBilling.BillNo }}
+                  </mat-panel-title>
+                  <mat-panel-description>
+                    {{ collectionBilling.BillingDate }}
+                    <mat-icon>keyboard_arrow_down</mat-icon>
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+                <div fxLayout="row" fxLayoutAlign="space-between center" >
+                  <span>Amount Due</span>
+                  <span>{{collectionBilling.AmountDue}}</span>
+                </div>
+                <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.Discount === '0.00'">
+                  <span>Senior Discount</span>
+                  <span>{{collectionBilling.Discount}}</span>
+                </div>
+                <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.earlyPaymentDiscount === '0.00'">
+                  <span>Early Payment Discount</span>
+                  <span>{{collectionBilling.earlyPaymentDiscount}}</span>
+                </div>
+                <div fxLayout="row" fxLayoutAlign="space-between center">
+                  <span>View Bill</span>
+                  <button mat-icon-button matTooltip="view bill" (click)="loadBill(collectionBilling.BillNo)">
+                    <mat-icon>remove_red_eye</mat-icon>
+                  </button>
+                </div>
+                <mat-divider></mat-divider>
+              </mat-expansion-panel>
+            </mat-accordion>
+          </mat-card-content>
+        </mat-card>
+        <mat-card class="b-1 shadow-none" *ngIf="collectionCharges && collectionCharges.length != 0">
+          <mat-card-header>
+            <mat-card-title>Charges</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="b-t-1">
+            <div class="m-t-16" fxLayout="row" fxLayoutAlign="space-between center" *ngFor="let collectionCharge of collectionCharges">
               <span>{{ collectionCharge.Particulars }}</span>
               <span>{{ collectionCharge.Amount }}</span>
             </div>
-          </div>
-          <div *ngIf="collectionDetails?.length !== 0">
-            <h2>Payment</h2>
+          </mat-card-content>
+        </mat-card>
+        <mat-card class="b-1 shadow-none" *ngIf="selectedOR">
+          <mat-card-header>
+            <mat-card-title>Payment</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="b-t-1">
             <ng-container *ngFor="let or of collectionDetails">
-              <div fxLayout="row" fxLayoutAlign="space-between center" >
-                <span>Total Amount Due</span>
-                <span>{{or.TotalAmountDue}}</span>
-              </div>
-              <div fxLayout="row" fxLayoutAlign="space-between center" >
-                <span>Payment type</span>
-                <span>{{ or.PaymentType }}</span>
-              </div>
-              <div fxLayout="row" fxLayoutAlign="space-between center" >
-                <span>Amount Paid</span>
-                <span>{{amountPaid}}</span>
-              </div>
+              <ng-container *ngIf="or.CRNo === selectedOR.CRNo">
+                <div fxLayout="row" fxLayoutAlign="space-between center" class="m-t-16">
+                  <span>Total Amount Due</span>
+                  <span>{{or.TotalAmountDue}}</span>
+                </div>
+                <div fxLayout="row" fxLayoutAlign="space-between center" >
+                  <span>Payment type</span>
+                  <span>{{ or.PaymentType }}</span>
+                </div>
+                <div fxLayout="row" fxLayoutAlign="space-between center" >
+                  <span>Amount Paid</span>
+                  <span>{{amountPaid}}</span>
+                </div>
+              </ng-container>
             </ng-container>
-          </div>
-        </div>
-        <div fxLayout="column" fxFlex="30">
-          <div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      <div fxLayout="column" fxFlex="30">
+        <mat-card class="b-1 shadow-none" *ngIf="billDetails">
+          <mat-card-header>
+            <mat-card-title>Bill</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="b-t-1">
             <app-bill-details [billDetails]="billDetails"></app-bill-details>
-          </div>
-        </div>
-      </ng-container>
+          </mat-card-content>
+        </mat-card>
+      </div>
     </div>
   </mat-card-content>
 </mat-card>

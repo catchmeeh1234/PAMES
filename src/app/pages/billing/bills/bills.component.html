@@ -1,12 +1,10 @@
 <mat-card class="cardWithShadow theme-card">
   <mat-card-header>
-      <mat-card-title>Bills</mat-card-title>
+    <app-content-header [data]="headerData"></app-content-header>
   </mat-card-header>
-  <mat-card-actions>
-    <button mat-flat-button color="primary" (click)="onCreateBill()">Create Bill</button>
-  </mat-card-actions>
   <mat-card-content class="b-t-1">
-    <div class="row">
+    <button mat-flat-button color="primary" (click)="onCreateBill()">Create Bill</button>
+    <div class="row m-t-16">
           <div class="col-6">
             <mat-form-field class="example-full-width" appearance="outline" class="w-100">
               <input
@@ -46,16 +44,17 @@
             </mat-form-field>
           </div>
           <div class="col-4">
-            <div class="row align-items-baseline">
-              <div class="col-8">
-                <mat-form-field appearance="outline" class="w-100">
-                  <mat-label>Account Number</mat-label>
-                  <input matInput type="text" placeholder="Account No." [(ngModel)]="account_no"/>
-                </mat-form-field>
-              </div>
-              <div class="col-3">
-                <button mat-flat-button color="primary" (click)="searchConsumer()">Search</button>
-              </div>
+            <div fxLayout="row" fxLayoutAlign="end baseline" fxLayoutGap="1em">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Account Number</mat-label>
+                <input
+                  matInput type="text"
+                  placeholder="Account No."
+                  [(ngModel)]="account_no"
+                  (keyup.enter)="loadBillsByAccNo(account_no)"
+                  #searchAccount/>
+              </mat-form-field>
+              <button type="button" mat-flat-button color="primary" (click)="searchConsumer()">Search</button>
             </div>
           </div>
         </div>

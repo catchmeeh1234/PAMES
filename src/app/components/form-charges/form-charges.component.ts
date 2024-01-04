@@ -18,6 +18,10 @@ export class FormChargesComponent {
 
   chargesForm:FormGroup;
 
+  headerData = {
+    title: `Cancel OR`,
+  };
+
   constructor(
     private formBuilder:FormBuilder,
     private chargesService:ChargesService,

@@ -25,6 +25,9 @@ export class ChargesComponent {
     // "ComputeRate",
   ];
 
+  headerData = {
+    title: `Charges`,
+  };
 
   constructor(
     public chargesService:ChargesService,

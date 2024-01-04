@@ -5,7 +5,7 @@ import { BehaviorSubject, Observable, Subscription, map, of } from 'rxjs';
 import { SearchConsumerComponent } from 'src/app/components/search-consumer/search-consumer.component';
 import { BillInfo, BillMonthGroup, BillService } from 'src/app/services/bill.service';
 import { ChargesService } from 'src/app/services/charges.service';
-import { Consumer } from 'src/app/services/consumer.service';
+import { Consumer, ConsumerService } from 'src/app/services/consumer.service';
 import { Discount, DiscountsService } from 'src/app/services/discounts.service';
 import { ORFormGroup, OfficialReceiptService, ReceiptDetails } from 'src/app/services/official-receipt.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
@@ -23,6 +23,7 @@ export interface Data1 {
   styleUrls: ['./create-or.component.scss']
 })
 export class CreateOrComponent {
+  @ViewChild('searchAccount') searchAccount!: ElementRef;
   @ViewChild('printReceipt1') printReceipt!: ElementRef;
 
   public companyName = environment.COMPANY_NAME;
@@ -74,6 +75,7 @@ export class CreateOrComponent {
     private discountService:DiscountsService,
     private snackbarService:SnackbarService,
     private sessionStorageService:SessionStorageServiceService,
+    private consumerService:ConsumerService,
   ) {}
 
 
@@ -119,7 +121,7 @@ export class CreateOrComponent {
         if (billingMonth.Checked) {
           // Perform calculations or update totalAmount based on the checked status
           // Example: assuming each item has an 'amount' field
-          totalAmount += billingMonth.amountDue; // Adjust this according to your data structure
+          totalAmount += parseFloat(billingMonth.totalAmountDue) ; // Adjust this according to your data structure
         }
       });
 
@@ -136,6 +138,7 @@ export class CreateOrComponent {
       }
 
       const newTotalAmount = totalAmount.toFixed(2);
+
       this.orFormGroup.patchValue({
         totalAmountDue: newTotalAmount,
         amountPaid: newTotalAmount,
@@ -152,7 +155,7 @@ export class CreateOrComponent {
         if (billingMonth.Checked) {
           // Perform calculations or update totalAmount based on the checked status
           // Example: assuming each item has an 'amount' field
-          totalAmount += billingMonth.amountDue; // Adjust this according to your data structure
+          totalAmount += parseFloat(billingMonth.totalAmountDue); // Adjust this according to your data structure
         }
       });
 
@@ -205,7 +208,7 @@ export class CreateOrComponent {
         if (billingMonth.Checked) {
           // Perform calculations or update totalAmount based on the checked status
           // Example: assuming each item has an 'amount' field
-          totalAmount += billingMonth.amountDue; // Adjust this according to your data structure
+          totalAmount += parseFloat(billingMonth.totalAmountDue); // Adjust this according to your data structure
         }
       });
 
@@ -277,6 +280,10 @@ export class CreateOrComponent {
 
   }
 
+  get accountNumber() {
+    return this.orFormGroup.get('accountNumber')?.value;
+  }
+
   get billingMonthFormArray(): FormArray {
     return this.orFormGroup.get('billingMonth') as FormArray;
   }
@@ -320,7 +327,8 @@ export class CreateOrComponent {
       billNumber: [bill ? bill.BillNo: null, Validators.required],
       monthYear: [bill ? bill.BillingMonth: null, Validators.required],
       Checked: [bill ? bill.checked: null, Validators.required],
-      amountDue: [bill ? this.calculateTotalAmountDue(bill): null, Validators.required],
+      amountDue: [bill ? bill.AmountDue: null, Validators.required],
+      totalAmountDue: [bill ? this.calculateTotalAmountDue(bill): null, Validators.required],
       billDetails: [bill ? bill: null, Validators.required],
     });
 
@@ -366,113 +374,127 @@ export class CreateOrComponent {
         //clear fields
         this.clearFields();
 
-        const data = {
-          AccountNumber: result.AccountNo,
-          IsPaid: "No",
-          BillStatus: "Posted",
-          IsCollectionCreated: "Yes",
-        };
-        const newData = JSON.stringify(data);
-        //validate if the concessionaire has any unpaid bill
-        const bills = await this.billService.fetchUnpaidBills(newData).toPromise();
+        this.orFormGroup.get("accountNumber")?.patchValue(result.AccountNo);
 
-        if (!bills) {
-          return;
-        }
-        const billLength = bills.length;
-
-        if (billLength <= 0) {
-          this.isPaid = false;
-
-
-          //get last customer payment
-          const lastPaidOR = await this.officialReceiptService.fetchLastPaidORByAccountNo(result.AccountNo).toPromise();
-
-          if (lastPaidOR?.length === 1) {
-            const message = `All bills are paid. \nLast Payment Details: \nCRNo: ${lastPaidOR[0].CRNo} \nAmount: ${lastPaidOR[0].TotalAmountDue} \nDate: ${lastPaidOR[0].PaymentDate}`;
-            alert(message);
-            //this.snackbarService.showSuccess(message, 0);
-          } else {
-            alert("No Bills for this account yet");
-          }
-
-          return;
-        }
-
-        this.isPaid = true;
-        this.orFormGroup.patchValue({
-          accountNumber: result.AccountNo,
-        });
-
-        //set or number value
-        this.orNumber.subscribe((data) => {
-          this.orFormGroup.patchValue({
-            orNumber: data,
-          });
-        });
-
-        //DISPLAY CONSUMER'S INFORMATION
-        this.data.consumerInfo = result;
-
-        //DISPLAY CONSUMER'S UNPAID BILLS
-        this.unpaidBillsSubscription = this.billService.fetchUnpaidBills(newData)
-        .pipe(
-          map(bills => bills.map(bill => ({ ...bill, checked: true })))
-        )
-        .subscribe(data => {
-          this.setUnpaidBills(data);
-
-          //asign default display for Bill section
-          this.billDetails = data[0];
-
-          //GET TOTAL AMOUNT DUE OF ALL UNPAID BILLS
-          let totalAmountDue = 0;
-
-          for (const bill of data) {
-            totalAmountDue += this.calculateTotalAmountDue(bill);
-          }
-
-          //add recon fee
-          if (this.orFormGroup.get('reconnectionFee')?.value) {
-            totalAmountDue += parseFloat(this.reconnectionFee); // Add the reconnection fee amount
-          }
-
-          //loop through all unpaid bills
-          let billAmountDue = 0;
-          for (let index = 0; index < this.billingMonthFormArray.length; index++) {
-            console.log(this.billingMonthFormArray.at(index).value);
-            const isChecked = this.billingMonthFormArray.at(index).value.Checked;
-            const amountDue = this.billingMonthFormArray.at(index).value.amountDue;
-
-            if (isChecked) {
-              billAmountDue = amountDue;
-              break;
-            }
-          }
-
-          //add early payment discount
-          if (this.orFormGroup.get('earlyPaymentDiscount')?.value) {
-            const earlyPaymentDisc = this.calculateEarlyPaymentDiscount(parseFloat(this.earlyPaymentRate), this.latestBillAmountDue);
-            const newEarlyPaymentDisc = Number(earlyPaymentDisc).toFixed(2);
-            totalAmountDue -= parseFloat(newEarlyPaymentDisc);
-          }
-
-
-          //this.totalAmountDue = totalAmountDue;
-
-          //set amountPaid
-          this.orFormGroup.patchValue({
-            amountPaid: totalAmountDue.toFixed(2)
-          })
-        });
-
+        const event = new KeyboardEvent('keyup', { key: 'Enter' });
+        this.searchAccount.nativeElement.dispatchEvent(event);
       } else {
         console.log('The dialog was closed without a value.');
       }
     });
   }
 
+  async viewBillInfo(accountNumber:string) {
+    //fetch consumer information
+    const consumerInfo = await this.consumerService.fetchConsumerInfoByAccNo(accountNumber).toPromise();
+    if (!consumerInfo) {
+      return;
+    }
+
+    const data = {
+      AccountNumber: consumerInfo.AccountNo,
+      IsPaid: "No",
+      BillStatus: "Posted",
+      IsCollectionCreated: "Yes",
+    };
+    const newData = JSON.stringify(data);
+    //validate if the concessionaire has any unpaid bill
+    const bills = await this.billService.fetchUnpaidBills(newData).toPromise();
+
+    if (!bills) {
+      return;
+    }
+    const billLength = bills.length;
+
+    if (billLength <= 0) {
+      this.isPaid = false;
+
+
+      //get last customer payment
+      const lastPaidOR = await this.officialReceiptService.fetchLastPaidORByAccountNo(consumerInfo.AccountNo).toPromise();
+
+      if (lastPaidOR?.length === 1) {
+        const message = `All bills are paid. \nLast Payment Details: \nCRNo: ${lastPaidOR[0].CRNo} \nAmount: ${lastPaidOR[0].TotalAmountDue} \nDate: ${lastPaidOR[0].PaymentDate}`;
+        alert(message);
+        //this.snackbarService.showSuccess(message, 0);
+      } else {
+        alert("No Bills for this account yet");
+      }
+
+      return;
+    }
+
+    this.isPaid = true;
+    this.orFormGroup.patchValue({
+      accountNumber: consumerInfo.AccountNo,
+    });
+
+    //set or number value
+    this.orNumber.subscribe((data) => {
+      this.orFormGroup.patchValue({
+        orNumber: data,
+      });
+    });
+
+    //DISPLAY CONSUMER'S INFORMATION
+    this.data.consumerInfo = consumerInfo;
+
+    //DISPLAY CONSUMER'S UNPAID BILLS
+    this.unpaidBillsSubscription = this.billService.fetchUnpaidBills(newData)
+    .pipe(
+      map(bills => bills.map(bill => ({ ...bill, checked: true })))
+    )
+    .subscribe(data => {
+      this.setUnpaidBills(data);
+
+      //asign default display for Bill section
+      this.billDetails = data[0];
+
+      //GET TOTAL AMOUNT DUE OF ALL UNPAID BILLS
+      let totalAmountDue = 0;
+
+      for (const bill of data) {
+        totalAmountDue += this.calculateTotalAmountDue(bill);
+      }
+
+      //add recon fee
+      if (this.orFormGroup.get('reconnectionFee')?.value) {
+        totalAmountDue += parseFloat(this.reconnectionFee); // Add the reconnection fee amount
+      }
+
+      //loop through all unpaid bills
+      let billAmountDue = 0;
+      for (let index = 0; index < this.billingMonthFormArray.length; index++) {
+        console.log(this.billingMonthFormArray.at(index).value);
+        const isChecked = this.billingMonthFormArray.at(index).value.Checked;
+        const amountDue = this.billingMonthFormArray.at(index).value.amountDue;
+
+        if (isChecked) {
+          billAmountDue = amountDue;
+          break;
+        }
+      }
+
+      //add early payment discount
+      if (this.orFormGroup.get('earlyPaymentDiscount')?.value) {
+        const earlyPaymentDisc = this.calculateEarlyPaymentDiscount(parseFloat(this.earlyPaymentRate), this.latestBillAmountDue);
+        const newEarlyPaymentDisc = Number(earlyPaymentDisc).toFixed(2);
+        totalAmountDue -= parseFloat(newEarlyPaymentDisc);
+      }
+
+
+      //this.totalAmountDue = totalAmountDue;
+
+      //set amountPaid
+      this.orFormGroup.patchValue({
+        amountPaid: totalAmountDue.toFixed(2)
+      })
+    });
+
+  }
+
   async saveOR(orDetails:FormGroup) {
+
     //there should atleast be one bill selected
     const newORDetails:ORFormGroup = orDetails.value;
     const billingMonth = newORDetails.billingMonth;
@@ -509,7 +531,7 @@ export class CreateOrComponent {
             setTimeout(() => {
               this.printReceipt.nativeElement.click();
               this.clearFields();
-            }, 500);
+            }, 1000);
           } else {
             console.log('Button element not found.');
           }
@@ -610,7 +632,7 @@ export class CreateOrComponent {
     }
   }
 
-  async cancelOR() {
+  async test() {
     this.receiptDetails = this.createReceiptDetails(this.orFormGroup.value, this.billingMonthFormArray.value, this.data.consumerInfo);
 
     // Access the buttonToClick element here

@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { NativeDateAdapter, DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE, MatDateFormats, MAT_NATIVE_DATE_FORMATS } from '@angular/material/core';
@@ -38,7 +38,12 @@ type Zone = {
   ]
 })
 export class BillsComponent {
+  @ViewChild('searchAccount') searchAccount!: ElementRef;
   @ViewChild(MatPaginator) paginator: MatPaginator;
+
+  headerData = {
+    title: `Bills`,
+  };
 
   billStatuses = ["Pending", "Posted", "Cancelled", "Paid"];
   zones:Zone[];
@@ -104,9 +109,10 @@ export class BillsComponent {
 
     dialogRef.afterClosed().subscribe(async (result:Consumer) => {
       if (result) {
-        console.log(result);
         this.account_no = result.AccountNo;
-        this.loadBillsByAccNo(result.AccountNo);
+
+        const event = new KeyboardEvent('keyup', { key: 'Enter' });
+        this.searchAccount.nativeElement.dispatchEvent(event);
       }
     });
 

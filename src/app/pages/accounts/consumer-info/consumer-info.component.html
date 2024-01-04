@@ -5,65 +5,80 @@
     </mat-card-header>
     <mat-card-content class="b-t-1">
       <ng-container *ngFor="let info of consumerInfo">
-        <div fxLayout="row" fxLayoutAlign="space-evenly start" fxLayoutGap="20">
-          <div fxLayout="column" fxLayoutAlign="space-between start" fxFlex="35" fxLayoutGap="20">
-            <h3>Consumer Details</h3>
-            <div class="consInfo">
-              <app-consumer-info-summary [data]="data"></app-consumer-info-summary>
-            </div>
-            <h3>Customer Status</h3>
-            <div class="consInfo">
-              <mat-list>
-                <mat-list-item>
-                  <span matListItemTitle fxLayout="row" fxLayoutAlign="space-between center">
-                    <p>Senior Citizen</p>
-                    <span>
-                      <mat-checkbox [checked]="info.IsSenior === 'Yes' ? true : false" disabled></mat-checkbox>
+        <div fxLayout="row" fxLayoutGap="1em" class="m-t-16">
+          <div fxLayout="column" fxFlex="35" style="gap:1em">
+            <mat-card class="b-1 shadow-none">
+              <mat-card-header>
+                <mat-card-title>Consumer Details</mat-card-title>
+              </mat-card-header>
+              <mat-card-content class="b-t-1">
+                <app-consumer-info-summary [data]="data"></app-consumer-info-summary>
+              </mat-card-content>
+            </mat-card>
+            <mat-card class="b-1 shadow-none">
+              <mat-card-header>
+                <mat-card-title>Customer Status</mat-card-title>
+              </mat-card-header>
+              <mat-card-content class="b-t-1">
+                <mat-list>
+                  <mat-list-item>
+                    <span matListItemTitle fxLayout="row" fxLayoutAlign="space-between center">
+                      <p>Senior Citizen</p>
+                      <span>
+                        <mat-checkbox [checked]="info.IsSenior === 'Yes' ? true : false" disabled></mat-checkbox>
+                      </span>
                     </span>
-                  </span>
-                </mat-list-item>
-                <mat-list-item>
-                  <span matListItemTitle fxLayout="row" fxLayoutAlign="space-between center">
-                    <p>Status</p>
-                    <button mat-flat-button extended color="primary"  [matTooltip]="'Click to update status'" (click)="updateConsumerStatus(info.AccountNo)">
-                      <mat-icon *ngIf="info.CustomerStatus === 'Active';else notActive">check_circle_outline</mat-icon>
-                      <ng-template #notActive>
-                        <mat-icon>cancel</mat-icon>
-                      </ng-template>
-                      {{ info.CustomerStatus }}
-                    </button>
-                  </span>
-                </mat-list-item>
-              </mat-list>
-            </div>
-            <h3>Charges</h3>
-            <div class="consInfo">
-              <div class="scrollable" style="max-height:300px;">
-                <div *ngIf="consumerCharges?.length !== 0;else noConsumerCharges" style="padding: 0px 10px">
-                  <mat-list *ngFor="let consumerCharge of consumerCharges">
-                    <mat-list-item >
-                      <span matListItemTitle>{{ consumerCharge.Particular }}</span>
-                      <ng-container *ngIf="consumerCharge.Amount !== '.00'">
-                        <span>{{ consumerCharge.Amount }}</span>
-                      </ng-container>
-                      <ng-container *ngIf="consumerCharge.ChargeRate !== '.00'">
-                        <span>{{ consumerCharge.ChargeRate }}</span>
-                      </ng-container>
-                    </mat-list-item>
-                    <mat-divider></mat-divider>
-                  </mat-list>
-                </div>
-                <ng-template #noConsumerCharges>
-                  <div class="text-center">
-                    <h3>No Consumer Charges yet</h3>
+                  </mat-list-item>
+                  <mat-list-item>
+                    <span matListItemTitle fxLayout="row" fxLayoutAlign="space-between center">
+                      <p>Status</p>
+                      <button mat-flat-button extended color="primary"  [matTooltip]="'Click to update status'" (click)="updateConsumerStatus(info.AccountNo)">
+                        <mat-icon *ngIf="info.CustomerStatus === 'Active';else notActive">check_circle_outline</mat-icon>
+                        <ng-template #notActive>
+                          <mat-icon>cancel</mat-icon>
+                        </ng-template>
+                        {{ info.CustomerStatus }}
+                      </button>
+                    </span>
+                  </mat-list-item>
+                </mat-list>
+              </mat-card-content>
+            </mat-card>
+            <mat-card class="b-1 shadow-none">
+              <mat-card-header>
+                <mat-card-title>Charges</mat-card-title>
+              </mat-card-header>
+              <mat-card-content class="b-t-1">
+                <div class="scrollable" style="max-height:300px;">
+                  <div *ngIf="consumerCharges?.length !== 0;else noConsumerCharges" style="padding: 0px 10px">
+                    <mat-list *ngFor="let consumerCharge of consumerCharges">
+                      <mat-list-item >
+                        <span matListItemTitle>{{ consumerCharge.Particular }}</span>
+                        <ng-container *ngIf="consumerCharge.Amount !== '.00'">
+                          <span>{{ consumerCharge.Amount }}</span>
+                        </ng-container>
+                        <ng-container *ngIf="consumerCharge.ChargeRate !== '.00'">
+                          <span>{{ consumerCharge.ChargeRate }}</span>
+                        </ng-container>
+                      </mat-list-item>
+                      <mat-divider></mat-divider>
+                    </mat-list>
                   </div>
-                </ng-template>
-              </div>
-            </div>
+                  <ng-template #noConsumerCharges>
+                    <div class="text-center">
+                      <h3>No Consumer Charges yet</h3>
+                    </div>
+                  </ng-template>
+                </div>
+              </mat-card-content>
+            </mat-card>
           </div>
-          <div fxLayout="column" fxLayoutAlign="space-between start" fxFlex="65" fxLayoutGap="20">
-            <h3>Account Ledger</h3>
-              <div class="transInfo">
+          <div fxLayout="column" fxFlex="65">
+            <mat-card class="b-1 shadow-none">
+              <mat-card-header>
+                <mat-card-title>Account Ledger</mat-card-title>
+              </mat-card-header>
+              <mat-card-content class="b-t-1">
                 <div class="scrollable" style="max-height:700px;">
                   <table mat-table [dataSource]="dataSource">
                     <!-- ledger reference number -->
@@ -136,7 +151,8 @@
                     <h3 class="text-center">No Ledger Entry</h3>
                   </div>
                 </div>
-              </div>
+              </mat-card-content>
+            </mat-card>
           </div>
         </div>
       </ng-container>

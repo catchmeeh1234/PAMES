@@ -1,9 +1,9 @@
 <mat-card class="cardWithShadow">
-  <mat-card-content class="p-24">
-    <div class="title-container">
-      <mat-card-title>Charges</mat-card-title>
-      <button mat-flat-button color="primary" class="fab-button" (click)="onAddCharges()">Add new charge +</button>
-    </div>
+  <mat-card-header>
+    <app-content-header [data]="headerData"></app-content-header>
+  </mat-card-header>
+  <mat-card-content class="b-t-1 p-24">
+    <button mat-flat-button color="primary" class="fab-button" (click)="onAddCharges()">Add new charge +</button>
     <div class="table-responsive m-t-16">
       <table mat-table [dataSource]="chargesService.dataSource" class="w-100">
         <ng-container matColumnDef="ChargeID">

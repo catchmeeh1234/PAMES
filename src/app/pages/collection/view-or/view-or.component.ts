@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { SearchConsumerComponent } from 'src/app/components/search-consumer/search-consumer.component';
-import { Consumer } from 'src/app/services/consumer.service';
+import { Consumer, ConsumerService } from 'src/app/services/consumer.service';
 import { CollectionBilling, CollectionCharges, CollectionDetails, ORFormGroup, OfficialReceiptService, ReceiptDetails } from 'src/app/services/official-receipt.service';
 import { Data1 } from '../create-or/create-or.component';
 import { BillInfo, BillService, BillingMonth } from 'src/app/services/bill.service';
@@ -16,6 +16,8 @@ import { CancelOrComponent } from 'src/app/components/cancel-or/cancel-or.compon
   styleUrls: ['./view-or.component.scss']
 })
 export class ViewOrComponent {
+  @ViewChild('searchAccount') searchAccount!: ElementRef;
+
   panelOpenState = false;
 
   headerData = {
@@ -35,11 +37,17 @@ export class ViewOrComponent {
 
   public receiptDetails:ReceiptDetails | undefined;
 
+  public selectedOR:CollectionDetails | undefined;
+
+  accountNumber:string = "";
+  public consumersResult:Consumer;
+
   constructor(
     private dialog:MatDialog,
     private officialReceiptService:OfficialReceiptService,
     private billService:BillService,
     private sessionStorageService:SessionStorageServiceService,
+    private consumerService:ConsumerService,
   ) {}
 
   searchConsumer() {
@@ -48,22 +56,52 @@ export class ViewOrComponent {
     });
 
     dialogRef.afterClosed().subscribe(async (result:Consumer) => {
-      this.data.consumerInfo = undefined;
-      this.clearFields();
       if (result) {
-        //populate consumer summary section
-        this.data.consumerInfo = result;
+        this.accountNumber = result.AccountNo;
 
-        //search all or for this account number
-        const collectionDetails = await this.officialReceiptService.fetchORDetailsByAccountNo(result.AccountNo).toPromise();
-        if (collectionDetails) {
-          this.collectionDetails = collectionDetails;
-        }
+        const event = new KeyboardEvent('keyup', { key: 'Enter' });
+        this.searchAccount.nativeElement.dispatchEvent(event);
       }
+
     });
   }
 
+  async viewORDetailsByAccNo(accountNumber:string) {
+    if (accountNumber === "") {
+      return;
+    }
+
+    //fetch consumer info by acc no
+    const consumerInfo = await this.consumerService.fetchConsumerInfoByAccNo(accountNumber).toPromise();
+
+    this.data.consumerInfo = undefined;
+    this.clearFields();
+
+    //check if account number exists in the database
+    if (Array.isArray(consumerInfo)) {
+      if (consumerInfo.length === 0) {
+        alert("Account Number does not exist");
+        this.searchAccount.nativeElement.select();
+        return;
+      }
+    }
+
+    if (consumerInfo) {
+      //populate consumer summary section
+      this.data.consumerInfo = consumerInfo;
+
+      //search all or for this account number
+      const collectionDetails = await this.officialReceiptService.fetchORDetailsByAccountNo(consumerInfo.AccountNo).toPromise();
+      if (collectionDetails) {
+
+        this.collectionDetails = collectionDetails;
+      }
+    }
+  }
+
   async viewORDetails(orDetails:CollectionDetails) {
+    this.selectedOR = orDetails;
+
     //clear bill details and receiptDetails first
     this.billDetails = null;
     this.receiptDetails = undefined;
@@ -93,9 +131,10 @@ export class ViewOrComponent {
 
   get amountPaid() {
     //this.amountPaid = (parseFloat(orDetails.TotalAmountDue) + parseFloat(orDetails.AdvancePayment)).toFixed(2);
+    console.log(this.selectedOR);
 
-    if (this.collectionDetails && this.collectionDetails.length === 1) {
-      return (parseFloat(this.collectionDetails[0].TotalAmountDue) + parseFloat(this.collectionDetails[0].AdvancePayment)).toFixed(2);
+    if (this.selectedOR) {
+      return (parseFloat(this.selectedOR.TotalAmountDue) + parseFloat(this.selectedOR.AdvancePayment)).toFixed(2);
     } else {
       console.log("collection details is undefined");
       return "0";
@@ -177,6 +216,7 @@ export class ViewOrComponent {
   }
 
   clearFields() {
+    this.selectedOR = undefined;
     this.collectionDetails = [];
     this.collectionBillings = [];
     this.collectionCharges = [];

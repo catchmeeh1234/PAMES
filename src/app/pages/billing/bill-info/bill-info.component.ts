@@ -14,6 +14,8 @@ import { SnackbarService } from 'src/app/services/snackbar.service';
 import { PasswordStatus } from 'src/app/services/useraccounts.service';
 import EscPosEncoder from 'esc-pos-encoder';
 import { environment } from 'src/environments/environment';
+import { Data1 } from '../../collection/create-or/create-or.component';
+import { ConsumerService } from 'src/app/services/consumer.service';
 
 @Component({
   selector: 'app-bill-info',
@@ -44,6 +46,10 @@ export class BillInfoComponent {
   billno:string;
   billInfo:BillInfo;
 
+  data:Data1 = {
+    hideEditBtn: true,
+  }
+
   constructor(
     private fb: FormBuilder,
     private meterReaderService:MeterReaderService,
@@ -53,6 +59,7 @@ export class BillInfoComponent {
     private route:ActivatedRoute,
     private dialog:MatDialog,
     private router:Router,
+    private consumerService:ConsumerService,
   ) {
     this.billInfoForm = this.fb.group({
       BillNo: ['', Validators.required],
@@ -112,6 +119,8 @@ export class BillInfoComponent {
         Name: "Senior",
         isSenior: billInfo[0].isSenior
       });
+
+      this.data.consumerInfo = await this.consumerService.fetchConsumerInfoByAccNo(billInfo[0].AccountNumber).toPromise();
     }
   }
 

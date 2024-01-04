@@ -12,6 +12,7 @@ import { ComponentsModule } from 'src/app/components/components.module';
 import { CreateSingleBillComponent } from './create-single-bill/create-single-bill.component';
 import { BillInfoComponent } from './bill-info/bill-info.component';
 import { EditBillComponent } from './edit-bill/edit-bill.component';
+import { BillingAddjustmentComponent } from './billing-addjustment/billing-addjustment.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { EditBillComponent } from './edit-bill/edit-bill.component';
     CreateBillsComponent,
     CreateSingleBillComponent,
     BillInfoComponent,
-    EditBillComponent
+    EditBillComponent,
+    BillingAddjustmentComponent
   ],
   imports: [
     FormsModule,

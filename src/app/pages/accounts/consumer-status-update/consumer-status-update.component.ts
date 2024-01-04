@@ -1,13 +1,28 @@
 import { Component, ViewChild } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, first, map } from 'rxjs';
+import { PasswordPromptComponent } from 'src/app/components/password-prompt/password-prompt.component';
 import { AccountStatus, Consumer, ConsumerService } from 'src/app/services/consumer.service';
 import { DateFormatService } from 'src/app/services/date-format.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
+import { PasswordStatus } from 'src/app/services/useraccounts.service';
+
+interface AccountStatusFormInput {
+  date: Date
+  customerStatus: string
+  discType: string
+  meterStatus: string
+  performedBy: string
+  lastReading: string
+  remarks: string
+  username: string
+  accountNo: string
+}
 
 @Component({
   selector: 'app-consumer-status-update',
@@ -15,6 +30,8 @@ import { SnackbarService } from 'src/app/services/snackbar.service';
   styleUrls: ['./consumer-status-update.component.scss']
 })
 export class ConsumerStatusUpdateComponent {
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+
   headerData = {
     title: "Update Consumer Status",
     url: "./accounts/manage-accounts"
@@ -31,9 +48,10 @@ export class ConsumerStatusUpdateComponent {
     "lastReading","remarks","performedBy","updatedBy",
   ];
   dataSource:MatTableDataSource<AccountStatus>;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
 
   accountStatusForm:FormGroup;
+  accountStatusFormOriginalValues:AccountStatusFormInput;
+
   errorMessage:string[] = [];
 
   private username:string = "";
@@ -48,10 +66,11 @@ export class ConsumerStatusUpdateComponent {
     private dateFormatService:DateFormatService,
     private snackbarService:SnackbarService,
     private router:Router,
+    private dialog:MatDialog,
   ) {}
 
   ngOnInit(): void {
-    const accountNo = this.route.snapshot.params['accountNo'];
+    const accountNo:string = this.route.snapshot.params['accountNo'];
 
     this.username = this.sessionStorageService.getSession("username")!;
 
@@ -66,6 +85,9 @@ export class ConsumerStatusUpdateComponent {
       username: [this.username, Validators.required],
       accountNo: [accountNo, Validators.required]
     });
+
+    //save original values of formgroup
+    this.accountStatusFormOriginalValues = this.accountStatusForm.value;
 
     this.accountStatusForm.get("customerStatus")?.valueChanges
     .subscribe((customerStatus:string) => {
@@ -161,23 +183,43 @@ export class ConsumerStatusUpdateComponent {
       }
     }
 
-
-    const formData = this.accountStatusForm.value;
-    const date = formData.date;
-    const newDate = this.dateFormatService.formatDate(date);
-    formData.date = newDate;
-
-    this.consumerService.updateAccountStatus(formData)
-    .subscribe(result => {
-      if (result.status === "Account status updated") {
-        const accountNumber = formData.accountNo;
-
-        this.snackbarService.showSuccess(result.status);
-        this.loadAccountStatusTable(accountNumber);
-      } else {
-        this.snackbarService.showError(result.status)
+    const dialogRef = this.dialog.open(PasswordPromptComponent, {
+      data: {
+        headerData: {
+          title: "Authorization",
+        },
+        //message: `Are you sure you want to update Consumer's Status to ${customerStatus} ?`,
       }
     });
+
+    dialogRef.afterClosed().subscribe((result:PasswordStatus) => {
+      if (result === undefined) {
+        return;
+      }
+
+      if (result.status === "access granted") {
+        const formData = this.accountStatusForm.value;
+        const date = formData.date;
+        const newDate = this.dateFormatService.formatDate(date);
+        formData.date = newDate;
+
+        this.consumerService.updateAccountStatus(formData)
+        .subscribe(result => {
+          if (result.status === "Account status updated") {
+            const accountNumber = formData.accountNo;
+
+            this.snackbarService.showSuccess(result.status);
+            this.loadAccountStatusTable(accountNumber);
+
+            //reset table
+            this.accountStatusForm.reset(this.accountStatusFormOriginalValues);
+          } else {
+            this.snackbarService.showError(result.status)
+          }
+        });
+      }
+    });
+
   }
 
 }

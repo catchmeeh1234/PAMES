@@ -57,3 +57,24 @@
   align-items: center;
 }
 
+.Pending {
+  color: #ffcc00;
+  font-weight: bolder;
+}
+
+.Cancelled {
+  color: #ff0000;
+  font-weight: bolder;
+
+}
+
+.Posted {
+  color: #008000;
+  font-weight: bolder;
+
+}
+
+.collectionDetails {
+  max-height: 15em;
+  overflow-y: auto;
+}

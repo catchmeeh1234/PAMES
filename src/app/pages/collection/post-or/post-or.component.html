@@ -64,7 +64,7 @@
                  showFirstLastButtons
                  aria-label="Select page of OR">
       </mat-paginator>
-    <button mat-flat-button color="primary" (click)="onPostOR()">Post OR</button>
+    <button mat-flat-button color="primary" (click)="onPostOR()" [disabled]="this.selection.selected.length <= 0">Post OR</button>
     </div>
   </mat-card-content>
 </mat-card>
