@@ -39,6 +39,7 @@ export class ViewOrComponent {
 
   public selectedOR:CollectionDetails | undefined;
 
+
   accountNumber:string = "";
   public consumersResult:Consumer;
 
@@ -100,6 +101,7 @@ export class ViewOrComponent {
   }
 
   async viewORDetails(orDetails:CollectionDetails) {
+    console.log(orDetails);
     this.selectedOR = orDetails;
 
     //clear bill details and receiptDetails first
@@ -120,6 +122,9 @@ export class ViewOrComponent {
     //load printable content
     this.receiptDetails = this.createReceiptDetails(orDetails, this.collectionBillings, this.collectionCharges, this.data.consumerInfo);
 
+    //update total amount due + adjustment
+
+    //to do tom. add the total adjustment to collection details
   }
 
   loadBill(billNumber:string) {
@@ -131,7 +136,7 @@ export class ViewOrComponent {
 
   get amountPaid() {
     //this.amountPaid = (parseFloat(orDetails.TotalAmountDue) + parseFloat(orDetails.AdvancePayment)).toFixed(2);
-    console.log(this.selectedOR);
+    //console.log(this.selectedOR);
 
     if (this.selectedOR) {
       return (parseFloat(this.selectedOR.TotalAmountDue) + parseFloat(this.selectedOR.AdvancePayment)).toFixed(2);
@@ -154,14 +159,20 @@ export class ViewOrComponent {
           billNumber: bill.BillNo,
           billingMonth: bill.BillingDate,
           amount: bill.AmountDue,
+          adjustment: bill.Adjustment
         };
         previousBills.push(prevBill);
       }
     });
 
     const fullName = `${consumerInfo?.Firstname} ${consumerInfo?.Middlename} ${consumerInfo?.Lastname}`;
-    const reconnectionFeeAmount = collectionCharges.find(collectionCharges => collectionCharges.Particulars.toLowerCase() === 'reconnection fee')!;
-
+    const reconnectionFeeAmount = collectionCharges.find(collectionCharges => collectionCharges.Particulars.toLowerCase() === 'reconnection fee');
+    let newReconnectionFeeAmount:string;
+    if (!reconnectionFeeAmount) {
+      newReconnectionFeeAmount = 0.00.toFixed(2);
+    } else {
+      newReconnectionFeeAmount = reconnectionFeeAmount.Amount;
+    }
     //convert amount to words
     const amountToWords = this.officialReceiptService.floatToWords(parseFloat(orDetails.TotalAmountDue));
 
@@ -177,9 +188,10 @@ export class ViewOrComponent {
         billNumber: bills[0].BillNo,
         billingMonth: bills[0].BillingDate,
         amount: bills[0].AmountDue,
+        adjustment: bills[0].Adjustment
       },
       earlyPaymentDiscount: parseFloat(bills[0].earlyPaymentDiscount),
-      reconnectionFee: reconnectionFeeAmount?.Amount,
+      reconnectionFee: newReconnectionFeeAmount,
       previousBills: previousBills,
       amountInWords: amountToWords,
       totalAmountDue: orDetails.TotalAmountDue,
@@ -187,15 +199,19 @@ export class ViewOrComponent {
       actingMunTreasurer1: "Acting Mun-Treasurer",
       actingMunTreasurer2: "By: Ruby L. Patling"
     }
+
   }
 
-  openCollectionCancel(orDetails:CollectionDetails[]) {
+  openCollectionCancel(orDetails:CollectionDetails | undefined) {
+    if (!orDetails) {
+      return;
+    }
     const dialogRef = this.dialog.open(CancelOrComponent, {
       data: {
         headerData: {
           title: "Cancel OR",
         },
-        orDetails: orDetails[0]
+        orDetails: orDetails
       }
     });
 
@@ -203,12 +219,12 @@ export class ViewOrComponent {
       if (result === undefined) {
         return;
       }
-      if (result.status === "OR Cancelled") {
-        const collectionDetails = await this.officialReceiptService.fetchORDetailsByAccountNo(orDetails[0].AccountNo).toPromise();
+      if (result === "OR Cancelled") {
+        const collectionDetails = await this.officialReceiptService.fetchORDetailsByAccountNo(orDetails.AccountNo).toPromise();
         if (collectionDetails) {
           this.clearFields();
           this.collectionDetails = collectionDetails;
-
+          this.selectedOR = undefined;
         }
       }
 

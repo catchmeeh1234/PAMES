@@ -212,7 +212,9 @@ export class ConsumerStatusUpdateComponent {
             this.loadAccountStatusTable(accountNumber);
 
             //reset table
-            this.accountStatusForm.reset(this.accountStatusFormOriginalValues);
+            this.accountStatusForm.patchValue({
+              remarks: ""
+            });
           } else {
             this.snackbarService.showError(result.status)
           }

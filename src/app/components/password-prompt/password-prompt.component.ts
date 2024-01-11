@@ -87,7 +87,6 @@ export class PasswordPromptComponent {
   }
 
   async submitPassword() {
-
     if (!this.inputsFilled) {
       this.snackbarService.showError("Please input admin password");
       return;
@@ -106,6 +105,10 @@ export class PasswordPromptComponent {
     } else {
       this.snackbarService.showError(newRes.status);
       this.resetInput();
+      if (this.input1 && this.input1.nativeElement) {
+        // Focus on the input field
+        this.input1.nativeElement.focus();
+      }
     }
   }
 

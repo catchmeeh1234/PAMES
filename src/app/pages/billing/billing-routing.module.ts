@@ -5,6 +5,7 @@ import { BillsComponent } from './bills/bills.component';
 import { CreateSingleBillComponent } from './create-single-bill/create-single-bill.component';
 import { BillInfoComponent } from './bill-info/bill-info.component';
 import { EditBillComponent } from './edit-bill/edit-bill.component';
+import { BillAdjustmentComponent } from './bill-adjustment/bill-adjustment.component';
 
 const routes: Routes = [
   {
@@ -30,6 +31,10 @@ const routes: Routes = [
         path: 'bill-info/:bill_no',
         component: BillInfoComponent,
       },
+      {
+        path: 'bill-adjustment',
+        component: BillAdjustmentComponent,
+      }
     ],
   }
 ];

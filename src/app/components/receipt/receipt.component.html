@@ -25,13 +25,15 @@
         <div fxLayout="row" fxLayoutAlign="space-between center">
           <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="0">
             <span class="receipt-text">PAMES Bills {{receipt.currentBill.billingMonth}}</span>
+            <span class="receipt-text" *ngIf="receipt.currentBill.adjustment != '.00'">Adjustment</span>
             <span class="receipt-text" *ngIf="receipt.earlyPaymentDiscount > 0">Early Payment Discount</span>
-            <span class="receipt-text" *ngIf="receipt.reconnectionFee !== '0'">Reconnection Fee</span>
+            <span class="receipt-text" *ngIf="receipt.reconnectionFee != '0.00'">Reconnection Fee</span>
           </div>
           <div fxLayout="column" fxLayoutAlign="center end" fxLayoutGap="0">
             <span class="receipt-text">{{receipt.currentBill.amount}}</span>
+            <span class="receipt-text" *ngIf="receipt.currentBill.adjustment != '.00'">{{receipt.currentBill.adjustment}}</span>
             <span class="receipt-text" *ngIf="receipt.earlyPaymentDiscount > 0">{{receipt.earlyPaymentDiscount}}</span>
-            <span class="receipt-text" *ngIf="receipt.reconnectionFee !== '0'">{{receipt.reconnectionFee}}</span>
+            <span class="receipt-text" *ngIf="receipt.reconnectionFee !== '0.00'">{{receipt.reconnectionFee}}</span>
           </div>
         </div>
         <ng-container *ngIf="receipt.previousBills.length != 0">
@@ -40,9 +42,11 @@
             <ng-container *ngFor="let bill of receipt.previousBills">
               <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="0">
                 <span class="receipt-text">{{bill.billingMonth}}</span>
+                <span class="receipt-text">Adjustment</span>
               </div>
               <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="0">
                 <span class="receipt-text">{{bill.amount}}</span>
+                <span class="receipt-text">{{bill.adjustment}}</span>
               </div>
             </ng-container>
           </div>

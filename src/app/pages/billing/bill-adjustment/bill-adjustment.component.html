@@ -1,0 +1,206 @@
+<mat-card class="cardWithShadow theme-card">
+  <mat-card-header fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="1em">
+      <mat-card-title>Bill Adjustment</mat-card-title>
+      <button type="button" mat-flat-button color="primary" (click)="openAddBillAdjustment()">Add Bill Adjustment</button>
+  </mat-card-header>
+  <mat-card-content class="b-t-1">
+    <div fxLayout="row" fxLayoutAlign="space-between baseline" fxLayoutGap="1em" class="m-t-16">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Account No</mat-label>
+        <input
+          matInput
+          [(ngModel)]="accountNumber"
+          (keyup.enter)="viewBillAdjustmentByAccNo(accountNumber)"
+          #searchAccount
+          (input)="onInputChange($event.target)"
+          />
+      </mat-form-field>
+      <button type="button" mat-flat-button color="primary" (click)="searchConsumer('Query')">search</button>
+    </div>
+    <div fxLayout="row" fxLayoutGap="1em">
+      <div fxLayout="column" fxFlex="40" fxLayoutGap="1em">
+        <mat-card class="b-1 shadow-none">
+          <mat-card-header>
+              <mat-card-title>Records</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="b-t-1">
+            <table mat-table [dataSource]="dataSource">
+              <!-- ledger reference number -->
+              <ng-container matColumnDef="ReferenceNo">
+                <th mat-header-cell *matHeaderCellDef> Ref# </th>
+                <td mat-cell *matCellDef="let element">
+                    {{ element.RefNo }}
+                </td>
+              </ng-container>
+              <!-- Date -->
+              <ng-container matColumnDef="BillNo">
+                <th mat-header-cell *matHeaderCellDef> Bill Number </th>
+                <td mat-cell *matCellDef="let element">
+                    {{element.BillNo}}
+                </td>
+              </ng-container>
+              <!-- Particulars -->
+              <ng-container matColumnDef="Remarks">
+                <th mat-header-cell *matHeaderCellDef> Remarks </th>
+                <td mat-cell *matCellDef="let element">
+                    {{element.Remarks}}
+                </td>
+              </ng-container>
+              <!-- Ledger Meter Reading -->
+              <ng-container matColumnDef="Adjustment">
+                <th mat-header-cell *matHeaderCellDef> Adjustment </th>
+                <td mat-cell *matCellDef="let element">
+                    {{computeAdjustment(element)}}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="Status">
+                <th mat-header-cell *matHeaderCellDef> Status </th>
+                <td mat-cell *matCellDef="let element">
+                  {{element.Status}}
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row;
+                let even = even;
+                columns: displayedColumns;"
+                [ngClass]="{gray: even}"
+                class="table-row cursor-pointer"
+                (click)="viewBilladjustmentDetails(row)"
+              >
+              </tr>
+            </table>
+            <div *ngIf="dataSource.data.length === 0 && showErrorMessage;">
+              <h3 class="text-center">No Bill Adjustment for this account yet</h3>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      <div fxLayout="column" fxFlex="60" fxLayoutGap="1em">
+        <mat-card class="b-1 shadow-none">
+          <mat-card-header>
+              <mat-card-title>Bill Adjustment</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="b-t-1">
+            <form [formGroup]="billAdjustmentForm">
+              <h3>Reference Number: {{referenceNumber}}</h3>
+              <div fxLayout="row" fxLayoutGap="1em" fxLayoutAlign="start baseline">
+                <mat-form-field appearance="outline" fxFlex="30" class="dense-2">
+                  <mat-label>Date</mat-label>
+                  <input matInput [matDatepicker]="picker1" placeholder="Date" formControlName="Date">
+                  <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                  <mat-datepicker #picker1></mat-datepicker>
+                </mat-form-field>
+                <h3 fxFlex="30">Status: {{billAdjustmentStatus}}</h3>
+              </div>
+
+              <div fxLayout="row" fxLayoutGap="1em" fxLayoutAlign="start baseline">
+                <mat-form-field appearance="outline" fxFlex="30" class="dense-2">
+                  <mat-label>Category</mat-label>
+                  <mat-select formControlName="Category">
+                    <mat-option *ngFor="let category of categories" [value]="category"> {{ category }} </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <h3>Approved by: {{approvedBy}}</h3>
+              </div>
+              <mat-divider></mat-divider>
+              <h3>Bill Details</h3>
+              <div fxLayout="row" fxLayoutGap="1em" fxLayoutAlign="start baseline">
+                <mat-form-field appearance="outline" class="dense-2">
+                  <mat-label>Bill Number</mat-label>
+                  <mat-select formControlName="BillNo">
+                    <mat-option *ngFor="let bill of billNumberArray" [value]="bill">{{bill}}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <ng-container *ngIf="billInfo">
+                  <h3>Bill For {{billInfo.BillingMonth}}</h3>
+                  <div>
+                    <mat-checkbox class="m-t-16" formControlName="isSenior">Senior Citizen</mat-checkbox>
+                  </div>
+                </ng-container>
+              </div>
+              <div fxLayout="row" fxLayoutGap="1em" fxLayoutAlign="space-evenly start">
+                  <div fxLayout="column" fxFlex="45">
+                    <h3>Amount</h3>
+                    <mat-form-field appearance="outline" class="w-100 dense-2">
+                      <mat-label>Amount Due</mat-label>
+                      <input
+                        matInput
+                        formControlName="OldAmountDue" readonly/>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="w-100 dense-2">
+                      <mat-label>Discount</mat-label>
+                      <input
+                        matInput
+                        formControlName="OldDiscount" readonly/>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="w-100 dense-2">
+                      <mat-label>Advance Payment</mat-label>
+                      <input
+                        matInput
+                        formControlName="OldAdvance" readonly/>
+                    </mat-form-field>
+                    <h3>Total Amount due {{oldBillTotal}}</h3>
+                  </div>
+                  <div fxLayout="column" fxFlex="45">
+                    <h3>New Amount</h3>
+                    <mat-form-field appearance="outline" class="w-100 dense-2">
+                      <mat-label>Amount Due</mat-label>
+                      <input
+                        type="number"
+                        matInput
+                        formControlName="NewAmountDue"
+                        placeholder="Enter Amount"
+                        onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 46"
+                        (input)="setInputValueToZero($event, 'NewAmountDue')"/>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="w-100 dense-2">
+                      <mat-label>Discount</mat-label>
+                      <input
+                        type="number"
+                        matInput
+                        formControlName="NewDiscount"
+                        placeholder="Discount"
+                        onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 46"
+                        (input)="setInputValueToZero($event, 'NewDiscount')"/>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="w-100 dense-2">
+                      <mat-label>Advance Payment</mat-label>
+                      <input
+                        type="number"
+                        matInput
+                        formControlName="NewAdvance"
+                        placeholder="Advance Payment"
+                        onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 46"
+                        (input)="setInputValueToZero($event, 'NewAdvance')"/>
+                    </mat-form-field>
+                    <h3>New total Amount due {{newBillTotal}}</h3>
+                  </div>
+                </div>
+                <mat-form-field appearance="outline" class="w-100 dense-2">
+                  <mat-label>Remarks</mat-label>
+                  <input
+                    matInput
+                    formControlName="Remarks"
+                    placeholder="Enter Remarks"/>
+                </mat-form-field>
+            </form>
+            <div fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="1em">
+              <button type="button" mat-flat-button color="primary" *ngIf="billAdjustmentStatus === 'Pending' && mode === 'Query'" (click)="onEditBillAdjustment()">Edit</button>
+              <button type="button" mat-flat-button color="primary" *ngIf="billAdjustmentStatus === 'Pending' && mode === 'Edit'" (click)="cancelEditBillAdjustment()">Cancel edit</button>
+              <button type="button" mat-flat-button color="primary" *ngIf="billAdjustmentStatus === 'Pending' && mode === 'Edit'" (click)="saveEditBillAdjustment()">Save</button>
+
+              <button type="button" mat-flat-button color="primary" *ngIf="billAdjustmentStatus === 'Pending' && mode === 'Query'" (click)="onPostBillAdjustment()">Post</button>
+              <button type="button" mat-flat-button color="primary" *ngIf="billAdjustmentStatus !== 'Cancelled' && mode === 'Query'" (click)="onCancelBillAdjustment()">Cancel</button>
+              <button type="button" mat-flat-button color="primary"
+                *ngIf="billAdjustmentStatus === 'Pending' && mode === 'Add'"
+                (click)="onSaveBillAdjustment()"
+                [disabled]="!this.billAdjustmentForm.valid">Save</button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

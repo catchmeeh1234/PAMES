@@ -24,7 +24,7 @@ export interface Data1 {
 })
 export class CreateOrComponent {
   @ViewChild('searchAccount') searchAccount!: ElementRef;
-  @ViewChild('printReceipt1') printReceipt!: ElementRef;
+  @ViewChild('printReceipt1') printReceipt: ElementRef;
 
   public companyName = environment.COMPANY_NAME;
   public companyAddress1 = environment.COMPANY_ADDRESS1;
@@ -89,6 +89,7 @@ export class CreateOrComponent {
       this.earlyPaymentRate = discount?.DiscountPercent.toString()!;
     });
 
+    //get reconnection fee
     this.reconnectionFeeSubscription = this.loadReconnectionFee().subscribe((amount => {
       this.reconnectionFee = amount!;
     }));
@@ -100,6 +101,7 @@ export class CreateOrComponent {
       reconnectionFee: [true, Validators.required],
       earlyPaymentDiscount: [true, Validators.required],
       earlyPaymentDiscountAmount: [0.00, Validators.required],
+      totalAdjustment: [0.00, Validators.required],
       modeOfPayment: ['Cash', Validators.required],
       referenceNumber: [''],
       checkDate: [''],
@@ -137,12 +139,16 @@ export class CreateOrComponent {
         totalAmount -= parseFloat(newEarlyPaymentDisc);
       }
 
+      //add adjustments
+      totalAmount += this.totalAdjustment;
+
       const newTotalAmount = totalAmount.toFixed(2);
 
       this.orFormGroup.patchValue({
         totalAmountDue: newTotalAmount,
         amountPaid: newTotalAmount,
       }, { emitEvent: false });
+
     });
 
     // Subscribe to changes in the reconnection fee checkbox
@@ -170,6 +176,9 @@ export class CreateOrComponent {
         const newEarlyPaymentDisc = Number(earlyPaymentDisc).toFixed(2);
         totalAmount -= parseFloat(newEarlyPaymentDisc);
       }
+
+      //add adjustments
+      totalAmount += this.totalAdjustment;
 
       const newTotalAmount = totalAmount.toFixed(2);
       // Update the 'totalamountdue' FormControl in the main FormGroup
@@ -223,6 +232,9 @@ export class CreateOrComponent {
         const newEarlyPaymentDisc = Number(earlyPaymentDisc).toFixed(2);
         totalAmount -= parseFloat(newEarlyPaymentDisc);
       }
+
+      //add adjustments
+      totalAmount += this.totalAdjustment;
 
       const newTotalAmount = totalAmount.toFixed(2);
       // Update the 'totalamountdue' FormControl in the main FormGroup
@@ -316,6 +328,23 @@ export class CreateOrComponent {
     }
   }
 
+  get totalAdjustment():number {
+    if (this.billingMonthFormArray.length != 0) {
+      let totalBillAdjustment = 0;
+      for (let index = 0; index < this.billingMonthFormArray.length; index++) {
+        const isChecked = this.billingMonthFormArray.at(index).value.Checked;
+        const adjustment = this.billingMonthFormArray.at(index).value.adjustment;
+
+        if (isChecked) {
+          totalBillAdjustment += parseFloat(adjustment);
+        }
+      }
+      return totalBillAdjustment;
+    } else {
+      return 0.00;
+    }
+  }
+
   setUnpaidBills(bills:BillInfo[]) {
     for (let [index, bill] of bills.entries()) {
       this.billingMonthFormArray.push(this.createBillGroup(bill));
@@ -328,6 +357,7 @@ export class CreateOrComponent {
       monthYear: [bill ? bill.BillingMonth: null, Validators.required],
       Checked: [bill ? bill.checked: null, Validators.required],
       amountDue: [bill ? bill.AmountDue: null, Validators.required],
+      adjustment: [bill ? bill.Adjustment: null, Validators.required],
       totalAmountDue: [bill ? this.calculateTotalAmountDue(bill): null, Validators.required],
       billDetails: [bill ? bill: null, Validators.required],
     });
@@ -343,7 +373,6 @@ export class CreateOrComponent {
   get billNumber() {
     return this.billingMonthFormArray.get("billNumber")?.value;
   }
-
 
   //calculate total amount due of all unpaid bills
   calculateTotalAmountDue(billInfo:BillInfo) {
@@ -463,17 +492,17 @@ export class CreateOrComponent {
       }
 
       //loop through all unpaid bills
-      let billAmountDue = 0;
-      for (let index = 0; index < this.billingMonthFormArray.length; index++) {
-        console.log(this.billingMonthFormArray.at(index).value);
-        const isChecked = this.billingMonthFormArray.at(index).value.Checked;
-        const amountDue = this.billingMonthFormArray.at(index).value.amountDue;
+      // let billAmountDue = 0;
+      // for (let index = 0; index < this.billingMonthFormArray.length; index++) {
+      //   console.log(this.billingMonthFormArray.at(index).value);
+      //   const isChecked = this.billingMonthFormArray.at(index).value.Checked;
+      //   const amountDue = this.billingMonthFormArray.at(index).value.amountDue;
 
-        if (isChecked) {
-          billAmountDue = amountDue;
-          break;
-        }
-      }
+      //   if (isChecked) {
+      //     billAmountDue = amountDue;
+      //     break;
+      //   }
+      // }
 
       //add early payment discount
       if (this.orFormGroup.get('earlyPaymentDiscount')?.value) {
@@ -482,10 +511,13 @@ export class CreateOrComponent {
         totalAmountDue -= parseFloat(newEarlyPaymentDisc);
       }
 
+      //add adjustments
+      totalAmountDue += this.totalAdjustment;
 
       //this.totalAmountDue = totalAmountDue;
 
       //set amountPaid
+      //set adjustment
       this.orFormGroup.patchValue({
         amountPaid: totalAmountDue.toFixed(2)
       })
@@ -522,19 +554,19 @@ export class CreateOrComponent {
       const createOR:any = await this.officialReceiptService.createOR(orDetails.value).toPromise();
       if (createOR.status === "OR Created") {
         alert(createOR.status);
-          this.calculateChange(amountPaid, totalAmountDue);
-          //this.snackbarService.showSuccess(response.status);
-          //print OR
-          this.receiptDetails = this.createReceiptDetails(newORDetails, this.billingMonthFormArray.value, this.data.consumerInfo);
+        this.calculateChange(amountPaid, totalAmountDue);
+        //this.snackbarService.showSuccess(response.status);
+        //print OR
+        this.receiptDetails = this.createReceiptDetails(newORDetails, this.billingMonthFormArray.value, this.data.consumerInfo);
 
-          if (this.printReceipt && this.printReceipt.nativeElement) {
-            setTimeout(() => {
-              this.printReceipt.nativeElement.click();
-              this.clearFields();
-            }, 1000);
-          } else {
-            console.log('Button element not found.');
-          }
+        if (this.printReceipt && this.printReceipt.nativeElement) {
+          setTimeout(() => {
+            this.printReceipt.nativeElement.click();
+            this.clearFields();
+          }, 1000);
+        } else {
+          console.log('Button element not found.');
+        }
 
       } else {
         this.snackbarService.showError(createOR.status);
@@ -620,6 +652,7 @@ export class CreateOrComponent {
         billNumber: newBills[0].billNumber,
         billingMonth: newBills[0].monthYear,
         amount: newBills[0].amountDue,
+        adjustment: newBills[0].adjustment,
       },
       earlyPaymentDiscount: earlyPaymentDiscountTotal,
       reconnectionFee: reconnectionFeeAmount,

@@ -69,9 +69,8 @@ export class CancelOrComponent {
     const newDate = this.dateFormatService.formatDate(this.cancelORForm.get("CurrentDate")?.value);
     details.CurrentDate = newDate;
     const res:any = await this.officialReceiptService.cancelOR(details).toPromise();
-    console.log(res);
     if (res.status === "OR Cancelled") {
-      this.dialogRef.close();
+      this.dialogRef.close(res.status);
     } else {
       this.snackbarService.showError(res.status);
     }

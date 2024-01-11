@@ -24,6 +24,8 @@ export type BillInfo = {
   isSenior: string;
   Consumption: string;
   AmountDue: string;
+  AdvancePayment: string;
+  Adjustment: string;
   isPaid: string;
   MeterReader: string;
   SeniorDiscount: string;
@@ -42,6 +44,7 @@ export interface BillingMonth {
   billNumber: string,
   billingMonth: string,
   amount: string,
+  adjustment: string,
 }
 
 export interface BillMonthGroup {
@@ -50,6 +53,33 @@ export interface BillMonthGroup {
   Checked: boolean,
   amountDue: string,
   billDetails: BillInfo,
+  adjustment: string,
+}
+
+export interface BillAdjustment {
+  billadjustID: string
+  RefNo: string
+  AccountNo: string
+  AccountName: string
+  Remarks: string
+  BillNo: string
+  BillNumberArray: []
+  Date: string
+  DatePosted: string
+  Status: string
+  CreatedBy: string
+  ApprovedBy: string
+  BillCovered: string
+  OldAmountDue: string
+  OldDiscount: string
+  OldPenalty: string
+  OldAdvance: string
+  NewAmountDue: string
+  NewDiscount: string
+  NewPenalty: string
+  NewAdvance: string
+  Category: string
+  AssocID?: string
 }
 
 @Injectable({
@@ -133,6 +163,34 @@ export class BillService {
     return this.http.post(`${environment.API_URL}/Bills/cancelBill.php`, params, { responseType: 'json' });
   }
 
+  createBillAdjustment(billAdjustment:any) {
+    let params = new FormData();
+    let json = JSON.stringify(billAdjustment);
+    params.append('billAdjustmentDetails', json);
+    return this.http.post(`${environment.API_URL}/Bills/createBillAdjustment.php`, params, { responseType: 'json' });
+  }
+
+  editBillAdjustment(billAdjustment:any) {
+    let params = new FormData();
+    let json = JSON.stringify(billAdjustment);
+    params.append('billAdjustmentDetails', json);
+    return this.http.post(`${environment.API_URL}/Bills/editBillAdjustment.php`, params, { responseType: 'json' });
+  }
+
+  cancelBillAdjustment(billAdjustment:any) {
+    let params = new FormData();
+    let json = JSON.stringify(billAdjustment);
+    params.append('billAdjustmentDetails', json);
+    return this.http.post(`${environment.API_URL}/Bills/cancelBillAdjustment.php`, params, { responseType: 'json' });
+  }
+
+  postBillAdjustment(billAdjustment:any) {
+    let params = new FormData();
+    let json = JSON.stringify(billAdjustment);
+    params.append('billAdjustmentDetails', json);
+    return this.http.post(`${environment.API_URL}/Bills/postBillAdjustment.php`, params, { responseType: 'json' });
+  }
+
   searchBills(billingMonth:string, billStatus:string, zone:string) {
     return this.http.get(`${environment.API_URL}/Bills/searchBill.php?billingMonth=${billingMonth}&billStatus=${billStatus}&zone=${zone}`, { responseType: 'json' });
   }
@@ -173,6 +231,18 @@ export class BillService {
 
   fetchUnpaidBills(data:string) {
     return this.http.get<BillInfo[]>(`${environment.API_URL}/Bills/loadUnpaidBills.php?data=${data}`, { responseType: 'json' });
+  }
+
+  fetchBillAdjustmentByAccNo(accountNumber:string) {
+    return this.http.get<BillAdjustment[]>(`${environment.API_URL}/Bills/viewBillAdjustmentByAccNo.php?accountNumber=${accountNumber}`, { responseType: 'json' });
+  }
+
+  fetchBillAdjustmentByBillNo(billNumber:string) {
+    return this.http.get<BillAdjustment[]>(`${environment.API_URL}/Bills/viewBillAdjustmentByBillNo.php?billNumber=${billNumber}`, { responseType: 'json' });
+  }
+
+  fetchBillAdjustmentByRefNo(refNo:string) {
+    return this.http.get<BillAdjustment[]>(`${environment.API_URL}/Bills/viewBillAdjustmentByRefNo.php?refNo=${refNo}`, { responseType: 'json' });
   }
 
 }

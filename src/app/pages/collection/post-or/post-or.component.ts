@@ -95,7 +95,7 @@ export class PostOrComponent {
       }
     }
     alert(`Posted ${count} OR`);
-
+    this.selection.clear();
   }
 
   viewOR(CRNo:string) {

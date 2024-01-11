@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { BillingRoutingModule } from './billing-routing.module';
 import { BillsComponent } from './bills/bills.component';
 import { CreateBillsComponent } from './create-bills/create-bills.component';
@@ -12,7 +11,7 @@ import { ComponentsModule } from 'src/app/components/components.module';
 import { CreateSingleBillComponent } from './create-single-bill/create-single-bill.component';
 import { BillInfoComponent } from './bill-info/bill-info.component';
 import { EditBillComponent } from './edit-bill/edit-bill.component';
-import { BillingAddjustmentComponent } from './billing-addjustment/billing-addjustment.component';
+import { BillAdjustmentComponent } from './bill-adjustment/bill-adjustment.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +20,7 @@ import { BillingAddjustmentComponent } from './billing-addjustment/billing-addju
     CreateSingleBillComponent,
     BillInfoComponent,
     EditBillComponent,
-    BillingAddjustmentComponent
+    BillAdjustmentComponent
   ],
   imports: [
     FormsModule,

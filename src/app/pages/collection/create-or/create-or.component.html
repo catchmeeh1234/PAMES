@@ -62,12 +62,16 @@
           </mat-card>
           <mat-card class="b-1 shadow-none" >
             <mat-card-header>
-              <mat-card-title>Discounts</mat-card-title>
+              <mat-card-title>Discounts & Adjustments</mat-card-title>
             </mat-card-header>
             <mat-card-content class="b-t-1">
               <div fxLayout="row" fxLayoutAlign="space-between center">
                 <h4 class="l-0">{{(earlyPaymentDiscount | async)?.DiscountName }}({{calculateEarlyPaymentDiscount((earlyPaymentDiscount | async)?.DiscountPercent, latestBillAmountDue)}})</h4>
                 <mat-checkbox formControlName="earlyPaymentDiscount"></mat-checkbox>
+              </div>
+              <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="totalAdjustment">
+                <h4 class="l-0">Adjustments</h4>
+                <h4>{{totalAdjustment}}</h4>
               </div>
             </mat-card-content>
           </mat-card>

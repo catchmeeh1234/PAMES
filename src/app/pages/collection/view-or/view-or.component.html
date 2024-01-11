@@ -25,7 +25,7 @@
       </div>
       <div fxLayoutGap="0.5em">
         <button *ngIf="collectionBillings && collectionBillings.length > 0" mat-flat-button color="primary" printSectionId="print-section" ngxPrint [useExistingCss]="true" [previewOnly]="true">print</button>
-        <button mat-flat-button color="primary" *ngIf="collectionBillings && collectionBillings.length != 0" (click)="openCollectionCancel(this.collectionDetails)">cancel</button>
+        <button mat-flat-button color="primary" *ngIf="selectedOR && selectedOR?.CollectionStatus !== 'Cancelled'" (click)="openCollectionCancel(selectedOR)">cancel</button>
       </div>
     </div>
     <div fxLayout="row" fxLayoutGap="1em">
@@ -36,9 +36,9 @@
           </mat-card-header>
           <mat-card-content class="b-t-1">
             <mat-list>
-              <ng-container *ngFor="let or of collectionDetails" (click)="viewORDetails(or)">
+              <ng-container *ngFor="let or of collectionDetails">
                 <br>
-                <mat-list-item>
+                <mat-list-item (click)="viewORDetails(or)">
                   <span matListItemTitle class="mat-body-1 cursor-pointer">
                     <span [className]="or.CollectionStatus">{{or.CollectionStatus}}</span>
                   </span>
@@ -83,13 +83,17 @@
                   <span>Amount Due</span>
                   <span>{{collectionBilling.AmountDue}}</span>
                 </div>
-                <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.Discount === '0.00'">
+                <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.Discount != '.00'">
                   <span>Senior Discount</span>
                   <span>{{collectionBilling.Discount}}</span>
                 </div>
-                <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.earlyPaymentDiscount === '0.00'">
+                <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.earlyPaymentDiscount != '.00'">
                   <span>Early Payment Discount</span>
                   <span>{{collectionBilling.earlyPaymentDiscount}}</span>
+                </div>
+                <div fxLayout="row" fxLayoutAlign="space-between center" *ngIf="collectionBilling.Adjustment != '.00'">
+                  <span>Adjustment</span>
+                  <span>{{collectionBilling.Adjustment}}</span>
                 </div>
                 <div fxLayout="row" fxLayoutAlign="space-between center">
                   <span>View Bill</span>
@@ -122,7 +126,7 @@
               <ng-container *ngIf="or.CRNo === selectedOR.CRNo">
                 <div fxLayout="row" fxLayoutAlign="space-between center" class="m-t-16">
                   <span>Total Amount Due</span>
-                  <span>{{or.TotalAmountDue}}</span>
+                  <span>{{ or.TotalAmountDue}}</span>
                 </div>
                 <div fxLayout="row" fxLayoutAlign="space-between center" >
                   <span>Payment type</span>
