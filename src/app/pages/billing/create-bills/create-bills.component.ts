@@ -10,6 +10,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { Announcement, AnnouncementService } from 'src/app/services/announcement.service';
 import { MatPaginator } from '@angular/material/paginator';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-create-bills',
@@ -29,13 +30,13 @@ export class CreateBillsComponent {
   ];
   dataSource:any;
 
-  zones:Zone[] | undefined;
+  zones:Zone[];
   selectedZones:string[] = [];
 
   currentDate = new Date();
   selectedBillingMonth: Date =  new Date(this.currentDate.setMonth(this.currentDate.getMonth() - 1));
 
-  meterReaders:MeterReader[] | undefined;
+  meterReaders:MeterReader[];
   selectedMeterReader:string = "";
 
   //announcement
@@ -63,18 +64,15 @@ export class CreateBillsComponent {
 
   async onLoadZones() {
     const checked = false;
-    const zones:Zone[] | undefined = await this.zoneService.fetchZones().toPromise();
-    if (zones) {
-      const newZones = zones.map(zone => ({
-        ...zone,
-        checked
-      }));
-
-      this.zones = newZones;
-    }
+    const zones = await lastValueFrom(this.zoneService.fetchZones());
+    const newZones = zones.map(zone => ({
+      ...zone,
+      checked
+    }));
+    this.zones = newZones;
   }
   async onLoadMeterReaders() {
-    this.meterReaders = await this.meterReaderService.fetchMeterReader("All").toPromise();
+    this.meterReaders = await lastValueFrom(this.meterReaderService.fetchMeterReader("All"));
   }
 
   onCheckboxChange(zone:Zone) {
@@ -106,12 +104,7 @@ export class CreateBillsComponent {
     const newBillingMonth = this.dateFormatService.convertToMonthYearString(billingMonth);
     //console.log(zones, newBillingMonth, meterReader);
 
-    const preparedBills:any = await this.billService.prepareBills(zones, newBillingMonth, meterReader, username).toPromise();
-    console.log(preparedBills);
-
-    if (!preparedBills) {
-      return;
-    }
+    const preparedBills:any = await lastValueFrom(this.billService.prepareBills(zones, newBillingMonth, meterReader, username));
 
     if (preparedBills.status !== "Bills Prepared") {
       console.log(preparedBills.status);
@@ -130,7 +123,7 @@ export class CreateBillsComponent {
       return;
     }
 
-    const res:any = await this.billService.createBills(preparedBills.data, newBillingMonth, zones).toPromise();
+    const res:any = await lastValueFrom(this.billService.createBills(preparedBills.data, newBillingMonth, zones));
 
     if (res.status === "Bills Created") {
       this.snackbarService.showSuccess(res.status);
@@ -154,16 +147,14 @@ export class CreateBillsComponent {
   }
 
   async onLoadAnnouncement() {
-    const announcements = await this.announcementService.loadAnnouncement().toPromise();
-    if (announcements) {
-      for (const announcement of announcements) {
-        if (announcement.AnnounceID === "1") {
-          this.announcementMessage = announcement.Announce;
-        } else if(announcement.AnnounceID === "2") {
-          this.announcementContactNo = announcement.Announce;
-        } else {
-          console.log("Something went wrong");
-        }
+    const announcements = await lastValueFrom(this.announcementService.loadAnnouncement());
+    for (const announcement of announcements) {
+      if (announcement.AnnounceID === "1") {
+        this.announcementMessage = announcement.Announce;
+      } else if(announcement.AnnounceID === "2") {
+        this.announcementContactNo = announcement.Announce;
+      } else {
+        console.log("Something went wrong");
       }
     }
   }
@@ -174,7 +165,7 @@ export class CreateBillsComponent {
       return;
     }
     //add validation later for message and contact no
-    const response:any = await this.announcementService.updateAnnouncement(message, contactNo).toPromise();
+    const response:any = await lastValueFrom(this.announcementService.updateAnnouncement(message, contactNo));
 
     if (response.status === "Announcement updated") {
       this.snackbarService.showSuccess(response.status);

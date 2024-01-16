@@ -63,9 +63,14 @@ export const navItems: NavItem[] = [
     route: '/billing/create-bills',
   },
   {
+    displayName: 'Post Bills',
+    iconName: 'cash',
+    route: '/billing/post-bills',
+  },
+  {
     displayName: 'Bill Adjustment',
     iconName: 'cash',
-    route: '/billing/bill-adjustment',
+    route: `/billing/bill-adjustment`,
   },
 
   {

@@ -1,6 +1,7 @@
 import { Component, ElementRef, Inject, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { lastValueFrom } from 'rxjs';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { PasswordStatus, UseraccountsService } from 'src/app/services/useraccounts.service';
 
@@ -97,7 +98,7 @@ export class PasswordPromptComponent {
       return;
     }
 
-    const res:any = await this.userAccountsService.validateAuthorizationPassword(password).toPromise();
+    const res:any = await lastValueFrom(this.userAccountsService.validateAuthorizationPassword(password));
     const newRes:PasswordStatus = res;
 
     if (newRes.status === "access granted") {

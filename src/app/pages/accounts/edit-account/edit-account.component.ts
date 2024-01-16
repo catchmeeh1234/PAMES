@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Observable, Subscription, of,  } from 'rxjs';
+import { Observable, Subscription, lastValueFrom, of,  } from 'rxjs';
 import { Consumer, ConsumerService } from 'src/app/services/consumer.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 
@@ -63,12 +63,7 @@ export class EditAccountComponent {
 
   async updateConsumerAccount(formvalues:Consumer) {
     console.log(formvalues);
-    const res = await this.consumerService.updateConsumerInfo(formvalues).toPromise();
-
-    if (res?.status === undefined) {
-      return;
-    }
-
+    const res = await lastValueFrom(this.consumerService.updateConsumerInfo(formvalues));
 
     if (res.status === "Consumer Info updated successfully") {
       this.snackbarService.showSuccess(res.status);

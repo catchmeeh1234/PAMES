@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
+import { lastValueFrom } from 'rxjs';
 import { ChargeType, Charges, ChargesService } from 'src/app/services/charges.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 
@@ -29,7 +30,7 @@ export class AddChargesComponent {
 
 
   async onSave(chargesInfo:Charges) {
-    const res:any = await this.chargesService.addCharges(chargesInfo).toPromise();
+    const res:any = await lastValueFrom(this.chargesService.addCharges(chargesInfo));
       if (res.status === "Charges Added") {
         this.snackbarService.showSuccess(res.status);
 

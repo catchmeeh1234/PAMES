@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { Consumer, ConsumerService, Product, ProductInfo } from 'src/app/services/consumer.service';
-import { Observable, filter, map, pipe } from 'rxjs';
+import { Observable, filter, lastValueFrom, map, pipe } from 'rxjs';
 import { Router } from '@angular/router';
 
 @Component({
@@ -41,7 +41,7 @@ export class ManageAccountsComponent {
     this.res$ = this.consumerService.fetchConsumers(numbersOfSelection);
 
     //load the actual table
-    const resToPromise = await this.res$.toPromise();
+    const resToPromise = await lastValueFrom(this.res$, {defaultValue: [] as Consumer[]});
 
     this.consumerService.dataSource = new MatTableDataSource(resToPromise)
     this.consumerService.dataSource.paginator = this.paginator;

@@ -1,5 +1,6 @@
 import { Component, ElementRef, HostListener } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
+import { lastValueFrom } from 'rxjs';
 import { ConsumerService } from 'src/app/services/consumer.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { ZoneService } from 'src/app/services/zone.service';
@@ -155,12 +156,8 @@ export class FilterCustomerComponent {
 
     //console.log(search, status, zone);
 
-    const searchedAccounts:any = await this.consumerService.searchConsumer(search, zone, status).toPromise();
+    const searchedAccounts = await lastValueFrom(this.consumerService.searchConsumer(search, zone, status));
     console.log(searchedAccounts);
-
-    if (!searchedAccounts) {
-      return;
-    }
     this.consumerService.dataSource.data = searchedAccounts;
   }
 }

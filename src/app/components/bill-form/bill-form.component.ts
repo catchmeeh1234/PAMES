@@ -13,6 +13,7 @@ import { SessionStorageServiceService } from 'src/app/services/session-storage-s
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { SearchConsumerComponent } from '../search-consumer/search-consumer.component';
 import { Data1 } from 'src/app/pages/collection/create-or/create-or.component';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-bill-form',
@@ -108,14 +109,14 @@ export class BillFormComponent {
 
     if (this.formData.action === "Edit" && this.formData.bill_no) {
       const bill_no = this.formData.bill_no;
-      const billInfo = await this.billService.fetchBillByBillNo(bill_no).toPromise();
-      if (billInfo) {
-        this.rateName = billInfo[0].RateSchedule;
-        const rate:any = await this.rateScheduleService.loadRateSchedule(this.rateName).toPromise();
-        this.rateKwh = rate[0].kwh;
-        this.billCharges = await this.billService.fetchBillCharges(bill_no).toPromise();
-        this.populateBillFormOnEdit(billInfo[0], this.rateKwh, this.billCharges);
-      }
+      const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(bill_no));
+
+      this.rateName = billInfo[0].RateSchedule;
+      const rate = await lastValueFrom(this.rateScheduleService.loadRateSchedule(this.rateName));
+      this.rateKwh = rate[0].kwh;
+      this.billCharges = await lastValueFrom(this.billService.fetchBillCharges(bill_no));
+      this.populateBillFormOnEdit(billInfo[0], this.rateKwh, this.billCharges);
+
     }
 
 
@@ -279,39 +280,28 @@ export class BillFormComponent {
   }
 
   async onLoadRateSchedule(classification:string) {
-    const type = await this.rateScheduleService.loadRateSchedule(classification).toPromise();
-    if (type && type.length !== 0) {
-      this.rateKwh = type[0].kwh;
-    }
+    const type = await lastValueFrom(this.rateScheduleService.loadRateSchedule(classification));
+    this.rateKwh = type[0].kwh;
   }
 
   async onLoadDiscounts() {
     this.seniorPercentDiscount = 0;
-    const seniorDiscount = await this.discountsService.loadDiscounts("Senior Citizen").toPromise();
-    if (seniorDiscount && seniorDiscount.length !== 0) {
-      this.seniorPercentDiscount = seniorDiscount[0].DiscountPercent;
-    }
+    const seniorDiscount = await lastValueFrom(this.discountsService.loadDiscounts("Senior Citizen"));
+    this.seniorPercentDiscount = seniorDiscount[0].DiscountPercent;
   }
 
   async onLoadReadingDay(zone:string) {
-    const reading_day = await this.readingSettingsService.loadReadingSettings("reading_day", zone).toPromise();
-    if (reading_day) {
-      this.readingDay = parseInt(reading_day[0].value);
-
-    }
+    const reading_day = await lastValueFrom(this.readingSettingsService.loadReadingSettings("reading_day", zone));
+    this.readingDay = parseInt(reading_day[0].value);
   }
 
   async onLoadMeterReaders() {
-    this.meterreaders = await this.meterReaderService.fetchMeterReader("All").toPromise();
+    this.meterreaders = await lastValueFrom(this.meterReaderService.fetchMeterReader("All"));
   }
 
   async loadBillCharges(billno:string) {
-    const billCharges = await this.billService.fetchBillCharges(billno).toPromise();
-    if (billCharges) {
-      return billCharges;
-    } else {
-      return [];
-    }
+    const billCharges = await lastValueFrom(this.billService.fetchBillCharges(billno));
+    return billCharges;
   }
 
   async onLoadConsumerCharges(account_no:string, month:string, year:number, ) {
@@ -322,9 +312,8 @@ export class BillFormComponent {
     const newMonth = months.indexOf(month) + 1;
     console.log(newMonth, year);
 
-    const consumerCharges = await this.consumerService.fetchConsumerCharges(account_no).toPromise();
-    if (consumerCharges) {
-      this.consumerCharges = consumerCharges?.filter(data => data.Recurring === 'Yes' || (data.BillingMonth === newMonth.toString() && data.BillingYear === year.toString()))
+    const consumerCharges = await lastValueFrom(this.consumerService.fetchConsumerCharges(account_no));
+    this.consumerCharges = consumerCharges.filter(data => data.Recurring === 'Yes' || (data.BillingMonth === newMonth.toString() && data.BillingYear === year.toString()))
                             // .map(charges => {
                             //   if (charges.ChargeType === "Fixed") {
                             //     charges.Amount = parseFloat(charges.Amount).toFixed(2);
@@ -341,7 +330,6 @@ export class BillFormComponent {
                             //   }
                             // });
 
-    }
     //console.log(this.consumerCharges);
 
     this.billForm.patchValue({
@@ -486,11 +474,7 @@ export class BillFormComponent {
     }
 
     //fetch consumer info by acc no
-    const consumerInfo = await this.consumerService.fetchConsumerInfoByAccNo(accountNumber).toPromise();
-
-    if (!consumerInfo) {
-      return;
-    }
+    const consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(accountNumber));
 
     this.data.consumerInfo = undefined;
     this.billForm.reset();
@@ -622,7 +606,7 @@ export class BillFormComponent {
         DueDateFormatted: this.dateFormatService.formatDate(this.billForm.get("DueDate")?.value),
       });
       //console.log(this.billForm.value);
-      const res:any = await this.billService.createBill(this.billForm.getRawValue()).toPromise();
+      const res:any = await lastValueFrom(this.billService.createBill(this.billForm.getRawValue()));
       //console.log(res);
 
       if (res.status === "Bill Created") {
@@ -669,7 +653,7 @@ export class BillFormComponent {
 
       console.log(this.billForm.getRawValue());
 
-      const res:any = await this.billService.updateBill(this.billForm.getRawValue()).toPromise();
+      const res:any = await lastValueFrom(this.billService.updateBill(this.billForm.getRawValue()));
       console.log(res);
 
       if (res.status === "Bill Updated") {

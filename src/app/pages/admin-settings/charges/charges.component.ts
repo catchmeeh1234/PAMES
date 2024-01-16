@@ -6,6 +6,7 @@ import { Charges, ChargesService } from 'src/app/services/charges.service';
 import { EditChargesComponent } from '../edit-charges/edit-charges.component';
 import { ConsumerService } from 'src/app/services/consumer.service';
 import { MatPaginator } from '@angular/material/paginator';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-charges',
@@ -41,7 +42,7 @@ export class ChargesComponent {
   }
 
   async onLoadCharges() {
-   const charges = await this.chargesService.loadCharges().toPromise();
+   const charges = await lastValueFrom(this.chargesService.loadCharges());
    console.log(charges);
     this.chargesService.dataSource = new MatTableDataSource(charges);
     this.chargesService.dataSource.paginator = this.paginator;

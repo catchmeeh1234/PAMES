@@ -6,11 +6,13 @@ import { Zone } from './zone.service';
 import { BehaviorSubject } from 'rxjs';
 
 export type BillInfo = {
+  position?: number,
   billid: string;
   BillNo: string;
   AccountNumber: string;
   CustomerName: string;
   CustomerAddress: string;
+  Zone: string;
   DateFrom: string;
   ReadingDate: string;
   DiscDate: string;
@@ -97,7 +99,7 @@ export class BillService {
   // }
 
   fetchBills(accno:string) {
-    return this.http.get(`${environment.API_URL}/Bills/loadBills.php?accno=${accno}`, {responseType: 'json'})
+    return this.http.get<BillInfo[]>(`${environment.API_URL}/Bills/loadBills.php?accno=${accno}`, {responseType: 'json'})
   }
 
   fetchBillByBillNo(billno:string) {
@@ -156,6 +158,7 @@ export class BillService {
     return this.http.post(`${environment.API_URL}/Bills/postBill.php`, params, { responseType: 'json' });
   }
 
+
   cancelBill(billInfo:any) {
     let params = new FormData();
     let json = JSON.stringify(billInfo);
@@ -192,7 +195,7 @@ export class BillService {
   }
 
   searchBills(billingMonth:string, billStatus:string, zone:string) {
-    return this.http.get(`${environment.API_URL}/Bills/searchBill.php?billingMonth=${billingMonth}&billStatus=${billStatus}&zone=${zone}`, { responseType: 'json' });
+    return this.http.get<BillInfo[]>(`${environment.API_URL}/Bills/searchBill.php?billingMonth=${billingMonth}&billStatus=${billStatus}&zone=${zone}`, { responseType: 'json' });
   }
 
   printBill(receipt:any) {
@@ -231,6 +234,10 @@ export class BillService {
 
   fetchUnpaidBills(data:string) {
     return this.http.get<BillInfo[]>(`${environment.API_URL}/Bills/loadUnpaidBills.php?data=${data}`, { responseType: 'json' });
+  }
+
+  fetchPendingBills() {
+    return this.http.get<BillInfo[]>(`${environment.API_URL}/Bills/loadPendingBills.php`, { responseType: 'json' });
   }
 
   fetchBillAdjustmentByAccNo(accountNumber:string) {

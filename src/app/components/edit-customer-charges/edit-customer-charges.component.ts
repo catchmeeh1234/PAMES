@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Charges, ChargesService } from 'src/app/services/charges.service';
 import { ConsumerService, ScheduleCharges } from 'src/app/services/consumer.service';
 import { DateFormatService } from 'src/app/services/date-format.service';
-import { Subscription, of, sample } from 'rxjs';
+import { Subscription, lastValueFrom, of, sample } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 
@@ -22,7 +22,7 @@ export class EditCustomerChargesComponent {
 
   chargesSubscription:Subscription
 
-  charges:Charges[] | undefined;
+  charges:Charges[];
   months:string[];
   years:number[];
 
@@ -88,15 +88,13 @@ export class EditCustomerChargesComponent {
   }
 
   async onLoadCharges() {
-    this.charges = await this.chargesService.loadCharges().toPromise();
+    this.charges = await lastValueFrom(this.chargesService.loadCharges());
   }
 
   async getChargebyId() {
-    const charges = await this.chargesService.loadCharges().toPromise();
-    const charge = charges?.filter(charges => charges.ChargeID.toString() === this.scheduleCharge.ChargeID);
-    if (charge) {
-      this.currentConsumerCharge = charge[0];
-    }
+    const charges = await lastValueFrom(this.chargesService.loadCharges());
+    const charge = charges.filter(charges => charges.ChargeID.toString() === this.scheduleCharge.ChargeID);
+    this.currentConsumerCharge = charge[0];
   }
 
   compareSelectedCharge(option:Charges, value:Charges) {
@@ -116,7 +114,7 @@ export class EditCustomerChargesComponent {
 
   async saveCustomerCharge() {
     if (this.editScheduleChargeForm.valid) {
-      const res:any = await this.consumerService.editScheduleCharge(this.editScheduleChargeForm.value).toPromise();
+      const res:any = await lastValueFrom(this.consumerService.editScheduleCharge(this.editScheduleChargeForm.value));
       if (res.status === "Schedule Charge Updated") {
         this.snackbarService.showSuccess(res.status);
 

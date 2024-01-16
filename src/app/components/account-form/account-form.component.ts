@@ -8,7 +8,7 @@ import { SessionStorageServiceService } from 'src/app/services/session-storage-s
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { ZoneService } from 'src/app/services/zone.service';
 import { Router } from '@angular/router';
-import { Observable, Subscription, from, map, of,  } from 'rxjs';
+import { Observable, Subscription, from, lastValueFrom, map, of,  } from 'rxjs';
 import { MatDialogRef } from '@angular/material/dialog';
 
 type Status = "Adding Failed" | "Consumer Added";
@@ -132,24 +132,19 @@ export class AccountFormComponent {
   }
 
   async loadCustomerStatuses() {
-    const statuses = await this.consumerService.fetchConsumerStatus().toPromise();
-    if (statuses) {
-      this.customerStatuses = statuses;
-    }
+    const statuses = await lastValueFrom(this.consumerService.fetchConsumerStatus());
+    this.customerStatuses = statuses;
+
   }
 
   async loadZones() {
-    const response = await this.zoneService.fetchZones().toPromise();
-    if (response) {
-      this.zones = response;
-    }
+    const zones = await lastValueFrom(this.zoneService.fetchZones());
+    this.zones = zones;
   }
 
   async loadRates() {
-    const rates = await this.rateService.loadRateSchedule("All").toPromise();
-    if (rates) {
-      this.rates = rates;
-    }
+    const rates = await lastValueFrom(this.rateService.loadRateSchedule("All"));
+    this.rates = rates;
   }
 
   onZoneAndClassChange() {
@@ -341,7 +336,7 @@ export class AccountFormComponent {
     //console.log(allFormData);
 
     if (formData.action === "Create") {
-      const res:any = await this.consumerService.addConsumers(allFormData).toPromise();
+      const res:any = await lastValueFrom(this.consumerService.addConsumers(allFormData));
       let status: Status = res.status;
       if (status === "Consumer Added") {
         this.snackbarService.showSuccess(status);
@@ -368,7 +363,7 @@ export class AccountFormComponent {
         //console.log(status);
       }
     } else if(formData.action === "Edit") {
-      const res = await this.consumerService.updateConsumerInfo(allFormData).toPromise();
+      const res:any = await lastValueFrom(this.consumerService.updateConsumerInfo(allFormData));
 
       if (res?.status === undefined) {
         return;

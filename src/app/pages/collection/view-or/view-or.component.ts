@@ -5,7 +5,7 @@ import { Consumer, ConsumerService } from 'src/app/services/consumer.service';
 import { CollectionBilling, CollectionCharges, CollectionDetails, ORFormGroup, OfficialReceiptService, ReceiptDetails } from 'src/app/services/official-receipt.service';
 import { Data1 } from '../create-or/create-or.component';
 import { BillInfo, BillService, BillingMonth } from 'src/app/services/bill.service';
-import { Subscription } from 'rxjs';
+import { Subscription, lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { CancelOrComponent } from 'src/app/components/cancel-or/cancel-or.component';
@@ -73,7 +73,7 @@ export class ViewOrComponent {
     }
 
     //fetch consumer info by acc no
-    const consumerInfo = await this.consumerService.fetchConsumerInfoByAccNo(accountNumber).toPromise();
+    const consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(accountNumber));
 
     this.data.consumerInfo = undefined;
     this.clearFields();
@@ -87,17 +87,12 @@ export class ViewOrComponent {
       }
     }
 
-    if (consumerInfo) {
-      //populate consumer summary section
-      this.data.consumerInfo = consumerInfo;
+    //populate consumer summary section
+    this.data.consumerInfo = consumerInfo;
 
-      //search all or for this account number
-      const collectionDetails = await this.officialReceiptService.fetchORDetailsByAccountNo(consumerInfo.AccountNo).toPromise();
-      if (collectionDetails) {
-
-        this.collectionDetails = collectionDetails;
-      }
-    }
+    //search all or for this account number
+    const collectionDetails = await lastValueFrom(this.officialReceiptService.fetchORDetailsByAccountNo(consumerInfo.AccountNo));
+    this.collectionDetails = collectionDetails;
   }
 
   async viewORDetails(orDetails:CollectionDetails) {
@@ -109,15 +104,12 @@ export class ViewOrComponent {
     this.receiptDetails = undefined;
 
     //load collection billing
-    const collectionBilling = await this.officialReceiptService.fetchORBillingByORNo(orDetails.CRNo).toPromise();
-    if (collectionBilling) {
-      this.collectionBillings = collectionBilling;
-    }
+    const collectionBilling = await lastValueFrom(this.officialReceiptService.fetchORBillingByORNo(orDetails.CRNo));
+    this.collectionBillings = collectionBilling;
+
     //load collection charges
-    const collectionCharges = await this.officialReceiptService.fetchORChargesByORNo(orDetails.CRNo).toPromise();
-    if (collectionCharges) {
-      this.collectionCharges = collectionCharges;
-    }
+    const collectionCharges = await lastValueFrom(this.officialReceiptService.fetchORChargesByORNo(orDetails.CRNo));
+    this.collectionCharges = collectionCharges;
 
     //load printable content
     this.receiptDetails = this.createReceiptDetails(orDetails, this.collectionBillings, this.collectionCharges, this.data.consumerInfo);
@@ -220,12 +212,10 @@ export class ViewOrComponent {
         return;
       }
       if (result === "OR Cancelled") {
-        const collectionDetails = await this.officialReceiptService.fetchORDetailsByAccountNo(orDetails.AccountNo).toPromise();
-        if (collectionDetails) {
-          this.clearFields();
-          this.collectionDetails = collectionDetails;
-          this.selectedOR = undefined;
-        }
+        const collectionDetails = await lastValueFrom(this.officialReceiptService.fetchORDetailsByAccountNo(orDetails.AccountNo));
+        this.clearFields();
+        this.collectionDetails = collectionDetails;
+        this.selectedOR = undefined;
       }
 
     });

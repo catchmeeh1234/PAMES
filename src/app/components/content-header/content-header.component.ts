@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 
@@ -15,12 +16,15 @@ export class ContentHeaderComponent {
   @Input() data: data;
   //title:string;
 
-  constructor(private router:Router) {}
+  constructor(
+    private router:Router,
+    private location:Location) {}
 
   backButton() {
-    console.log(this.data.url);
+    this.location.back();
+    //console.log(this.data.url);
 
-    this.router.navigate([this.data.url]);
+    //this.router.navigate([this.data.url]);
   }
 
 }

@@ -8,7 +8,7 @@ import { CancelBillComponent } from 'src/app/components/cancel-bill/cancel-bill.
 import { ConfirmationPromptComponent } from 'src/app/components/confirmation-prompt/confirmation-prompt.component';
 import { PasswordPromptComponent } from 'src/app/components/password-prompt/password-prompt.component';
 import { BillInfo, BillService } from 'src/app/services/bill.service';
-import { MeterReaderService } from 'src/app/services/meter-reader.service';
+import { MeterReader, MeterReaderService } from 'src/app/services/meter-reader.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { PasswordStatus } from 'src/app/services/useraccounts.service';
@@ -16,6 +16,7 @@ import EscPosEncoder from 'esc-pos-encoder';
 import { environment } from 'src/environments/environment';
 import { Data1 } from '../../collection/create-or/create-or.component';
 import { ConsumerService } from 'src/app/services/consumer.service';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-bill-info',
@@ -38,7 +39,7 @@ export class BillInfoComponent {
   displayedColumns: string[] = ['Charges', 'Amount'];
   billStatus:string;
 
-  meterReaders:any;
+  meterReaders:MeterReader[];
   billcharges:any;
 
   billInfoForm: FormGroup;
@@ -88,17 +89,14 @@ export class BillInfoComponent {
   }
 
   ngOnInit() {
-
     const bill_no = this.route.snapshot.params['bill_no'];
-    //Called after the constructor, initializing input properties, and the first call to ngOnChanges.
-    //Add 'implements OnInit' to the class.
     this.loadBillInfo(bill_no);
   }
 
   async loadBillInfo(billno:string) {
-    const billInfo = await this.billService.fetchBillByBillNo(billno).toPromise();
+    const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(billno));
 
-    if (billInfo && billInfo.length === 1) {
+    if (billInfo.length === 1) {
       this.billInfo = billInfo[0];
 
       await this.loadMeterReader();
@@ -120,16 +118,16 @@ export class BillInfoComponent {
         isSenior: billInfo[0].isSenior
       });
 
-      this.data.consumerInfo = await this.consumerService.fetchConsumerInfoByAccNo(billInfo[0].AccountNumber).toPromise();
+      this.data.consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(billInfo[0].AccountNumber));
     }
   }
 
   async loadMeterReader() {
-   this.meterReaders = await this.meterReaderService.fetchMeterReader("All").toPromise();
+   this.meterReaders = await lastValueFrom(this.meterReaderService.fetchMeterReader("All"));
   }
 
   async loadBillCharges(billno:string) {
-    this.billcharges = await this.billService.fetchBillCharges(billno).toPromise();
+    this.billcharges = await lastValueFrom(this.billService.fetchBillCharges(billno));
     //console.log(this.billcharges);
   }
 
@@ -139,16 +137,14 @@ export class BillInfoComponent {
 
   async onPostBill(billno:string, accno:string) {
     if (this.user) {
-      const res:any = await this.billService.postbill(billno, accno, this.user).toPromise();
+      const res:any = await lastValueFrom(this.billService.postbill(billno, accno, this.user));
       //console.log(res);
       if (res.status === "Bill Posted") {
         this.snackbarService.showSuccess(res.status);
 
-        const bill:any = await this.billService.fetchBillByBillNo(billno).toPromise();
-        if (bill) {
-          this.billInfo = bill[0].BillNo;
-          this.loadBillInfo(bill[0].BillNo);
-        }
+        const bill = await lastValueFrom(this.billService.fetchBillByBillNo(billno));
+        this.loadBillInfo(bill[0].BillNo);
+
       } else {
         this.snackbarService.showError(res.status);
       }

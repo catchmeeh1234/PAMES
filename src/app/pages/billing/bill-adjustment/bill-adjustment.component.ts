@@ -2,12 +2,13 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
+import { ActivatedRoute } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
 import { PasswordPromptComponent } from 'src/app/components/password-prompt/password-prompt.component';
 import { SearchConsumerComponent } from 'src/app/components/search-consumer/search-consumer.component';
 import { BillAdjustment, BillInfo, BillService } from 'src/app/services/bill.service';
 import { Consumer } from 'src/app/services/consumer.service';
 import { DateFormatService } from 'src/app/services/date-format.service';
-import { DiscountsService } from 'src/app/services/discounts.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { PasswordStatus, UseraccountsService } from 'src/app/services/useraccounts.service';
@@ -47,7 +48,7 @@ export class BillAdjustmentComponent {
     private sessionStorageService:SessionStorageServiceService,
     private snackbarService:SnackbarService,
     private dateFormatService:DateFormatService,
-    private discountService:DiscountsService,
+    private route:ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
@@ -84,10 +85,7 @@ export class BillAdjustmentComponent {
       }
 
       if (this.mode === "Add") {
-        const billInfo = await this.billService.fetchBillByBillNo(billNo).toPromise();
-        if (!billInfo) {
-          return;
-        }
+        const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(billNo));
 
         this.billAdjustmentForm.patchValue({
           isSenior: billInfo[0].isSenior === 'Yes' ? true : false,
@@ -215,10 +213,7 @@ export class BillAdjustmentComponent {
 
     this.showErrorMessage = true;
 
-    const billAdjustment = await this.billService.fetchBillAdjustmentByAccNo(accountNumber).toPromise();
-    if (!billAdjustment) {
-      return;
-    }
+    const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(accountNumber));
 
     //populate bill adjustment records table
     this.dataSource.data = billAdjustment;
@@ -240,28 +235,26 @@ export class BillAdjustmentComponent {
     this.billNumberArray.push(billAdjustmentDetails.BillNo);
 
     //load bill info
-    const billInfo = await this.billService.fetchBillByBillNo(billAdjustmentDetails.BillNo).toPromise();
-    if (!billInfo) {
-      return;
-    }
+    const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(billAdjustmentDetails.BillNo));
+
     this.billAdjustmentForm.patchValue({
       BillInfo: billInfo[0],
       isSenior: billInfo[0].isSenior === 'Yes' ? true : false,
     })
 
-    //load bills
-    const data = {
-      AccountNumber: billAdjustmentDetails.AccountNo,
-      IsPaid: "No",
-      BillStatus: "Posted",
-      IsCollectionCreated: "Yes",
-    };
-    const newData = JSON.stringify(data);
-    const bills = await this.billService.fetchUnpaidBills(newData).toPromise();
-    if (!bills) {
-      console.log("error fetching unpaid bills");
-      return;
-    }
+    // //load bills
+    // const data = {
+    //   AccountNumber: billAdjustmentDetails.AccountNo,
+    //   IsPaid: "No",
+    //   BillStatus: "Posted",
+    //   IsCollectionCreated: "Yes",
+    // };
+    // const newData = JSON.stringify(data);
+    // const bills = await this.billService.fetchUnpaidBills(newData).toPromise();
+    // if (!bills) {
+    //   console.log("error fetching unpaid bills");
+    //   return;
+    // }
     //this.bills = bills;
 
     const oldAmountDue = parseFloat(billAdjustmentDetails.OldAmountDue);
@@ -310,12 +303,8 @@ export class BillAdjustmentComponent {
     };
 
     const newData = JSON.stringify(data);
-    const bills = await this.billService.fetchUnpaidBills(newData).toPromise();
+    const bills = await lastValueFrom(this.billService.fetchUnpaidBills(newData));
 
-    if (!bills) {
-      console.log("error fetching unpaid bills");
-      return;
-    }
     //check if there are any posted bills
     if (bills.length <= 0) {
       this.snackbarService.showError("No Bills to be adjusted");
@@ -323,10 +312,8 @@ export class BillAdjustmentComponent {
     }
 
     //check if there are any pending bill adjustments
-    const billAdjustmentByAccNo = await this.billService.fetchBillAdjustmentByAccNo(accountNumber).toPromise();
-    if (!billAdjustmentByAccNo) {
-      return;
-    }
+    const billAdjustmentByAccNo = await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(accountNumber));
+
     const hasPendingBillAdjustment = billAdjustmentByAccNo.some(obj =>
       obj.Status === 'Pending'
     );
@@ -345,11 +332,7 @@ export class BillAdjustmentComponent {
     this.billAdjustmentForm.enable();
 
     //fetch reference number of bill adjustment
-    const refNo = await this.userAccountsService.fetchLogicNumbers("Bill Adjustment").toPromise();
-    if (!refNo) {
-      console.log("error fetching reference number");
-      return;
-    }
+    const refNo = await lastValueFrom(this.userAccountsService.fetchLogicNumbers("Bill Adjustment"));
 
     //populate form
     this.billAdjustmentForm.patchValue({
@@ -396,20 +379,14 @@ export class BillAdjustmentComponent {
     billAdjustmentDetails.NewBillTotal = this.newBillTotal;
     billAdjustmentDetails.OldBilltotal = this.oldBillTotal;
 
-    const response:any = await this.billService.postBillAdjustment(billAdjustmentDetails).toPromise();
+    const response:any = await lastValueFrom(this.billService.postBillAdjustment(billAdjustmentDetails));
     if (response.status === "Bill Adjustment Posted") {
       //fetch bill adjustment to database
-      const billAdjustment = await this.billService.fetchBillAdjustmentByRefNo(billAdjustmentDetails.RefNo).toPromise();
-      if (!billAdjustment) {
-        return;
-      }
+      const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(billAdjustmentDetails.RefNo));
       this.viewBilladjustmentDetails(billAdjustment[0]);
 
       //refresh bill adjustment table
-      const data =  await this.billService.fetchBillAdjustmentByAccNo(billAdjustment[0].AccountNo).toPromise();
-      if (!data) {
-        return;
-      }
+      const data =  await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(billAdjustment[0].AccountNo));
 
       this.dataSource.data = data;
     } else {
@@ -431,23 +408,17 @@ export class BillAdjustmentComponent {
     billAdjustmentDetails.NewBillTotal = this.newBillTotal;
     billAdjustmentDetails.OldBilltotal = this.oldBillTotal;
 
-    const result:any = await this.billService.cancelBillAdjustment(billAdjustmentDetails).toPromise();
+    const result:any = await lastValueFrom(this.billService.cancelBillAdjustment(billAdjustmentDetails));
 
     if (result.status === "Bill Adjustment Cancelled") {
       this.snackbarService.showSuccess(result.status);
 
       //fetch bill adjustment to database
-      const billAdjustment = await this.billService.fetchBillAdjustmentByRefNo(billAdjustmentDetails.RefNo).toPromise();
-      if (!billAdjustment) {
-        return;
-      }
+      const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(billAdjustmentDetails.RefNo));
       this.viewBilladjustmentDetails(billAdjustment[0]);
 
       //refresh bill adjustment table
-      const data =  await this.billService.fetchBillAdjustmentByAccNo(billAdjustment[0].AccountNo).toPromise();
-      if (!data) {
-        return;
-      }
+      const data =  await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(billAdjustment[0].AccountNo));
 
       this.dataSource.data = data;
     } else{
@@ -465,19 +436,14 @@ export class BillAdjustmentComponent {
   async saveEditBillAdjustment() {
     const billAdjustmentDetails = this.billAdjustmentForm.getRawValue();
 
-    const result:any = await this.billService.editBillAdjustment(billAdjustmentDetails).toPromise();
-    if (!result) {
-      return;
-    }
+    const result:any = await lastValueFrom(this.billService.editBillAdjustment(billAdjustmentDetails));
+
     if (result.status === "Bill Adjustment Edited") {
       this.snackbarService.showSuccess(result.status);
       this.mode = "Query";
       this.billAdjustmentForm.disable();
       //refresh bill adjustment table
-      const data =  await this.billService.fetchBillAdjustmentByAccNo(billAdjustmentDetails.BillInfo.AccountNumber).toPromise();
-      if (!data) {
-        return;
-      }
+      const data =  await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(billAdjustmentDetails.BillInfo.AccountNumber));
 
       this.dataSource.data = data;
     } else {
@@ -492,10 +458,7 @@ export class BillAdjustmentComponent {
     this.billAdjustmentForm.disable();
 
     //fetch bill adjustment to database
-    const billAdjustment = await this.billService.fetchBillAdjustmentByRefNo(this.billAdjustmentForm.getRawValue().RefNo).toPromise();
-    if (!billAdjustment) {
-      return;
-    }
+    const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(this.billAdjustmentForm.getRawValue().RefNo));
     this.viewBilladjustmentDetails(billAdjustment[0]);
   }
 
@@ -515,20 +478,14 @@ export class BillAdjustmentComponent {
       NewDate: newDate
     });
 
-    const billAdjustment:any = await this.billService.createBillAdjustment(this.billAdjustmentForm.value).toPromise();
-    if (!billAdjustment) {
-      return;
-    }
+    const billAdjustment:any = await lastValueFrom(this.billService.createBillAdjustment(this.billAdjustmentForm.value));
 
     if (billAdjustment.status === "Bill Adjusted") {
       this.snackbarService.showSuccess(billAdjustment.status);
       this.mode = "Query";
 
       //fetch bill adjustment by ref no
-      const billAdjustmentDetails = await this.billService.fetchBillAdjustmentByRefNo(this.billAdjustmentForm.value.RefNo).toPromise();
-      if (!billAdjustmentDetails) {
-        return;
-      }
+      const billAdjustmentDetails = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(this.billAdjustmentForm.value.RefNo));
       this.viewBilladjustmentDetails(billAdjustmentDetails[0]);
     } else {
       console.log(billAdjustment.status);

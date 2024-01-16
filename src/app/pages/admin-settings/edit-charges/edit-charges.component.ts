@@ -2,6 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
+import { lastValueFrom } from 'rxjs';
 import { Charges, ChargesService } from 'src/app/services/charges.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 
@@ -49,9 +50,8 @@ export class EditChargesComponent {
   }
 
   async onSave(chargesInfo:Charges) {
-    console.log(chargesInfo);
-
-    const res:any = await this.chargesService.updateCharges(chargesInfo).toPromise();
+    //console.log(chargesInfo);
+    const res:any = await lastValueFrom(this.chargesService.updateCharges(chargesInfo));
       if (res.status === "Charges Updated") {
         this.snackbarService.showSuccess(res.status);
 

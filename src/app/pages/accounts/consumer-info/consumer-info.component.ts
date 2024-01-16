@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Consumer, ConsumerLedgerData, ConsumerService, ScheduleCharges } from 'src/app/services/consumer.service';
-import { Subscription, first, from, map, switchMap, take, pipe } from 'rxjs';
+import { Subscription, first, from, map, switchMap, take, pipe, lastValueFrom } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -126,11 +126,8 @@ export class ConsumerInfoComponent {
   }
 
   async onLoadConsumerCharges(account_no:string) {
-    const consumerCharges = await this.consumerService.fetchConsumerCharges(account_no).toPromise();
-    if (consumerCharges) {
-      this.consumerCharges = consumerCharges;
-    }
-
+    const consumerCharges = await lastValueFrom(this.consumerService.fetchConsumerCharges(account_no));
+    this.consumerCharges = consumerCharges;
   }
 
   updateConsumerStatus(accountNo:string) {

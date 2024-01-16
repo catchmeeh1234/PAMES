@@ -1,6 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { lastValueFrom } from 'rxjs';
 import { Charges, ChargesService } from 'src/app/services/charges.service';
 import { ConsumerService, ScheduleCharges } from 'src/app/services/consumer.service';
 import { DateFormatService } from 'src/app/services/date-format.service';
@@ -16,7 +17,7 @@ export class AddCustomerChargesComponent {
   addChargeForm:FormGroup;
   IsRecurring = true;
 
-  charges:Charges[] | undefined;
+  charges:Charges[];
   months:string[];
   years:number[];
 
@@ -66,13 +67,13 @@ export class AddCustomerChargesComponent {
   }
 
  async onLoadCharges() {
-    this.charges = await this.chargesService.loadCharges().toPromise();
+    this.charges = await lastValueFrom(this.chargesService.loadCharges());
   }
 
   async addCustomerCharge() {
     if (this.addChargeForm.valid) {
       console.log(this.addChargeForm.value);
-      const res:any = await this.consumerService.addScheduleCharge(this.addChargeForm.value).toPromise();
+      const res:any = await lastValueFrom(this.consumerService.addScheduleCharge(this.addChargeForm.value));
 
       if (res.status === "Schedule Charge Added") {
         this.snackbarService.showSuccess(res.status);

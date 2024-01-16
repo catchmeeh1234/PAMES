@@ -1,6 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { lastValueFrom } from 'rxjs';
 import { BillInfo, BillService } from 'src/app/services/bill.service';
 import { DateFormatService } from 'src/app/services/date-format.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
@@ -63,8 +64,8 @@ export class CancelBillComponent {
       this.cancelBillForm.patchValue(this.billInfo);
 
       //get cancel bill no
-      const cancelBillNo = await this.userAccountsService.fetchLogicNumbers("CancelBill").toPromise();
-      if (cancelBillNo && cancelBillNo.length === 1) {
+      const cancelBillNo = await lastValueFrom(this.userAccountsService.fetchLogicNumbers("CancelBill"));
+      if (cancelBillNo.length === 1) {
         this.cancelBillForm.patchValue({ReferenceNo: cancelBillNo[0].number});
         //console.log(this.cancelBillForm.value);
       }
@@ -80,7 +81,7 @@ export class CancelBillComponent {
 
     const newDate = this.dateFormatService.formatDate(this.cancelBillForm.get("CurrentDate")?.value);
     details.CurrentDate = newDate;
-    const res:any = await this.billService.cancelBill(details).toPromise();
+    const res:any = await lastValueFrom(this.billService.cancelBill(details));
     //console.log(res);
     if (res.status === "Bill Cancelled") {
       this.dialogRef.close(res);

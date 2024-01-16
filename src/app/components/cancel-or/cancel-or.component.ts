@@ -1,6 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { lastValueFrom } from 'rxjs';
 import { DateFormatService } from 'src/app/services/date-format.service';
 import { CollectionDetails, OfficialReceiptService } from 'src/app/services/official-receipt.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
@@ -53,8 +54,8 @@ export class CancelOrComponent {
     this.cancelORForm.patchValue(this.orDetails);
 
     //get cancel cr reference number
-    const cancelBillNo = await this.userAccountsService.fetchLogicNumbers("CancelCollection").toPromise();
-    if (cancelBillNo && cancelBillNo.length === 1) {
+    const cancelBillNo = await lastValueFrom(this.userAccountsService.fetchLogicNumbers("CancelCollection"));
+    if (cancelBillNo.length === 1) {
       this.cancelORForm.patchValue({ReferenceNo: cancelBillNo[0].number});
       //console.log(this.cancelBillForm.value);
     }
@@ -68,7 +69,7 @@ export class CancelOrComponent {
 
     const newDate = this.dateFormatService.formatDate(this.cancelORForm.get("CurrentDate")?.value);
     details.CurrentDate = newDate;
-    const res:any = await this.officialReceiptService.cancelOR(details).toPromise();
+    const res:any = await lastValueFrom(this.officialReceiptService.cancelOR(details));
     if (res.status === "OR Cancelled") {
       this.dialogRef.close(res.status);
     } else {

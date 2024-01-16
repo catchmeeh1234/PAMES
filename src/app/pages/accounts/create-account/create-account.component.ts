@@ -4,6 +4,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { MatStepper } from '@angular/material/stepper';
 import { MatTable } from '@angular/material/table';
 import { Router } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
 import { Consumer, ConsumerInput, ConsumerService } from 'src/app/services/consumer.service';
 import { DateFormatService } from 'src/app/services/date-format.service';
 import { RateScheduleService } from 'src/app/services/rate-schedule.service';
@@ -112,24 +113,18 @@ export class CreateAccountComponent {
   }
 
   async loadCustomerStatuses() {
-    const statuses = await this.consumerService.fetchConsumerStatus().toPromise();
-    if (statuses) {
-      this.customerStatuses = statuses;
-    }
+    const statuses = await lastValueFrom(this.consumerService.fetchConsumerStatus());
+    this.customerStatuses = statuses;
   }
 
   async loadZones() {
-    const response = await this.zoneService.fetchZones().toPromise();
-    if (response) {
-      this.zones = response;
-    }
+    const response = await lastValueFrom(this.zoneService.fetchZones());
+    this.zones = response;
   }
 
   async loadRates() {
-    const rates = await this.rateService.loadRateSchedule("All").toPromise();
-    if (rates) {
-      this.rates = rates;
-    }
+    const rates = await lastValueFrom(this.rateService.loadRateSchedule("All"));
+    this.rates = rates;
   }
 
   onZoneAndClassChange() {
@@ -295,7 +290,7 @@ export class CreateAccountComponent {
     const newDateInstalled = this.dateFormatService.formatDate(this.installationFormGroup.get("dateInstalled")?.value);
     allFormData.dateInstalled = newDateInstalled;
 
-    const res:any = await this.consumerService.addConsumers(allFormData).toPromise();
+    const res:any = await lastValueFrom(this.consumerService.addConsumers(allFormData));
     let status: Status = res.status;
     if (status === "Consumer Added") {
       this.snackbarService.showSuccess(status);

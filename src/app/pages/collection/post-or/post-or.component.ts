@@ -2,6 +2,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { Component, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { lastValueFrom } from 'rxjs';
 import { CollectionDetails, OfficialReceiptService } from 'src/app/services/official-receipt.service';
 
 @Component({
@@ -85,7 +86,7 @@ export class PostOrComponent {
     // console.log(this.progressCounter);
     let count = 0;
     for (const [index, orDetails] of this.selection.selected.entries()) {
-      const reponse:any = await this.officialReceiptService.postOR(orDetails).toPromise();
+      const reponse:any = await lastValueFrom(this.officialReceiptService.postOR(orDetails));
       if (reponse.status === "OR Posted") {
         this.progressCounter = ((index + 1) / this.selection.selected.length) * 100;
         this.loadPendingOR();

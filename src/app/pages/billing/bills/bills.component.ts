@@ -6,11 +6,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { Router } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
 import { SearchConsumerComponent } from 'src/app/components/search-consumer/search-consumer.component';
-import { BillService } from 'src/app/services/bill.service';
+import { BillInfo, BillService } from 'src/app/services/bill.service';
 import { Consumer } from 'src/app/services/consumer.service';
 import { DateFormatService } from 'src/app/services/date-format.service';
-import { ZoneService } from 'src/app/services/zone.service';
+import { ZoneService, Zone } from 'src/app/services/zone.service';
 
 export const GRI_DATE_FORMATS: MatDateFormats = {
   ...MAT_NATIVE_DATE_FORMATS,
@@ -22,12 +23,6 @@ export const GRI_DATE_FORMATS: MatDateFormats = {
     } as Intl.DateTimeFormatOptions,
   }
 };
-
-type Zone = {
-  ZoneID: string;
-  ZoneName: string;
-  LastNumber: string;
-}
 
 @Component({
   selector: 'app-bills',
@@ -98,7 +93,7 @@ export class BillsComponent {
   }
 
   async loadZones() {
-    const zones:any = await this.zoneService.fetchZones().toPromise();
+    const zones = await lastValueFrom(this.zoneService.fetchZones(), {defaultValue: [] as Zone[]});
     this.zones = zones;
   }
 
@@ -119,12 +114,11 @@ export class BillsComponent {
   }
 
   async loadBillsByAccNo(accno:string) {
-    const bills:any = await this.billService.fetchBills(accno).toPromise();
-    if (!bills) {
-      return;
-    }
-    this.billService.dataSource = new MatTableDataSource<any>(bills);
+    const bills = await lastValueFrom(this.billService.fetchBills(accno), {defaultValue: [] as BillInfo[]});
+
+    this.billService.dataSource = new MatTableDataSource<BillInfo>(bills);
     this.billService.dataSource.paginator = this.paginator;
+
   }
 
   openBillInfo(bill_info:any, bill_no:string) {
@@ -157,12 +151,8 @@ export class BillsComponent {
       return;
     }
 
-    const searchedBills:any = await this.billService.searchBills(newBillingMonth, billStatus, zone).toPromise();
-    console.log(searchedBills);
+    const searchedBills = await lastValueFrom(this.billService.searchBills(newBillingMonth, billStatus, zone), {defaultValue: [] as BillInfo[]});
 
-    if (!searchedBills) {
-      return;
-    }
     this.billService.dataSource = new MatTableDataSource<any>(searchedBills);
     this.billService.dataSource.paginator = this.paginator;
 
