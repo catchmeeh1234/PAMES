@@ -1,4 +1,5 @@
 import { SelectionModel } from '@angular/cdk/collections';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ViewChild } from '@angular/core';
 import { MAT_DATE_FORMATS, MatDateFormats, MAT_NATIVE_DATE_FORMATS } from '@angular/material/core';
 import { MatPaginator } from '@angular/material/paginator';
@@ -61,7 +62,18 @@ export class PostBillsComponent {
 
   async ngOnInit() {
     //load zones
-    this.zones = await lastValueFrom(this.zoneService.fetchZones());
+    try {
+      this.zones = await lastValueFrom(this.zoneService.fetchZones());
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
     //this.loadPendingBills();
   }
 
@@ -96,12 +108,22 @@ export class PostBillsComponent {
   }
 
   async loadPendingBills() {
-    const pendingBills = await lastValueFrom(this.billService.fetchPendingBills());
-    pendingBills.forEach((pendingBills, index) => {
-      pendingBills.position = index + 1;
-    });
-    this.dataSource = new MatTableDataSource(pendingBills);
-    this.dataSource.paginator = this.paginator;
+    try {
+      const pendingBills = await lastValueFrom(this.billService.fetchPendingBills());
+      pendingBills.forEach((pendingBills, index) => {
+        pendingBills.position = index + 1;
+      });
+      this.dataSource = new MatTableDataSource(pendingBills);
+      this.dataSource.paginator = this.paginator;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   computeCredit(seniorDiscount:string, advancePayment:string) {
@@ -125,41 +147,60 @@ export class PostBillsComponent {
     //   removeZeroCons = '&& bill.Consumption !== "0"';
     // }
 
-    const bills = await lastValueFrom(this.billService.fetchPendingBills());
-    const filterBill = bills.filter(async (bill) => {
-      //fetch customer by account number
-      //const consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(bill.AccountNumber));
+    try {
+      const bills = await lastValueFrom(this.billService.fetchPendingBills());
+      const filterBill = bills.filter(async (bill) => {
+        //fetch customer by account number
+        //const consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(bill.AccountNumber));
 
-      // let removeHighCons:string = "";
-      // //check if zero cons it ticked
-      // if (selectedHighCons === true) {
-      //   removeHighCons = `&& bill.Consumption > ${consumerInfo.Averagee}`;
-      // }
-      console.log(removeZeroCons);
+        // let removeHighCons:string = "";
+        // //check if zero cons it ticked
+        // if (selectedHighCons === true) {
+        //   removeHighCons = `&& bill.Consumption > ${consumerInfo.Averagee}`;
+        // }
+        console.log(removeZeroCons);
 
-      return bill.Zone === selectedZone && bill.BillingMonth === newSelectedBillingMonth + removeZeroCons
-    });
+        return bill.Zone === selectedZone && bill.BillingMonth === newSelectedBillingMonth + removeZeroCons
+      });
 
-    this.dataSource = new MatTableDataSource<BillInfo>(filterBill);
-    this.dataSource.paginator = this.paginator;
+      this.dataSource = new MatTableDataSource<BillInfo>(filterBill);
+      this.dataSource.paginator = this.paginator;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   async onPostBills() {
-    let count = 0;
+    try {
+      let count = 0;
 
-    for (const [index, billInfo] of this.selection.selected.entries()) {
-      const reponse:any = await lastValueFrom(this.billService.postbill(billInfo.BillNo, billInfo.AccountNumber, this.username));
-      if (reponse.status === "Bill Posted") {
-        this.progressCounter = ((index + 1) / this.selection.selected.length) * 100;
-        //this.loadPendingBills();
-        count++;
-      } else {
-        console.log(reponse.status);
+      for (const [index, billInfo] of this.selection.selected.entries()) {
+        const reponse:any = await lastValueFrom(this.billService.postbill(billInfo.BillNo, billInfo.AccountNumber, this.username));
+        if (reponse.status === "Bill Posted") {
+          this.progressCounter = ((index + 1) / this.selection.selected.length) * 100;
+          //this.loadPendingBills();
+          count++;
+        } else {
+          console.log(reponse.status);
+        }
+      }
+      alert(`Posted ${count} Bill`);
+      this.selection.clear();
+
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
       }
     }
-
-    alert(`Posted ${count} Bill`);
-    this.selection.clear();
   }
-
 }

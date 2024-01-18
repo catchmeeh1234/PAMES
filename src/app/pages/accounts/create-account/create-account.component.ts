@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ViewChild } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -113,18 +114,52 @@ export class CreateAccountComponent {
   }
 
   async loadCustomerStatuses() {
-    const statuses = await lastValueFrom(this.consumerService.fetchConsumerStatus());
-    this.customerStatuses = statuses;
+
+    try {
+      const statuses = await lastValueFrom(this.consumerService.fetchConsumerStatus());
+      this.customerStatuses = statuses;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
   }
 
   async loadZones() {
-    const response = await lastValueFrom(this.zoneService.fetchZones());
-    this.zones = response;
+    try {
+      const response = await lastValueFrom(this.zoneService.fetchZones());
+      this.zones = response;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
   }
 
   async loadRates() {
-    const rates = await lastValueFrom(this.rateService.loadRateSchedule("All"));
-    this.rates = rates;
+    try {
+      const rates = await lastValueFrom(this.rateService.loadRateSchedule("All"));
+      this.rates = rates;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
   }
 
   onZoneAndClassChange() {
@@ -290,30 +325,41 @@ export class CreateAccountComponent {
     const newDateInstalled = this.dateFormatService.formatDate(this.installationFormGroup.get("dateInstalled")?.value);
     allFormData.dateInstalled = newDateInstalled;
 
-    const res:any = await lastValueFrom(this.consumerService.addConsumers(allFormData));
-    let status: Status = res.status;
-    if (status === "Consumer Added") {
-      this.snackbarService.showSuccess(status);
 
-      //this.loadZones();
-      this.stepper.reset();
+    try {
+      const res:any = await lastValueFrom(this.consumerService.addConsumers(allFormData));
+      let status: Status = res.status;
+      if (status === "Consumer Added") {
+        this.snackbarService.showSuccess(status);
 
-      this.consumerInfoFormGroup.setValue(this.orgConsumerInfoFormGroup);
-      this.addressFormGroup.setValue(this.orgAddressFormGroup);
-      this.installationFormGroup.setValue(this.orgInstallationFormGroup);
+        //this.loadZones();
+        this.stepper.reset();
+
+        this.consumerInfoFormGroup.setValue(this.orgConsumerInfoFormGroup);
+        this.addressFormGroup.setValue(this.orgAddressFormGroup);
+        this.installationFormGroup.setValue(this.orgInstallationFormGroup);
 
 
-      this.accountNumber = "";
-      // const newDataSource:any = this.createAccountForm.value;
-      // newDataSource.push(this.createAccountForm.value);
-      // this.consumerService.fetchConsumers().subscribe(data => {
-      //   this.consumerService.dataSource.data = data;
-      // });
+        this.accountNumber = "";
+        // const newDataSource:any = this.createAccountForm.value;
+        // newDataSource.push(this.createAccountForm.value);
+        // this.consumerService.fetchConsumers().subscribe(data => {
+        //   this.consumerService.dataSource.data = data;
+        // });
 
-      // this.consumerService.loadConsumerSummary();
+        // this.consumerService.loadConsumerSummary();
 
-    } else {
-      console.log(status);
+      } else {
+        console.log(status);
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
   }
 

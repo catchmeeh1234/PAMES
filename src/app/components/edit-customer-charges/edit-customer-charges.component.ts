@@ -7,6 +7,9 @@ import { DateFormatService } from 'src/app/services/date-format.service';
 import { Subscription, lastValueFrom, of, sample } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SnackbarService } from 'src/app/services/snackbar.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-edit-customer-charges',
@@ -34,6 +37,8 @@ export class EditCustomerChargesComponent {
     private consumerService:ConsumerService,
     private snackbarService:SnackbarService,
     private dialogRef:MatDialogRef<EditCustomerChargesComponent>,
+    private sessionStorageService:SessionStorageServiceService,
+    private router:Router
   ) {
     this.editScheduleChargeForm = this.formBuilder.group({
       ScheduleChargesID: ['', Validators.required],
@@ -88,13 +93,36 @@ export class EditCustomerChargesComponent {
   }
 
   async onLoadCharges() {
-    this.charges = await lastValueFrom(this.chargesService.loadCharges());
+
+    try {
+      this.charges = await lastValueFrom(this.chargesService.loadCharges());
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   async getChargebyId() {
-    const charges = await lastValueFrom(this.chargesService.loadCharges());
-    const charge = charges.filter(charges => charges.ChargeID.toString() === this.scheduleCharge.ChargeID);
-    this.currentConsumerCharge = charge[0];
+
+    try {
+      const charges = await lastValueFrom(this.chargesService.loadCharges());
+      const charge = charges.filter(charges => charges.ChargeID.toString() === this.scheduleCharge.ChargeID);
+      this.currentConsumerCharge = charge[0];
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
   }
 
   compareSelectedCharge(option:Charges, value:Charges) {
@@ -114,17 +142,27 @@ export class EditCustomerChargesComponent {
 
   async saveCustomerCharge() {
     if (this.editScheduleChargeForm.valid) {
-      const res:any = await lastValueFrom(this.consumerService.editScheduleCharge(this.editScheduleChargeForm.value));
-      if (res.status === "Schedule Charge Updated") {
-        this.snackbarService.showSuccess(res.status);
+      try {
+        const res:any = await lastValueFrom(this.consumerService.editScheduleCharge(this.editScheduleChargeForm.value));
+        if (res.status === "Schedule Charge Updated") {
+          this.snackbarService.showSuccess(res.status);
 
-        this.consumerService.fetchConsumerCharges(this.scheduleCharge.AccountNumber).subscribe(data => {
-          this.consumerService.consumerChargesDataSource.data = data;
-        });
+          this.consumerService.fetchConsumerCharges(this.scheduleCharge.AccountNumber).subscribe(data => {
+            this.consumerService.consumerChargesDataSource.data = data;
+          });
 
-        this.dialogRef.close();
-      } else {
-        this.snackbarService.showError(res.status);
+          this.dialogRef.close();
+        } else {
+          this.snackbarService.showError(res.status);
+        }
+      } catch(error) {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            console.log('Forbidden:', error.error);
+            this.sessionStorageService.removeSession();
+            this.router.navigate(['./authentication/login']);
+          }
+        }
       }
     }
 

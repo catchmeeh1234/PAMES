@@ -1,8 +1,9 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { PasswordPromptComponent } from 'src/app/components/password-prompt/password-prompt.component';
 import { SearchConsumerComponent } from 'src/app/components/search-consumer/search-consumer.component';
@@ -49,6 +50,7 @@ export class BillAdjustmentComponent {
     private snackbarService:SnackbarService,
     private dateFormatService:DateFormatService,
     private route:ActivatedRoute,
+    private router:Router
   ) {}
 
   ngOnInit(): void {
@@ -85,27 +87,37 @@ export class BillAdjustmentComponent {
       }
 
       if (this.mode === "Add") {
-        const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(billNo));
-
-        this.billAdjustmentForm.patchValue({
+        try {
+          const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(billNo));
+          this.billAdjustmentForm.patchValue({
           isSenior: billInfo[0].isSenior === 'Yes' ? true : false,
           BillInfo: billInfo[0]
-        });
-        //populate old and new amount due, discount, advance payment
-        const oldAmountDue = parseFloat(billInfo[0].AmountDue);
-        const oldDiscount = parseFloat(billInfo[0].SeniorDiscount);
-        const oldAdvance = parseFloat(billInfo[0].AdvancePayment);
+          });
+          //populate old and new amount due, discount, advance payment
+          const oldAmountDue = parseFloat(billInfo[0].AmountDue);
+          const oldDiscount = parseFloat(billInfo[0].SeniorDiscount);
+          const oldAdvance = parseFloat(billInfo[0].AdvancePayment);
 
-        //compute bill total
-        const oldBillTotal = oldAmountDue - (oldDiscount + oldAdvance);
+          //compute bill total
+          const oldBillTotal = oldAmountDue - (oldDiscount + oldAdvance);
 
-        this.billAdjustmentForm.patchValue({
-          OldAmountDue: oldAmountDue,
-          OldDiscount: oldDiscount,
-          OldAdvancePayment: oldAdvance,
-          OldBillTotal: oldBillTotal,
-        });
-        this.oldBillTotal = oldBillTotal;
+          this.billAdjustmentForm.patchValue({
+            OldAmountDue: oldAmountDue,
+            OldDiscount: oldDiscount,
+            OldAdvancePayment: oldAdvance,
+            OldBillTotal: oldBillTotal,
+          });
+          this.oldBillTotal = oldBillTotal;
+
+        } catch(error) {
+          if (error instanceof HttpErrorResponse) {
+            if (error.status === 401) {
+              console.log('Forbidden:', error.error);
+              this.sessionStorageService.removeSession();
+              this.router.navigate(['./authentication/login']);
+            }
+          }
+        }
       }
     });
 
@@ -213,14 +225,25 @@ export class BillAdjustmentComponent {
 
     this.showErrorMessage = true;
 
-    const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(accountNumber));
+    try {
+      const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(accountNumber));
 
-    //populate bill adjustment records table
-    this.dataSource.data = billAdjustment;
+      //populate bill adjustment records table
+      this.dataSource.data = billAdjustment;
 
-    if (billAdjustment.length === 0) {
-      this.searchAccount.nativeElement.select();
+      if (billAdjustment.length === 0) {
+        this.searchAccount.nativeElement.select();
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
+
   }
 
   async viewBilladjustmentDetails(billAdjustmentDetails:BillAdjustment) {
@@ -234,58 +257,71 @@ export class BillAdjustmentComponent {
     this.billNumberArray = [];
     this.billNumberArray.push(billAdjustmentDetails.BillNo);
 
-    //load bill info
-    const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(billAdjustmentDetails.BillNo));
+    try {
+      //load bill info
+      const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(billAdjustmentDetails.BillNo));
 
-    this.billAdjustmentForm.patchValue({
-      BillInfo: billInfo[0],
-      isSenior: billInfo[0].isSenior === 'Yes' ? true : false,
-    })
+      this.billAdjustmentForm.patchValue({
+        BillInfo: billInfo[0],
+        isSenior: billInfo[0].isSenior === 'Yes' ? true : false,
+      })
 
-    // //load bills
-    // const data = {
-    //   AccountNumber: billAdjustmentDetails.AccountNo,
-    //   IsPaid: "No",
-    //   BillStatus: "Posted",
-    //   IsCollectionCreated: "Yes",
-    // };
-    // const newData = JSON.stringify(data);
-    // const bills = await this.billService.fetchUnpaidBills(newData).toPromise();
-    // if (!bills) {
-    //   console.log("error fetching unpaid bills");
-    //   return;
-    // }
-    //this.bills = bills;
+      // //load bills
+      // const data = {
+      //   AccountNumber: billAdjustmentDetails.AccountNo,
+      //   IsPaid: "No",
+      //   BillStatus: "Posted",
+      //   IsCollectionCreated: "Yes",
+      // };
+      // const newData = JSON.stringify(data);
+      // const bills = await this.billService.fetchUnpaidBills(newData).toPromise();
+      // if (!bills) {
+      //   console.log("error fetching unpaid bills");
+      //   return;
+      // }
+      //this.bills = bills;
 
-    const oldAmountDue = parseFloat(billAdjustmentDetails.OldAmountDue);
-    const oldDiscount = parseFloat(billAdjustmentDetails.OldDiscount);
-    const oldAdvance = parseFloat(billAdjustmentDetails.OldAdvance);
+      const oldAmountDue = parseFloat(billAdjustmentDetails.OldAmountDue);
+      const oldDiscount = parseFloat(billAdjustmentDetails.OldDiscount);
+      const oldAdvance = parseFloat(billAdjustmentDetails.OldAdvance);
 
-    const newAmountDue = parseFloat(billAdjustmentDetails.NewAmountDue);
-    const newDiscount = parseFloat(billAdjustmentDetails.NewDiscount);
-    const newAdvance = parseFloat(billAdjustmentDetails.NewAdvance);
-    const remarks = billAdjustmentDetails.Remarks;
-    //compute bill total
-    const oldBillTotal = Number((oldAmountDue - (oldDiscount + oldAdvance)).toFixed(2));
+      const newAmountDue = parseFloat(billAdjustmentDetails.NewAmountDue);
+      const newDiscount = parseFloat(billAdjustmentDetails.NewDiscount);
+      const newAdvance = parseFloat(billAdjustmentDetails.NewAdvance);
+      const remarks = billAdjustmentDetails.Remarks;
+      //compute bill total
+      const oldBillTotal = Number((oldAmountDue - (oldDiscount + oldAdvance)).toFixed(2));
 
-    //compute new bill total
-    const newBillTotal = Number((newAmountDue - (newDiscount + newAdvance)).toFixed(2));
+      //compute new bill total
+      const newBillTotal = Number((newAmountDue - (newDiscount + newAdvance)).toFixed(2));
 
-    // this.billAdjustmentForm.patchValue({
+      // this.billAdjustmentForm.patchValue({
 
-    //   OldAmountDue: oldAmountDue,
-    //   OldDiscount: oldDiscount,
-    //   OldAdvancePayment: oldAdvance,
-    //   NewAmountDue: newAmountDue,
-    //   NewDiscount: newDiscount,
-    //   NewAdvancePayment: newAdvance,
-    //   OldBillTotal: oldBillTotal,
-    //   NewBillTotal: newBillTotal,
-    //   remarks: remarks
-    // });
-    this.oldBillTotal = oldBillTotal;
-    this.newBillTotal = newBillTotal;
-    console.log(this.billAdjustmentForm.getRawValue());
+      //   OldAmountDue: oldAmountDue,
+      //   OldDiscount: oldDiscount,
+      //   OldAdvancePayment: oldAdvance,
+      //   NewAmountDue: newAmountDue,
+      //   NewDiscount: newDiscount,
+      //   NewAdvancePayment: newAdvance,
+      //   OldBillTotal: oldBillTotal,
+      //   NewBillTotal: newBillTotal,
+      //   remarks: remarks
+      // });
+      this.oldBillTotal = oldBillTotal;
+      this.newBillTotal = newBillTotal;
+      console.log(this.billAdjustmentForm.getRawValue());
+
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
+
 
   }
 
@@ -303,48 +339,61 @@ export class BillAdjustmentComponent {
     };
 
     const newData = JSON.stringify(data);
-    const bills = await lastValueFrom(this.billService.fetchUnpaidBills(newData));
 
-    //check if there are any posted bills
-    if (bills.length <= 0) {
-      this.snackbarService.showError("No Bills to be adjusted");
-      return;
+    try {
+      const bills = await lastValueFrom(this.billService.fetchUnpaidBills(newData));
+
+      //check if there are any posted bills
+      if (bills.length <= 0) {
+        this.snackbarService.showError("No Bills to be adjusted");
+        return;
+      }
+
+      //check if there are any pending bill adjustments
+      const billAdjustmentByAccNo = await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(accountNumber));
+
+      const hasPendingBillAdjustment = billAdjustmentByAccNo.some(obj =>
+        obj.Status === 'Pending'
+      );
+      if (hasPendingBillAdjustment) {
+        this.snackbarService.showError(`There are Pending Bill Adjustment for account no. ${accountNumber}`);
+        console.log('Array contains an object with status "Pending".');
+        return;
+      }
+
+      this.dataSource.data = [];
+      this.showErrorMessage = false;
+      this.accountNumber = "";
+      this.mode = "Add";
+      this.billAdjustmentForm.reset(this.originalBillAdjustmentFormValues);
+
+      this.billAdjustmentForm.enable();
+
+      //fetch reference number of bill adjustment
+      const refNo = await lastValueFrom(this.userAccountsService.fetchLogicNumbers("Bill Adjustment"));
+
+      //populate form
+      this.billAdjustmentForm.patchValue({
+        RefNo: refNo[0].number,
+        Status: 'Pending',
+        ApprovedBy: this.sessionStorageService.getSession("fullname"),
+      });
+
+      this.billNumberArray = [];
+      for (const bill of bills) {
+        this.billNumberArray.push(bill.BillNo);
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
 
-    //check if there are any pending bill adjustments
-    const billAdjustmentByAccNo = await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(accountNumber));
 
-    const hasPendingBillAdjustment = billAdjustmentByAccNo.some(obj =>
-      obj.Status === 'Pending'
-    );
-    if (hasPendingBillAdjustment) {
-      this.snackbarService.showError(`There are Pending Bill Adjustment for account no. ${accountNumber}`);
-      console.log('Array contains an object with status "Pending".');
-      return;
-    }
-
-    this.dataSource.data = [];
-    this.showErrorMessage = false;
-    this.accountNumber = "";
-    this.mode = "Add";
-    this.billAdjustmentForm.reset(this.originalBillAdjustmentFormValues);
-
-    this.billAdjustmentForm.enable();
-
-    //fetch reference number of bill adjustment
-    const refNo = await lastValueFrom(this.userAccountsService.fetchLogicNumbers("Bill Adjustment"));
-
-    //populate form
-    this.billAdjustmentForm.patchValue({
-      RefNo: refNo[0].number,
-      Status: 'Pending',
-      ApprovedBy: this.sessionStorageService.getSession("fullname"),
-    });
-
-    this.billNumberArray = [];
-    for (const bill of bills) {
-      this.billNumberArray.push(bill.BillNo);
-    }
 
   }
 
@@ -379,21 +428,33 @@ export class BillAdjustmentComponent {
     billAdjustmentDetails.NewBillTotal = this.newBillTotal;
     billAdjustmentDetails.OldBilltotal = this.oldBillTotal;
 
-    const response:any = await lastValueFrom(this.billService.postBillAdjustment(billAdjustmentDetails));
-    if (response.status === "Bill Adjustment Posted") {
-      //fetch bill adjustment to database
-      const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(billAdjustmentDetails.RefNo));
-      this.viewBilladjustmentDetails(billAdjustment[0]);
+    try {
+      const response:any = await lastValueFrom(this.billService.postBillAdjustment(billAdjustmentDetails));
+      if (response.status === "Bill Adjustment Posted") {
+        //fetch bill adjustment to database
+        const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(billAdjustmentDetails.RefNo));
+        this.viewBilladjustmentDetails(billAdjustment[0]);
 
-      //refresh bill adjustment table
-      const data =  await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(billAdjustment[0].AccountNo));
+        //refresh bill adjustment table
+        const data =  await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(billAdjustment[0].AccountNo));
 
-      this.dataSource.data = data;
-    } else {
-      this.snackbarService.showError(response.status);
-      console.log(response.status);
-      return;
+        this.dataSource.data = data;
+      } else {
+        this.snackbarService.showError(response.status);
+        console.log(response.status);
+        return;
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
+
+
   }
 
   async onCancelBillAdjustment() {
@@ -408,23 +469,35 @@ export class BillAdjustmentComponent {
     billAdjustmentDetails.NewBillTotal = this.newBillTotal;
     billAdjustmentDetails.OldBilltotal = this.oldBillTotal;
 
-    const result:any = await lastValueFrom(this.billService.cancelBillAdjustment(billAdjustmentDetails));
+    try {
+      const result:any = await lastValueFrom(this.billService.cancelBillAdjustment(billAdjustmentDetails));
 
-    if (result.status === "Bill Adjustment Cancelled") {
-      this.snackbarService.showSuccess(result.status);
+      if (result.status === "Bill Adjustment Cancelled") {
+        this.snackbarService.showSuccess(result.status);
 
-      //fetch bill adjustment to database
-      const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(billAdjustmentDetails.RefNo));
-      this.viewBilladjustmentDetails(billAdjustment[0]);
+        //fetch bill adjustment to database
+        const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(billAdjustmentDetails.RefNo));
+        this.viewBilladjustmentDetails(billAdjustment[0]);
 
-      //refresh bill adjustment table
-      const data =  await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(billAdjustment[0].AccountNo));
+        //refresh bill adjustment table
+        const data =  await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(billAdjustment[0].AccountNo));
 
-      this.dataSource.data = data;
-    } else{
-      this.snackbarService.showError(result.status);
-      console.log(result.status);
+        this.dataSource.data = data;
+      } else{
+        this.snackbarService.showError(result.status);
+        console.log(result.status);
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
+
+
 
   }
 
@@ -436,30 +509,52 @@ export class BillAdjustmentComponent {
   async saveEditBillAdjustment() {
     const billAdjustmentDetails = this.billAdjustmentForm.getRawValue();
 
-    const result:any = await lastValueFrom(this.billService.editBillAdjustment(billAdjustmentDetails));
+    try {
+      const result:any = await lastValueFrom(this.billService.editBillAdjustment(billAdjustmentDetails));
 
-    if (result.status === "Bill Adjustment Edited") {
-      this.snackbarService.showSuccess(result.status);
-      this.mode = "Query";
-      this.billAdjustmentForm.disable();
-      //refresh bill adjustment table
-      const data =  await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(billAdjustmentDetails.BillInfo.AccountNumber));
+      if (result.status === "Bill Adjustment Edited") {
+        this.snackbarService.showSuccess(result.status);
+        this.mode = "Query";
+        this.billAdjustmentForm.disable();
+        //refresh bill adjustment table
+        const data =  await lastValueFrom(this.billService.fetchBillAdjustmentByAccNo(billAdjustmentDetails.BillInfo.AccountNumber));
 
-      this.dataSource.data = data;
-    } else {
-      this.snackbarService.showError(result.status);
-      console.log(result.status);
+        this.dataSource.data = data;
+      } else {
+        this.snackbarService.showError(result.status);
+        console.log(result.status);
 
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
+
+
   }
 
   async cancelEditBillAdjustment() {
     this.mode = "Query";
     this.billAdjustmentForm.disable();
 
-    //fetch bill adjustment to database
-    const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(this.billAdjustmentForm.getRawValue().RefNo));
-    this.viewBilladjustmentDetails(billAdjustment[0]);
+    try {
+      //fetch bill adjustment to database
+      const billAdjustment = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(this.billAdjustmentForm.getRawValue().RefNo));
+      this.viewBilladjustmentDetails(billAdjustment[0]);
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   async onSaveBillAdjustment() {
@@ -478,21 +573,30 @@ export class BillAdjustmentComponent {
       NewDate: newDate
     });
 
-    const billAdjustment:any = await lastValueFrom(this.billService.createBillAdjustment(this.billAdjustmentForm.value));
+    try {
+       const billAdjustment:any = await lastValueFrom(this.billService.createBillAdjustment(this.billAdjustmentForm.value));
 
-    if (billAdjustment.status === "Bill Adjusted") {
-      this.snackbarService.showSuccess(billAdjustment.status);
-      this.mode = "Query";
+      if (billAdjustment.status === "Bill Adjusted") {
+        this.snackbarService.showSuccess(billAdjustment.status);
+        this.mode = "Query";
 
-      //fetch bill adjustment by ref no
-      const billAdjustmentDetails = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(this.billAdjustmentForm.value.RefNo));
-      this.viewBilladjustmentDetails(billAdjustmentDetails[0]);
-    } else {
-      console.log(billAdjustment.status);
-      this.snackbarService.showError(billAdjustment.status);
-      return;
+        //fetch bill adjustment by ref no
+        const billAdjustmentDetails = await lastValueFrom(this.billService.fetchBillAdjustmentByRefNo(this.billAdjustmentForm.value.RefNo));
+        this.viewBilladjustmentDetails(billAdjustmentDetails[0]);
+      } else {
+        console.log(billAdjustment.status);
+        this.snackbarService.showError(billAdjustment.status);
+        return;
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
-
   }
 
   computeAdjustment(adjustmentDetails:BillAdjustment) {

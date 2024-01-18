@@ -1,9 +1,12 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ViewChild, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { Router } from '@angular/router';
 import { Observable, Subscription, filter, map } from 'rxjs';
 import { Consumer, ConsumerService } from 'src/app/services/consumer.service';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 
 @Component({
   selector: 'app-search-consumer',
@@ -24,6 +27,8 @@ export class SearchConsumerComponent {
     @Inject(MAT_DIALOG_DATA) public data: any,
     private consumerService:ConsumerService,
     private dialogRef:MatDialogRef<SearchConsumerComponent>,
+    private router:Router,
+    private sessionStorageService:SessionStorageServiceService,
   ) {}
 
   ngOnInit(): void {
@@ -33,24 +38,34 @@ export class SearchConsumerComponent {
   }
 
   onLoadConsumers() {
-    const numbersOfSelection = "TOP 100";
-    let consumers$ = this.consumerService.fetchConsumers(numbersOfSelection);
+    try {
+      const numbersOfSelection = "TOP 100";
+      let consumers$ = this.consumerService.fetchConsumers(numbersOfSelection);
 
-    if (this.data.type === 'create bill' || this.data.type === 'create or') {
-      this.consumersSubcription = consumers$.pipe(
-        map(consumers => consumers.filter(consumer => consumer.CustomerStatus === 'Active'))
-      ).subscribe(consumer => {
+      if (this.data.type === 'create bill' || this.data.type === 'create or') {
+        this.consumersSubcription = consumers$.pipe(
+          map(consumers => consumers.filter(consumer => consumer.CustomerStatus === 'Active'))
+        ).subscribe(consumer => {
 
-        this.dataSource = new MatTableDataSource(consumer);
-        this.dataSource.paginator = this.paginator;
-      });
-    } else {
-      this.consumersSubcription = consumers$
-      .subscribe(consumer => {
+          this.dataSource = new MatTableDataSource(consumer);
+          this.dataSource.paginator = this.paginator;
+        });
+      } else {
+        this.consumersSubcription = consumers$
+        .subscribe(consumer => {
 
-        this.dataSource = new MatTableDataSource(consumer);
-        this.dataSource.paginator = this.paginator;
-      });
+          this.dataSource = new MatTableDataSource(consumer);
+          this.dataSource.paginator = this.paginator;
+        });
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
 
 
@@ -83,20 +98,29 @@ export class SearchConsumerComponent {
       return;
     }
 
-    if (this.data.type === 'create bill') {
-      this.activeConsumersSubcription = this.consumerService.searchConsumer(search)
-      .pipe(
-        map(consumers => consumers.filter(consumer => consumer.CustomerStatus === 'Active'))
-      ).subscribe(data => {
-        this.dataSource.data = data;
-      });
-    } else {
-      this.activeConsumersSubcription = this.consumerService.searchConsumer(search)
-      .subscribe(data => {
-        this.dataSource.data = data;
-      });
+    try {
+      if (this.data.type === 'create bill') {
+        this.activeConsumersSubcription = this.consumerService.searchConsumer(search)
+        .pipe(
+          map(consumers => consumers.filter(consumer => consumer.CustomerStatus === 'Active'))
+        ).subscribe(data => {
+          this.dataSource.data = data;
+        });
+      } else {
+        this.activeConsumersSubcription = this.consumerService.searchConsumer(search)
+        .subscribe(data => {
+          this.dataSource.data = data;
+        });
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
-
   }
 
   ngOnDestroy(): void {

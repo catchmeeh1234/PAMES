@@ -5,6 +5,8 @@ import { MatTableDataSource } from '@angular/material/table';
 import { Consumer, ConsumerService, Product, ProductInfo } from 'src/app/services/consumer.service';
 import { Observable, filter, lastValueFrom, map, pipe } from 'rxjs';
 import { Router } from '@angular/router';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-manage-accounts',
@@ -24,11 +26,14 @@ export class ManageAccountsComponent {
     public consumerService:ConsumerService,
     private dialog:MatDialog,
     private router:Router,
+    private sessionStorageService:SessionStorageServiceService,
   ) {
 
   }
 
   ngOnInit(): void {
+    console.log("test: " + this.sessionStorageService.getSession("fullname"));
+
     //Called after the constructor, initializing input properties, and the first call to ngOnChanges.
     //Add 'implements OnInit' to the class.
     //this.loadConsumerSummary();
@@ -40,16 +45,25 @@ export class ManageAccountsComponent {
 
     this.res$ = this.consumerService.fetchConsumers(numbersOfSelection);
 
-    //load the actual table
-    const resToPromise = await lastValueFrom(this.res$, {defaultValue: [] as Consumer[]});
-
-    this.consumerService.dataSource = new MatTableDataSource(resToPromise)
-    this.consumerService.dataSource.paginator = this.paginator;
-    //get the consumer's summmary / statistics
-    this.consumerService.loadConsumerSummary();
-    //console.log(resToPromise);
 
 
+    try {
+      //load the actual table
+      const resToPromise = await lastValueFrom(this.res$, {defaultValue: [] as Consumer[]});
+      this.consumerService.dataSource = new MatTableDataSource(resToPromise)
+      this.consumerService.dataSource.paginator = this.paginator;
+      //get the consumer's summmary / statistics
+      this.consumerService.loadConsumerSummary();
+      //console.log(resToPromise);
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   // async loadConsumerSummary() {

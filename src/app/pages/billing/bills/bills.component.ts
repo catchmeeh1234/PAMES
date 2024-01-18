@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -11,6 +12,7 @@ import { SearchConsumerComponent } from 'src/app/components/search-consumer/sear
 import { BillInfo, BillService } from 'src/app/services/bill.service';
 import { Consumer } from 'src/app/services/consumer.service';
 import { DateFormatService } from 'src/app/services/date-format.service';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { ZoneService, Zone } from 'src/app/services/zone.service';
 
 export const GRI_DATE_FORMATS: MatDateFormats = {
@@ -61,6 +63,7 @@ export class BillsComponent {
     private dialog:MatDialog,
     private router:Router,
     private dateFormatService:DateFormatService,
+    private sessionStorageService:SessionStorageServiceService,
   ) {
     this.adapter.setLocale("en-EN");
   }
@@ -93,8 +96,18 @@ export class BillsComponent {
   }
 
   async loadZones() {
-    const zones = await lastValueFrom(this.zoneService.fetchZones(), {defaultValue: [] as Zone[]});
-    this.zones = zones;
+    try {
+      const zones = await lastValueFrom(this.zoneService.fetchZones(), {defaultValue: [] as Zone[]});
+      this.zones = zones;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   async searchConsumer() {
@@ -114,10 +127,21 @@ export class BillsComponent {
   }
 
   async loadBillsByAccNo(accno:string) {
-    const bills = await lastValueFrom(this.billService.fetchBills(accno), {defaultValue: [] as BillInfo[]});
+    try {
+      const bills = await lastValueFrom(this.billService.fetchBills(accno), {defaultValue: [] as BillInfo[]});
 
-    this.billService.dataSource = new MatTableDataSource<BillInfo>(bills);
-    this.billService.dataSource.paginator = this.paginator;
+      this.billService.dataSource = new MatTableDataSource<BillInfo>(bills);
+      this.billService.dataSource.paginator = this.paginator;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
 
   }
 
@@ -151,10 +175,22 @@ export class BillsComponent {
       return;
     }
 
-    const searchedBills = await lastValueFrom(this.billService.searchBills(newBillingMonth, billStatus, zone), {defaultValue: [] as BillInfo[]});
+    try {
+      const searchedBills = await lastValueFrom(this.billService.searchBills(newBillingMonth, billStatus, zone), {defaultValue: [] as BillInfo[]});
 
-    this.billService.dataSource = new MatTableDataSource<any>(searchedBills);
-    this.billService.dataSource.paginator = this.paginator;
+      this.billService.dataSource = new MatTableDataSource<any>(searchedBills);
+      this.billService.dataSource.paginator = this.paginator;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
+
 
     // if (!this.billService.dataSource) {
     //   return;

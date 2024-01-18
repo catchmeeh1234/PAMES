@@ -1,9 +1,12 @@
 import { SelectionModel } from '@angular/cdk/collections';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { CollectionDetails, OfficialReceiptService } from 'src/app/services/official-receipt.service';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 
 @Component({
   selector: 'app-post-or',
@@ -29,6 +32,8 @@ export class PostOrComponent {
 
   constructor(
     private officialReceiptService:OfficialReceiptService,
+    private router:Router,
+    private sessionStorageService:SessionStorageServiceService,
   ) {}
 
   ngOnInit(): void {
@@ -68,14 +73,26 @@ export class PostOrComponent {
   }
 
   loadPendingOR() {
-    this.officialReceiptService.fetchPendingOR().subscribe(collectionDetails => {
-      collectionDetails.forEach((collectionDetails, index) => {
-        collectionDetails.position = index + 1;
-      });
+    try {
+      this.officialReceiptService.fetchPendingOR().subscribe(collectionDetails => {
+        collectionDetails.forEach((collectionDetails, index) => {
+          collectionDetails.position = index + 1;
+        });
 
-      this.dataSource = new MatTableDataSource(collectionDetails);
-      this.dataSource.paginator = this.paginator;
-    })
+        this.dataSource = new MatTableDataSource(collectionDetails);
+        this.dataSource.paginator = this.paginator;
+      });
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
+
   }
 
   async onPostOR() {
@@ -84,19 +101,32 @@ export class PostOrComponent {
     // await this.loop(delay);
     // this.progressCounter = 0;
     // console.log(this.progressCounter);
-    let count = 0;
-    for (const [index, orDetails] of this.selection.selected.entries()) {
-      const reponse:any = await lastValueFrom(this.officialReceiptService.postOR(orDetails));
-      if (reponse.status === "OR Posted") {
-        this.progressCounter = ((index + 1) / this.selection.selected.length) * 100;
-        this.loadPendingOR();
-        count++;
-      } else {
-        console.log(reponse.status);
+
+    try {
+      let count = 0;
+      for (const [index, orDetails] of this.selection.selected.entries()) {
+        const reponse:any = await lastValueFrom(this.officialReceiptService.postOR(orDetails));
+        if (reponse.status === "OR Posted") {
+          this.progressCounter = ((index + 1) / this.selection.selected.length) * 100;
+          this.loadPendingOR();
+          count++;
+        } else {
+          console.log(reponse.status);
+        }
+      }
+      alert(`Posted ${count} OR`);
+      this.selection.clear();
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
       }
     }
-    alert(`Posted ${count} OR`);
-    this.selection.clear();
+
+
   }
 
   viewOR(CRNo:string) {

@@ -1,6 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, Subscription, map, of } from 'rxjs';
 import { SearchConsumerComponent } from 'src/app/components/search-consumer/search-consumer.component';
 import { BillInfo, BillMonthGroup, BillService } from 'src/app/services/bill.service';
@@ -76,6 +78,7 @@ export class CreateOrComponent {
     private snackbarService:SnackbarService,
     private sessionStorageService:SessionStorageServiceService,
     private consumerService:ConsumerService,
+    private router:Router,
   ) {}
 
 
@@ -83,16 +86,26 @@ export class CreateOrComponent {
     //get latest or number from the database
     this.orNumber = this.loadLastORNumber();
 
-    //get early payment discount
-    this.earlyPaymentDiscount = this.loadEarlyPaymentDiscount();
-    this.earlyPaymentDiscountSubscription = this.earlyPaymentDiscount.subscribe((discount) => {
-      this.earlyPaymentRate = discount?.DiscountPercent.toString()!;
-    });
+    try {
+      //get early payment discount
+      this.earlyPaymentDiscount = this.loadEarlyPaymentDiscount();
+      this.earlyPaymentDiscountSubscription = this.earlyPaymentDiscount.subscribe((discount) => {
+        this.earlyPaymentRate = discount?.DiscountPercent.toString()!;
+      });
 
-    //get reconnection fee
-    this.reconnectionFeeSubscription = this.loadReconnectionFee().subscribe((amount => {
-      this.reconnectionFee = amount!;
-    }));
+      //get reconnection fee
+      this.reconnectionFeeSubscription = this.loadReconnectionFee().subscribe((amount => {
+        this.reconnectionFee = amount!;
+      }));
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
 
     this.orFormGroup = this.formBuilder.group({
       orNumber: ['', Validators.required],
@@ -285,11 +298,20 @@ export class CreateOrComponent {
 
   loadBill(billNumber:string) {
     //this.billDetails = billInfo;
-    this.loadBillSubscription = this.billService.fetchBillByBillNo(billNumber)
-    .subscribe((data) => {
-      this.billDetails = data[0];
-    })
-
+    try {
+      this.loadBillSubscription = this.billService.fetchBillByBillNo(billNumber)
+      .subscribe((data) => {
+        this.billDetails = data[0];
+      });
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   get accountNumber() {
@@ -468,60 +490,72 @@ export class CreateOrComponent {
     //DISPLAY CONSUMER'S INFORMATION
     this.data.consumerInfo = consumerInfo;
 
-    //DISPLAY CONSUMER'S UNPAID BILLS
-    this.unpaidBillsSubscription = this.billService.fetchUnpaidBills(newData)
-    .pipe(
-      map(bills => bills.map(bill => ({ ...bill, checked: true })))
-    )
-    .subscribe(data => {
-      this.setUnpaidBills(data);
+    try {
+      //DISPLAY CONSUMER'S UNPAID BILLS
+      this.unpaidBillsSubscription = this.billService.fetchUnpaidBills(newData)
+      .pipe(
+        map(bills => bills.map(bill => ({ ...bill, checked: true })))
+      )
+      .subscribe(data => {
+        this.setUnpaidBills(data);
 
-      //asign default display for Bill section
-      this.billDetails = data[0];
+        //asign default display for Bill section
+        this.billDetails = data[0];
 
-      //GET TOTAL AMOUNT DUE OF ALL UNPAID BILLS
-      let totalAmountDue = 0;
+        //GET TOTAL AMOUNT DUE OF ALL UNPAID BILLS
+        let totalAmountDue = 0;
 
-      for (const bill of data) {
-        totalAmountDue += this.calculateTotalAmountDue(bill);
+        for (const bill of data) {
+          totalAmountDue += this.calculateTotalAmountDue(bill);
+        }
+
+        //add recon fee
+        if (this.orFormGroup.get('reconnectionFee')?.value) {
+          totalAmountDue += parseFloat(this.reconnectionFee); // Add the reconnection fee amount
+        }
+
+        //loop through all unpaid bills
+        // let billAmountDue = 0;
+        // for (let index = 0; index < this.billingMonthFormArray.length; index++) {
+        //   console.log(this.billingMonthFormArray.at(index).value);
+        //   const isChecked = this.billingMonthFormArray.at(index).value.Checked;
+        //   const amountDue = this.billingMonthFormArray.at(index).value.amountDue;
+
+        //   if (isChecked) {
+        //     billAmountDue = amountDue;
+        //     break;
+        //   }
+        // }
+
+        //add early payment discount
+        if (this.orFormGroup.get('earlyPaymentDiscount')?.value) {
+          const earlyPaymentDisc = this.calculateEarlyPaymentDiscount(parseFloat(this.earlyPaymentRate), this.latestBillAmountDue);
+          const newEarlyPaymentDisc = Number(earlyPaymentDisc).toFixed(2);
+          totalAmountDue -= parseFloat(newEarlyPaymentDisc);
+        }
+
+        //add adjustments
+        totalAmountDue += this.totalAdjustment;
+
+        //this.totalAmountDue = totalAmountDue;
+
+        //set amountPaid
+        //set adjustment
+        this.orFormGroup.patchValue({
+          amountPaid: totalAmountDue.toFixed(2)
+        })
+      });
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
       }
+    }
 
-      //add recon fee
-      if (this.orFormGroup.get('reconnectionFee')?.value) {
-        totalAmountDue += parseFloat(this.reconnectionFee); // Add the reconnection fee amount
-      }
 
-      //loop through all unpaid bills
-      // let billAmountDue = 0;
-      // for (let index = 0; index < this.billingMonthFormArray.length; index++) {
-      //   console.log(this.billingMonthFormArray.at(index).value);
-      //   const isChecked = this.billingMonthFormArray.at(index).value.Checked;
-      //   const amountDue = this.billingMonthFormArray.at(index).value.amountDue;
-
-      //   if (isChecked) {
-      //     billAmountDue = amountDue;
-      //     break;
-      //   }
-      // }
-
-      //add early payment discount
-      if (this.orFormGroup.get('earlyPaymentDiscount')?.value) {
-        const earlyPaymentDisc = this.calculateEarlyPaymentDiscount(parseFloat(this.earlyPaymentRate), this.latestBillAmountDue);
-        const newEarlyPaymentDisc = Number(earlyPaymentDisc).toFixed(2);
-        totalAmountDue -= parseFloat(newEarlyPaymentDisc);
-      }
-
-      //add adjustments
-      totalAmountDue += this.totalAdjustment;
-
-      //this.totalAmountDue = totalAmountDue;
-
-      //set amountPaid
-      //set adjustment
-      this.orFormGroup.patchValue({
-        amountPaid: totalAmountDue.toFixed(2)
-      })
-    });
 
   }
 

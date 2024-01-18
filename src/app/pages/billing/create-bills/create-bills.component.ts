@@ -11,6 +11,8 @@ import { Announcement, AnnouncementService } from 'src/app/services/announcement
 import { MatPaginator } from '@angular/material/paginator';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { lastValueFrom } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-create-bills',
@@ -51,6 +53,7 @@ export class CreateBillsComponent {
     private snackbarService:SnackbarService,
     private announcementService:AnnouncementService,
     private sessionStorageService:SessionStorageServiceService,
+    private router:Router,
   ) {}
 
   ngOnInit(): void {
@@ -64,15 +67,37 @@ export class CreateBillsComponent {
 
   async onLoadZones() {
     const checked = false;
-    const zones = await lastValueFrom(this.zoneService.fetchZones());
-    const newZones = zones.map(zone => ({
-      ...zone,
-      checked
-    }));
-    this.zones = newZones;
+
+    try {
+      const zones = await lastValueFrom(this.zoneService.fetchZones());
+      const newZones = zones.map(zone => ({
+        ...zone,
+        checked
+      }));
+      this.zones = newZones;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
   async onLoadMeterReaders() {
-    this.meterReaders = await lastValueFrom(this.meterReaderService.fetchMeterReader("All"));
+    try {
+      this.meterReaders = await lastValueFrom(this.meterReaderService.fetchMeterReader("All"));
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
   }
 
   onCheckboxChange(zone:Zone) {
@@ -104,16 +129,25 @@ export class CreateBillsComponent {
     const newBillingMonth = this.dateFormatService.convertToMonthYearString(billingMonth);
     //console.log(zones, newBillingMonth, meterReader);
 
-    const preparedBills:any = await lastValueFrom(this.billService.prepareBills(zones, newBillingMonth, meterReader, username));
+    try {
+      const preparedBills:any = await lastValueFrom(this.billService.prepareBills(zones, newBillingMonth, meterReader, username));
+      if (preparedBills.status !== "Bills Prepared") {
+        console.log(preparedBills.status);
+        this.snackbarService.showError(preparedBills.status);
+        return;
+      }
 
-    if (preparedBills.status !== "Bills Prepared") {
-      console.log(preparedBills.status);
-      this.snackbarService.showError(preparedBills.status);
-      return;
+      this.dataSource = new MatTableDataSource<any>(preparedBills.result);
+      this.dataSource.paginator = this.paginator;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
-
-    this.dataSource = new MatTableDataSource<any>(preparedBills.result);
-    this.dataSource.paginator = this.paginator;
   }
 
   async createBills(preparedBills:MatTableDataSource<any>, billingMonth:Date, zones:string[]) {
@@ -123,40 +157,59 @@ export class CreateBillsComponent {
       return;
     }
 
-    const res:any = await lastValueFrom(this.billService.createBills(preparedBills.data, newBillingMonth, zones));
+    try {
+      const res:any = await lastValueFrom(this.billService.createBills(preparedBills.data, newBillingMonth, zones));
 
-    if (res.status === "Bills Created") {
-      this.snackbarService.showSuccess(res.status);
-      this.selectedMeterReader = "";
-      //clear datasource table
-      this.dataSource.data = [];
-      //clear zones check list
-      if (this.zones) {
-        const newZones = this.zones.map(zone => {
-          return { ...zone, checked: false };
-        });
+      if (res.status === "Bills Created") {
+        this.snackbarService.showSuccess(res.status);
+        this.selectedMeterReader = "";
+        //clear datasource table
+        this.dataSource.data = [];
+        //clear zones check list
+        if (this.zones) {
+          const newZones = this.zones.map(zone => {
+            return { ...zone, checked: false };
+          });
 
-        this.zones = newZones;
+          this.zones = newZones;
+        }
+      } else {
+        this.snackbarService.showError(res.status);
       }
-    } else {
-      this.snackbarService.showError(res.status);
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
-
-
     //CLEAR PREPARED BILLS TABLE AFTER SUCCESSFUL CREATION OF BILL
   }
 
   async onLoadAnnouncement() {
-    const announcements = await lastValueFrom(this.announcementService.loadAnnouncement());
-    for (const announcement of announcements) {
-      if (announcement.AnnounceID === "1") {
-        this.announcementMessage = announcement.Announce;
-      } else if(announcement.AnnounceID === "2") {
-        this.announcementContactNo = announcement.Announce;
-      } else {
-        console.log("Something went wrong");
+    try {
+      const announcements = await lastValueFrom(this.announcementService.loadAnnouncement());
+      for (const announcement of announcements) {
+        if (announcement.AnnounceID === "1") {
+          this.announcementMessage = announcement.Announce;
+        } else if(announcement.AnnounceID === "2") {
+          this.announcementContactNo = announcement.Announce;
+        } else {
+          console.log("Something went wrong");
+        }
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
       }
     }
+
   }
 
   async onUpdateAnnouncement(message:string, contactNo:string) {
@@ -164,14 +217,23 @@ export class CreateBillsComponent {
       this.snackbarService.showError("please input an announcement message/contact no");
       return;
     }
-    //add validation later for message and contact no
-    const response:any = await lastValueFrom(this.announcementService.updateAnnouncement(message, contactNo));
+    try {
+      //add validation later for message and contact no
+      const response:any = await lastValueFrom(this.announcementService.updateAnnouncement(message, contactNo));
 
-    if (response.status === "Announcement updated") {
-      this.snackbarService.showSuccess(response.status);
-    } else {
-      this.snackbarService.showError(response.status);
+      if (response.status === "Announcement updated") {
+        this.snackbarService.showSuccess(response.status);
+      } else {
+        this.snackbarService.showError(response.status);
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
-
   }
 }

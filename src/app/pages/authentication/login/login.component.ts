@@ -10,6 +10,7 @@ type User = {
   username: string;
   fullname: string;
   status: "Login Success" | "Invalid Credentials";
+  token: string;
 }
 
 @Component({
@@ -40,10 +41,12 @@ export class AppSideLoginComponent {
       .subscribe((data:any) => {
         let response: User = data;
         if (response.status === "Login Success") {
+          this.sessionStorageService.setSession('token', response.token);
           this.sessionStorageService.setSession('userid', response.userid);
           this.sessionStorageService.setSession('username', response.username);
           this.sessionStorageService.setSession('password', this.password);
           this.sessionStorageService.setSession('fullname', response.fullname);
+          console.log(response);
 
           //this.router.navigate(['/auth/dashboard'], { queryParams: { id: this.sessionStorageService.getSession('userid') } });
           this.router?.navigate(['/accounts/manage-accounts']);

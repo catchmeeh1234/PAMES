@@ -1,5 +1,7 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, HostListener } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
+import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { ConsumerService } from 'src/app/services/consumer.service';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
@@ -46,7 +48,8 @@ export class FilterCustomerComponent {
     private elementRef: ElementRef,
     private zoneService:ZoneService,
     private consumerService:ConsumerService,
-    private sessionStorageService:SessionStorageServiceService
+    private sessionStorageService:SessionStorageServiceService,
+    private router:Router,
   ) {}
 
   ngOnInit(): void {
@@ -156,8 +159,19 @@ export class FilterCustomerComponent {
 
     //console.log(search, status, zone);
 
-    const searchedAccounts = await lastValueFrom(this.consumerService.searchConsumer(search, zone, status));
-    console.log(searchedAccounts);
-    this.consumerService.dataSource.data = searchedAccounts;
+    try {
+      const searchedAccounts = await lastValueFrom(this.consumerService.searchConsumer(search, zone, status));
+      console.log(searchedAccounts);
+      this.consumerService.dataSource.data = searchedAccounts;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
   }
 }

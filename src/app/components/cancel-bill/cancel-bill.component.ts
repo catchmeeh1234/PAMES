@@ -1,6 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { BillInfo, BillService } from 'src/app/services/bill.service';
 import { DateFormatService } from 'src/app/services/date-format.service';
@@ -37,6 +39,7 @@ export class CancelBillComponent {
     private sessionStorageService:SessionStorageServiceService,
     private billService:BillService,
     private dateFormatService:DateFormatService,
+    private router:Router
   ) {}
 
   async ngOnInit() {
@@ -64,11 +67,22 @@ export class CancelBillComponent {
       this.cancelBillForm.patchValue(this.billInfo);
 
       //get cancel bill no
-      const cancelBillNo = await lastValueFrom(this.userAccountsService.fetchLogicNumbers("CancelBill"));
-      if (cancelBillNo.length === 1) {
-        this.cancelBillForm.patchValue({ReferenceNo: cancelBillNo[0].number});
-        //console.log(this.cancelBillForm.value);
+      try {
+        const cancelBillNo = await lastValueFrom(this.userAccountsService.fetchLogicNumbers("CancelBill"));
+        if (cancelBillNo.length === 1) {
+          this.cancelBillForm.patchValue({ReferenceNo: cancelBillNo[0].number});
+          //console.log(this.cancelBillForm.value);
+        }
+      } catch(error) {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            console.log('Forbidden:', error.error);
+            this.sessionStorageService.removeSession();
+            this.router.navigate(['./authentication/login']);
+          }
+        }
       }
+
 
   }
 
@@ -81,12 +95,23 @@ export class CancelBillComponent {
 
     const newDate = this.dateFormatService.formatDate(this.cancelBillForm.get("CurrentDate")?.value);
     details.CurrentDate = newDate;
-    const res:any = await lastValueFrom(this.billService.cancelBill(details));
-    //console.log(res);
-    if (res.status === "Bill Cancelled") {
-      this.dialogRef.close(res);
-    } else {
-      this.snackbarService.showError(res.status);
+
+    try {
+      const res:any = await lastValueFrom(this.billService.cancelBill(details));
+      //console.log(res);
+      if (res.status === "Bill Cancelled") {
+        this.dialogRef.close(res);
+      } else {
+        this.snackbarService.showError(res.status);
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
   }
 }

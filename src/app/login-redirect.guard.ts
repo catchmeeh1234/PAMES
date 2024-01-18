@@ -13,16 +13,15 @@ export class LoginRedirectGuard implements CanActivate {
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
 
-      const username = this.sessionStorageService.getSession('username');
-      const uid = this.sessionStorageService.getSession('userid');
+      const token = this.sessionStorageService.getSession('token');
+      console.log(token);
 
-      if (username && uid) {
+      if (token) {
         //console.log("1")
         // Credentials are stored in cookies, so redirect to dashboard
         this.router?.navigate(['/accounts/manage-accounts']);
         return false;
       } else {
-        console.log(uid, username)
         // Credentials are not stored in cookies, so allow access
         return true;
       }

@@ -14,6 +14,7 @@ import { SnackbarService } from 'src/app/services/snackbar.service';
 import { SearchConsumerComponent } from '../search-consumer/search-consumer.component';
 import { Data1 } from 'src/app/pages/collection/create-or/create-or.component';
 import { lastValueFrom } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-bill-form',
@@ -109,14 +110,25 @@ export class BillFormComponent {
 
     if (this.formData.action === "Edit" && this.formData.bill_no) {
       const bill_no = this.formData.bill_no;
-      const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(bill_no));
 
-      this.rateName = billInfo[0].RateSchedule;
-      const rate = await lastValueFrom(this.rateScheduleService.loadRateSchedule(this.rateName));
-      this.rateKwh = rate[0].kwh;
-      this.billCharges = await lastValueFrom(this.billService.fetchBillCharges(bill_no));
-      this.populateBillFormOnEdit(billInfo[0], this.rateKwh, this.billCharges);
+      try {
+        const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(bill_no));
 
+        this.rateName = billInfo[0].RateSchedule;
+        const rate = await lastValueFrom(this.rateScheduleService.loadRateSchedule(this.rateName));
+        this.rateKwh = rate[0].kwh;
+        this.billCharges = await lastValueFrom(this.billService.fetchBillCharges(bill_no));
+        this.populateBillFormOnEdit(billInfo[0], this.rateKwh, this.billCharges);
+
+      } catch(error) {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            console.log('Forbidden:', error.error);
+            this.sessionStorageservice.removeSession();
+            this.router.navigate(['./authentication/login']);
+          }
+        }
+      }
     }
 
 
@@ -280,28 +292,88 @@ export class BillFormComponent {
   }
 
   async onLoadRateSchedule(classification:string) {
-    const type = await lastValueFrom(this.rateScheduleService.loadRateSchedule(classification));
-    this.rateKwh = type[0].kwh;
+    try {
+      const type = await lastValueFrom(this.rateScheduleService.loadRateSchedule(classification));
+      this.rateKwh = type[0].kwh;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageservice.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
   }
 
   async onLoadDiscounts() {
     this.seniorPercentDiscount = 0;
-    const seniorDiscount = await lastValueFrom(this.discountsService.loadDiscounts("Senior Citizen"));
-    this.seniorPercentDiscount = seniorDiscount[0].DiscountPercent;
+
+    try {
+      const seniorDiscount = await lastValueFrom(this.discountsService.loadDiscounts("Senior Citizen"));
+      this.seniorPercentDiscount = seniorDiscount[0].DiscountPercent;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageservice.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
+
   }
 
   async onLoadReadingDay(zone:string) {
-    const reading_day = await lastValueFrom(this.readingSettingsService.loadReadingSettings("reading_day", zone));
-    this.readingDay = parseInt(reading_day[0].value);
+    try {
+      const reading_day = await lastValueFrom(this.readingSettingsService.loadReadingSettings("reading_day", zone));
+      this.readingDay = parseInt(reading_day[0].value);
+
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageservice.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
+
   }
 
   async onLoadMeterReaders() {
-    this.meterreaders = await lastValueFrom(this.meterReaderService.fetchMeterReader("All"));
+    try {
+      this.meterreaders = await lastValueFrom(this.meterReaderService.fetchMeterReader("All"));
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageservice.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
   }
 
   async loadBillCharges(billno:string) {
-    const billCharges = await lastValueFrom(this.billService.fetchBillCharges(billno));
-    return billCharges;
+    try {
+      const billCharges = await lastValueFrom(this.billService.fetchBillCharges(billno));
+      return billCharges;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageservice.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+      return false;
+    }
+
   }
 
   async onLoadConsumerCharges(account_no:string, month:string, year:number, ) {
@@ -312,8 +384,23 @@ export class BillFormComponent {
     const newMonth = months.indexOf(month) + 1;
     console.log(newMonth, year);
 
-    const consumerCharges = await lastValueFrom(this.consumerService.fetchConsumerCharges(account_no));
-    this.consumerCharges = consumerCharges.filter(data => data.Recurring === 'Yes' || (data.BillingMonth === newMonth.toString() && data.BillingYear === year.toString()))
+    try {
+      const consumerCharges = await lastValueFrom(this.consumerService.fetchConsumerCharges(account_no));
+      this.consumerCharges = consumerCharges.filter(data => data.Recurring === 'Yes' || (data.BillingMonth === newMonth.toString() && data.BillingYear === year.toString()))
+      this.billForm.patchValue({
+        Charges: this.consumerCharges,
+      });
+
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageservice.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
                             // .map(charges => {
                             //   if (charges.ChargeType === "Fixed") {
                             //     charges.Amount = parseFloat(charges.Amount).toFixed(2);
@@ -332,9 +419,6 @@ export class BillFormComponent {
 
     //console.log(this.consumerCharges);
 
-    this.billForm.patchValue({
-      Charges: this.consumerCharges,
-    });
   }
 
   private compute(billForm:any, rateKwh:number, consumer_charges:any) {
@@ -474,72 +558,83 @@ export class BillFormComponent {
     }
 
     //fetch consumer info by acc no
-    const consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(accountNumber));
+    try {
+      const consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(accountNumber));
 
-    this.data.consumerInfo = undefined;
-    this.billForm.reset();
+      this.data.consumerInfo = undefined;
+      this.billForm.reset();
 
-    //check if account number exists in the database
-    if (Array.isArray(consumerInfo)) {
-      if (consumerInfo.length === 0) {
-        alert("Account Number does not exist");
-        this.searchAccount.nativeElement.select();
+      //check if account number exists in the database
+      if (Array.isArray(consumerInfo)) {
+        if (consumerInfo.length === 0) {
+          alert("Account Number does not exist");
+          this.searchAccount.nativeElement.select();
+          return;
+        }
+      }
+
+      //get previous month
+      const currentDate = new Date();
+      const billingMonth = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
+      const newBillingMonth = this.dateFormatService.convertToMonthYearString(billingMonth);
+      const billMonthArray = this.dateFormatService.separateMonthYear(newBillingMonth);
+      if (billMonthArray.length !== 2) {
+        this.snackbarService.showError("bill month length is not 2");
         return;
       }
+      const month = billMonthArray[0];
+      const year = parseInt(billMonthArray[1]);
+      this.resetFormValues();
+      //await this.onLoadReadingDay(result.Zone);
+      //this.calculateBillingDates(currentDate, this.readingDay);
+
+      //check if there is a last reading date for the chosen consumer
+      let newDateTo:Date = new Date();
+      let newDateFrom:Date;
+
+      if (consumerInfo.LasReadingDate === "" || consumerInfo.LasReadingDate === null) {
+        newDateFrom = this.dateFormatService.convertStringToDate(consumerInfo.DateInstalled)!;
+      } else {
+        newDateFrom = this.dateFormatService.convertStringToDate(consumerInfo.LasReadingDate)!;
+      }
+
+      //calculate due date using current date/reading date
+      const datesForBilling = this.calculateDueAndDisconnectionDate(newDateTo);
+
+      this.onLoadConsumerCharges(consumerInfo.AccountNo, month, year);
+
+      this.data.consumerInfo = consumerInfo;
+
+      this.billForm.patchValue(consumerInfo);
+      this.billForm.patchValue({
+        AccountNumber: consumerInfo.AccountNo,
+        CustomerName: `${consumerInfo.Firstname} ${consumerInfo.Middlename} ${consumerInfo.Lastname}`,
+        Consumption: 0 - consumerInfo.LastMeterReading,
+        AverageCons: parseInt(consumerInfo.Averagee),
+        IsSenior: consumerInfo.IsSenior === 'Yes' ? true : false,
+        Month: month,
+        Year: year,
+        BillingMonth: newBillingMonth,
+        DateFrom: newDateFrom,
+        DateTo: newDateTo,
+        DueDate: datesForBilling.dueDate,
+        CreatedBy: this.sessionStorageservice.getSession("username"),
+      });
+
+      this.rateName = consumerInfo.RateSchedule;
+      this.onLoadRateSchedule(consumerInfo.RateSchedule);
+
+      this.currentReading.nativeElement.select();
+
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageservice.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
-
-    //get previous month
-    const currentDate = new Date();
-    const billingMonth = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
-    const newBillingMonth = this.dateFormatService.convertToMonthYearString(billingMonth);
-    const billMonthArray = this.dateFormatService.separateMonthYear(newBillingMonth);
-    if (billMonthArray.length !== 2) {
-      this.snackbarService.showError("bill month length is not 2");
-      return;
-    }
-    const month = billMonthArray[0];
-    const year = parseInt(billMonthArray[1]);
-    this.resetFormValues();
-    //await this.onLoadReadingDay(result.Zone);
-    //this.calculateBillingDates(currentDate, this.readingDay);
-
-    //check if there is a last reading date for the chosen consumer
-    let newDateTo:Date = new Date();
-    let newDateFrom:Date;
-
-    if (consumerInfo.LasReadingDate === "" || consumerInfo.LasReadingDate === null) {
-      newDateFrom = this.dateFormatService.convertStringToDate(consumerInfo.DateInstalled)!;
-    } else {
-      newDateFrom = this.dateFormatService.convertStringToDate(consumerInfo.LasReadingDate)!;
-    }
-
-    //calculate due date using current date/reading date
-    const datesForBilling = this.calculateDueAndDisconnectionDate(newDateTo);
-
-    this.onLoadConsumerCharges(consumerInfo.AccountNo, month, year);
-
-    this.data.consumerInfo = consumerInfo;
-
-    this.billForm.patchValue(consumerInfo);
-    this.billForm.patchValue({
-      AccountNumber: consumerInfo.AccountNo,
-      CustomerName: `${consumerInfo.Firstname} ${consumerInfo.Middlename} ${consumerInfo.Lastname}`,
-      Consumption: 0 - consumerInfo.LastMeterReading,
-      AverageCons: parseInt(consumerInfo.Averagee),
-      IsSenior: consumerInfo.IsSenior === 'Yes' ? true : false,
-      Month: month,
-      Year: year,
-      BillingMonth: newBillingMonth,
-      DateFrom: newDateFrom,
-      DateTo: newDateTo,
-      DueDate: datesForBilling.dueDate,
-      CreatedBy: this.sessionStorageservice.getSession("username"),
-    });
-
-    this.rateName = consumerInfo.RateSchedule;
-    this.onLoadRateSchedule(consumerInfo.RateSchedule);
-
-    this.currentReading.nativeElement.select();
 
   }
 
@@ -606,14 +701,24 @@ export class BillFormComponent {
         DueDateFormatted: this.dateFormatService.formatDate(this.billForm.get("DueDate")?.value),
       });
       //console.log(this.billForm.value);
-      const res:any = await lastValueFrom(this.billService.createBill(this.billForm.getRawValue()));
-      //console.log(res);
+      try {
+        const res:any = await lastValueFrom(this.billService.createBill(this.billForm.getRawValue()));
+        //console.log(res);
 
-      if (res.status === "Bill Created") {
-        this.snackbarService.showSuccess(res.status);
-        this.openBillInfo(res.billno);
-      } else {
-        this.snackbarService.showError(res.status);
+        if (res.status === "Bill Created") {
+          this.snackbarService.showSuccess(res.status);
+          this.openBillInfo(res.billno);
+        } else {
+          this.snackbarService.showError(res.status);
+        }
+      } catch(error) {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            console.log('Forbidden:', error.error);
+            this.sessionStorageservice.removeSession();
+            this.router.navigate(['./authentication/login']);
+          }
+        }
       }
     }
   }
@@ -653,15 +758,28 @@ export class BillFormComponent {
 
       console.log(this.billForm.getRawValue());
 
-      const res:any = await lastValueFrom(this.billService.updateBill(this.billForm.getRawValue()));
-      console.log(res);
-
-      if (res.status === "Bill Updated") {
-        this.snackbarService.showSuccess(res.status);
-        this.openBillInfo(res.billno);
-      } else {
-        this.snackbarService.showError(res.status);
+      try {
+        const res:any = await lastValueFrom(this.billService.updateBill(this.billForm.getRawValue()));
+        //console.log(res);
+        if (res.status === "Bill Updated") {
+          this.snackbarService.showSuccess(res.status);
+          this.openBillInfo(res.billno);
+        } else {
+          this.snackbarService.showError(res.status);
+        }
+      } catch(error) {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            console.log('Forbidden:', error.error);
+            this.sessionStorageservice.removeSession();
+            this.router.navigate(['./authentication/login']);
+          }
+        }
       }
+
+
+
+
 
     }
 

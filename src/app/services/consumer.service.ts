@@ -1,9 +1,11 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { Observable, catchError, filter, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Charges } from './charges.service';
+import { Router } from '@angular/router';
+import { SessionStorageServiceService } from './session-storage-service.service';
 
 export type Consumer = {
   Consumer_id: string
@@ -166,7 +168,11 @@ export class ConsumerService {
   dataSource:MatTableDataSource<Consumer>;
   consumerSummary:ConsumerSummary[] = [];
 
-  constructor(private http:HttpClient) { }
+  constructor(
+    private http:HttpClient,
+    private router:Router,
+    private sessionStorageService:SessionStorageServiceService,
+  ) { }
 
   fetchConsumers(top=""): Observable<Consumer[]> {
     return this.http.get<Consumer[]>(`${environment.API_URL}/Consumers/viewConsumers.php?top=${top}`, {responseType: 'json'})
@@ -226,36 +232,47 @@ export class ConsumerService {
   }
 
   loadConsumerSummary() {
-    let consumerSummary:ConsumerSummary[] = [];
+    try {
+      let consumerSummary:ConsumerSummary[] = [];
 
-    this.fetchConsumers().subscribe(data => {
+      this.fetchConsumers().subscribe(data => {
 
-      //get all customers
-      let obj = {
-        Name: 'Total Consumer',
-        Count: data.length
-      };
-      consumerSummary.push(obj);
+        //get all customers
+        let obj = {
+          Name: 'Total Consumer',
+          Count: data.length
+        };
+        consumerSummary.push(obj);
 
-      //get active customers
-      const active = data.filter(toFilter => toFilter.CustomerStatus === "Active");
-      obj = {
-        Name: 'Total Active',
-        Count: active.length
+        //get active customers
+        const active = data.filter(toFilter => toFilter.CustomerStatus === "Active");
+        obj = {
+          Name: 'Total Active',
+          Count: active.length
+        }
+        consumerSummary.push(obj);
+
+        //get disconnected customers
+        const disconnected = data.filter(toFilter => toFilter.CustomerStatus === "Disconnected");
+        obj = {
+          Name: 'Total Disconnected',
+          Count: disconnected.length
+        }
+        consumerSummary.push(obj);
+
+        this.consumerSummary = consumerSummary;
+
+      });
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
       }
-      consumerSummary.push(obj);
+    }
 
-      //get disconnected customers
-      const disconnected = data.filter(toFilter => toFilter.CustomerStatus === "Disconnected");
-      obj = {
-        Name: 'Total Disconnected',
-        Count: disconnected.length
-      }
-      consumerSummary.push(obj);
-
-      this.consumerSummary = consumerSummary;
-
-    });
   }
   updateConsumerInfo(consumerInfo:Consumer) {
     let params = new FormData();

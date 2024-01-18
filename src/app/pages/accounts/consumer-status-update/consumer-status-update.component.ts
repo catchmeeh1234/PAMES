@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ViewChild } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -125,20 +126,30 @@ export class ConsumerStatusUpdateComponent {
 
     this.loadAccountStatusTable(accountNo);
 
-     this.consumerInfo$ = this.consumerService.fetchConsumerInfoByAccNo(accountNo)
-     .pipe(
-      first(),
-      map(consumer => {
-        const fullname = `${consumer.Firstname} ${consumer.Middlename} ${consumer.Lastname}`;
-        return {...consumer, Fullname: fullname};
-      }),
+    try {
+      this.consumerInfo$ = this.consumerService.fetchConsumerInfoByAccNo(accountNo)
+      .pipe(
+        first(),
+        map(consumer => {
+          const fullname = `${consumer.Firstname} ${consumer.Middlename} ${consumer.Lastname}`;
+          return {...consumer, Fullname: fullname};
+        }),
 
-      );
+        );
 
-     this.consumerInfo$.subscribe(data => {
-      console.log(data);
+      this.consumerInfo$.subscribe(data => {
+        console.log(data);
 
-     })
+      });
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   get accountNumber() {
@@ -162,11 +173,21 @@ export class ConsumerStatusUpdateComponent {
   }
 
   loadAccountStatusTable(accountNo:string) {
-    this.consumerService.fetchAccountStatusTable(accountNo)
-    .subscribe(data => {
-      this.dataSource = new MatTableDataSource(data);
-      this.dataSource.paginator = this.paginator;
-    });
+    try {
+      this.consumerService.fetchAccountStatusTable(accountNo)
+      .subscribe(data => {
+        this.dataSource = new MatTableDataSource(data);
+        this.dataSource.paginator = this.paginator;
+      });
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
 
@@ -203,22 +224,32 @@ export class ConsumerStatusUpdateComponent {
         const newDate = this.dateFormatService.formatDate(date);
         formData.date = newDate;
 
-        this.consumerService.updateAccountStatus(formData)
-        .subscribe(result => {
-          if (result.status === "Account status updated") {
-            const accountNumber = formData.accountNo;
+        try {
+          this.consumerService.updateAccountStatus(formData)
+          .subscribe(result => {
+            if (result.status === "Account status updated") {
+              const accountNumber = formData.accountNo;
 
-            this.snackbarService.showSuccess(result.status);
-            this.loadAccountStatusTable(accountNumber);
+              this.snackbarService.showSuccess(result.status);
+              this.loadAccountStatusTable(accountNumber);
 
-            //reset table
-            this.accountStatusForm.patchValue({
-              remarks: ""
-            });
-          } else {
-            this.snackbarService.showError(result.status)
+              //reset table
+              this.accountStatusForm.patchValue({
+                remarks: ""
+              });
+            } else {
+              this.snackbarService.showError(result.status)
+            }
+          });
+        } catch(error) {
+          if (error instanceof HttpErrorResponse) {
+            if (error.status === 401) {
+              console.log('Forbidden:', error.error);
+              this.sessionStorageService.removeSession();
+              this.router.navigate(['./authentication/login']);
+            }
           }
-        });
+        }
       }
     });
 

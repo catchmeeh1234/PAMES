@@ -1,9 +1,12 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
+import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { Charges, ChargesService } from 'src/app/services/charges.service';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 
 interface DialogData {
@@ -23,6 +26,8 @@ export class EditChargesComponent {
     private chargesService:ChargesService,
     private dialogRef: MatDialogRef<EditChargesComponent>,
     private snackbarService:SnackbarService,
+    private sessionStorageService:SessionStorageServiceService,
+    private router:Router
   ) {}
 
   ngOnInit(): void {
@@ -50,8 +55,9 @@ export class EditChargesComponent {
   }
 
   async onSave(chargesInfo:Charges) {
-    //console.log(chargesInfo);
-    const res:any = await lastValueFrom(this.chargesService.updateCharges(chargesInfo));
+    try {
+      //console.log(chargesInfo);
+      const res:any = await lastValueFrom(this.chargesService.updateCharges(chargesInfo));
       if (res.status === "Charges Updated") {
         this.snackbarService.showSuccess(res.status);
 
@@ -62,5 +68,16 @@ export class EditChargesComponent {
       } else {
         this.snackbarService.showError(res.status);
       }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
+
   }
 }

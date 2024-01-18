@@ -1,7 +1,10 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, Inject, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 import { PasswordStatus, UseraccountsService } from 'src/app/services/useraccounts.service';
 
@@ -28,6 +31,8 @@ export class PasswordPromptComponent {
     private userAccountsService:UseraccountsService,
     private snackbarService:SnackbarService,
     private dialog:MatDialog,
+    private router:Router,
+    private sessionStorageService:SessionStorageServiceService,
   ) { }
 
   ngAfterViewInit(): void {
@@ -98,19 +103,32 @@ export class PasswordPromptComponent {
       return;
     }
 
-    const res:any = await lastValueFrom(this.userAccountsService.validateAuthorizationPassword(password));
-    const newRes:PasswordStatus = res;
 
-    if (newRes.status === "access granted") {
-      this.dialogRef.close(newRes);
-    } else {
-      this.snackbarService.showError(newRes.status);
-      this.resetInput();
-      if (this.input1 && this.input1.nativeElement) {
-        // Focus on the input field
-        this.input1.nativeElement.focus();
+
+    try {
+      const res:any = await lastValueFrom(this.userAccountsService.validateAuthorizationPassword(password));
+      const newRes:PasswordStatus = res;
+
+      if (newRes.status === "access granted") {
+        this.dialogRef.close(newRes);
+      } else {
+        this.snackbarService.showError(newRes.status);
+        this.resetInput();
+        if (this.input1 && this.input1.nativeElement) {
+          // Focus on the input field
+          this.input1.nativeElement.focus();
+        }
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
       }
     }
+
   }
 
   private resetInput() {

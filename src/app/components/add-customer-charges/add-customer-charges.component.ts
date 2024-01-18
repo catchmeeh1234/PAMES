@@ -1,6 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { Charges, ChargesService } from 'src/app/services/charges.service';
 import { ConsumerService, ScheduleCharges } from 'src/app/services/consumer.service';
@@ -30,6 +32,7 @@ export class AddCustomerChargesComponent {
     private consumerService:ConsumerService,
     private snackbarService:SnackbarService,
     private dialogRef:MatDialogRef<AddCustomerChargesComponent>,
+    private router:Router,
   ) {}
 
   ngOnInit(): void {
@@ -67,23 +70,43 @@ export class AddCustomerChargesComponent {
   }
 
  async onLoadCharges() {
-    this.charges = await lastValueFrom(this.chargesService.loadCharges());
+    try {
+      this.charges = await lastValueFrom(this.chargesService.loadCharges());
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   async addCustomerCharge() {
     if (this.addChargeForm.valid) {
-      console.log(this.addChargeForm.value);
-      const res:any = await lastValueFrom(this.consumerService.addScheduleCharge(this.addChargeForm.value));
 
-      if (res.status === "Schedule Charge Added") {
-        this.snackbarService.showSuccess(res.status);
+      try {
+        const res:any = await lastValueFrom(this.consumerService.addScheduleCharge(this.addChargeForm.value));
 
-        this.consumerService.fetchConsumerCharges(this.data.account_no).subscribe(data => {
-          this.consumerService.consumerChargesDataSource.data = data;
-        });
-        this.dialogRef.close();
-      } else {
-        this.snackbarService.showError(res.status);
+        if (res.status === "Schedule Charge Added") {
+          this.snackbarService.showSuccess(res.status);
+
+          this.consumerService.fetchConsumerCharges(this.data.account_no).subscribe(data => {
+            this.consumerService.consumerChargesDataSource.data = data;
+          });
+          this.dialogRef.close();
+        } else {
+          this.snackbarService.showError(res.status);
+        }
+      } catch(error) {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            console.log('Forbidden:', error.error);
+            this.sessionStorageService.removeSession();
+            this.router.navigate(['./authentication/login']);
+          }
+        }
       }
     }
   }

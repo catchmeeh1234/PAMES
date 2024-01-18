@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { AppSideLoginComponent } from './login/login.component';
 import { AppSideRegisterComponent } from './register/register.component';
 import { LoginRedirectGuard } from 'src/app/login-redirect.guard';
+import { AuthGuard } from 'src/app/auth.guard';
 
 export const AuthenticationRoutes: Routes = [
   {

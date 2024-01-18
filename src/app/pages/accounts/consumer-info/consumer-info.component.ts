@@ -7,6 +7,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { EditAccountComponent } from '../edit-account/edit-account.component';
 import { Data1 } from '../../collection/create-or/create-or.component';
+import { HttpErrorResponse } from '@angular/common/http';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 
 
 
@@ -41,7 +43,8 @@ export class ConsumerInfoComponent {
     public consumerService:ConsumerService,
     private dialog: MatDialog,
     private route:ActivatedRoute,
-    private router:Router
+    private router:Router,
+    private sessionStorageService:SessionStorageServiceService,
   ) {}
 
   ngOnInit(): void {
@@ -59,28 +62,41 @@ export class ConsumerInfoComponent {
 
   loadCustomerInfo(consumer_id:string) {
     //this.consumerService.consumerInfo$
-     this.consumerService.consumerInfo$ = this.consumerService.fetchConsumerInfo(consumer_id);
 
-     this.consumerInfoSubscribe = this.consumerService.consumerInfo$.subscribe(data => {
-      this.data.consumerInfo = data[0];
-     });
+    try {
+      this.consumerService.consumerInfo$ = this.consumerService.fetchConsumerInfo(consumer_id);
 
-     this.consumerService.consumerLedger$ = this.consumerService.consumerInfo$
-     .pipe(
-      switchMap(consumerInfo => {
-        if (Array.isArray(consumerInfo) && consumerInfo.length === 1) {
-          const obj = consumerInfo[0]; // Accessing the single object from the array
-          this.onLoadConsumerCharges(obj.AccountNo);
-          return this.consumerService.fetchConsumerLedger(obj.AccountNo)
-        } else {
-          return of([]);
-        }
-      })
-     )
+      this.consumerInfoSubscribe = this.consumerService.consumerInfo$.subscribe(data => {
+        this.data.consumerInfo = data[0];
+      });
 
-     this.ConsumerLedgerDataSubscribe = this.consumerService.consumerLedger$.subscribe(data => {
+      this.consumerService.consumerLedger$ = this.consumerService.consumerInfo$
+      .pipe(
+        switchMap(consumerInfo => {
+          if (Array.isArray(consumerInfo) && consumerInfo.length === 1) {
+            const obj = consumerInfo[0]; // Accessing the single object from the array
+            this.onLoadConsumerCharges(obj.AccountNo);
+            return this.consumerService.fetchConsumerLedger(obj.AccountNo)
+          } else {
+            return of([]);
+          }
+        })
+      )
+
+      this.ConsumerLedgerDataSubscribe = this.consumerService.consumerLedger$.subscribe(data => {
         this.dataSource.data = data;
       });
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
+
 
 
     // const consumers= await this.consumerService.fetchConsumerInfo(consumer_id).toPromise();
@@ -126,8 +142,20 @@ export class ConsumerInfoComponent {
   }
 
   async onLoadConsumerCharges(account_no:string) {
-    const consumerCharges = await lastValueFrom(this.consumerService.fetchConsumerCharges(account_no));
-    this.consumerCharges = consumerCharges;
+
+    try {
+      const consumerCharges = await lastValueFrom(this.consumerService.fetchConsumerCharges(account_no));
+      this.consumerCharges = consumerCharges;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
   }
 
   updateConsumerStatus(accountNo:string) {

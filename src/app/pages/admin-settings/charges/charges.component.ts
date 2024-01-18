@@ -7,6 +7,9 @@ import { EditChargesComponent } from '../edit-charges/edit-charges.component';
 import { ConsumerService } from 'src/app/services/consumer.service';
 import { MatPaginator } from '@angular/material/paginator';
 import { lastValueFrom } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 
 @Component({
   selector: 'app-charges',
@@ -33,6 +36,8 @@ export class ChargesComponent {
   constructor(
     public chargesService:ChargesService,
     private dialog:MatDialog,
+    private router:Router,
+    private sessionStorageService:SessionStorageServiceService,
   ) {}
 
   ngOnInit(): void {
@@ -42,10 +47,22 @@ export class ChargesComponent {
   }
 
   async onLoadCharges() {
-   const charges = await lastValueFrom(this.chargesService.loadCharges());
-   console.log(charges);
-    this.chargesService.dataSource = new MatTableDataSource(charges);
-    this.chargesService.dataSource.paginator = this.paginator;
+
+   try {
+      const charges = await lastValueFrom(this.chargesService.loadCharges());
+      console.log(charges);
+      this.chargesService.dataSource = new MatTableDataSource(charges);
+      this.chargesService.dataSource.paginator = this.paginator;
+   } catch(error) {
+     if (error instanceof HttpErrorResponse) {
+       if (error.status === 401) {
+         console.log('Forbidden:', error.error);
+         this.sessionStorageService.removeSession();
+         this.router.navigate(['./authentication/login']);
+       }
+     }
+   }
+
   }
 
   onAddCharges() {

@@ -9,6 +9,8 @@ import { Subscription, lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { CancelOrComponent } from 'src/app/components/cancel-or/cancel-or.component';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-view-or',
@@ -49,6 +51,7 @@ export class ViewOrComponent {
     private billService:BillService,
     private sessionStorageService:SessionStorageServiceService,
     private consumerService:ConsumerService,
+    private router:Router,
   ) {}
 
   searchConsumer() {
@@ -72,27 +75,37 @@ export class ViewOrComponent {
       return;
     }
 
-    //fetch consumer info by acc no
-    const consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(accountNumber));
+    try {
+      //fetch consumer info by acc no
+      const consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(accountNumber));
 
-    this.data.consumerInfo = undefined;
-    this.clearFields();
+      this.data.consumerInfo = undefined;
+      this.clearFields();
 
-    //check if account number exists in the database
-    if (Array.isArray(consumerInfo)) {
-      if (consumerInfo.length === 0) {
-        alert("Account Number does not exist");
-        this.searchAccount.nativeElement.select();
-        return;
+      //check if account number exists in the database
+      if (Array.isArray(consumerInfo)) {
+        if (consumerInfo.length === 0) {
+          alert("Account Number does not exist");
+          this.searchAccount.nativeElement.select();
+          return;
+        }
+      }
+
+      //populate consumer summary section
+      this.data.consumerInfo = consumerInfo;
+
+      //search all or for this account number
+      const collectionDetails = await lastValueFrom(this.officialReceiptService.fetchORDetailsByAccountNo(consumerInfo.AccountNo));
+      this.collectionDetails = collectionDetails;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
       }
     }
-
-    //populate consumer summary section
-    this.data.consumerInfo = consumerInfo;
-
-    //search all or for this account number
-    const collectionDetails = await lastValueFrom(this.officialReceiptService.fetchORDetailsByAccountNo(consumerInfo.AccountNo));
-    this.collectionDetails = collectionDetails;
   }
 
   async viewORDetails(orDetails:CollectionDetails) {
@@ -103,27 +116,49 @@ export class ViewOrComponent {
     this.billDetails = null;
     this.receiptDetails = undefined;
 
-    //load collection billing
-    const collectionBilling = await lastValueFrom(this.officialReceiptService.fetchORBillingByORNo(orDetails.CRNo));
-    this.collectionBillings = collectionBilling;
+    try {
+      //load collection billing
+      const collectionBilling = await lastValueFrom(this.officialReceiptService.fetchORBillingByORNo(orDetails.CRNo));
+      this.collectionBillings = collectionBilling;
 
-    //load collection charges
-    const collectionCharges = await lastValueFrom(this.officialReceiptService.fetchORChargesByORNo(orDetails.CRNo));
-    this.collectionCharges = collectionCharges;
+      //load collection charges
+      const collectionCharges = await lastValueFrom(this.officialReceiptService.fetchORChargesByORNo(orDetails.CRNo));
+      this.collectionCharges = collectionCharges;
 
-    //load printable content
-    this.receiptDetails = this.createReceiptDetails(orDetails, this.collectionBillings, this.collectionCharges, this.data.consumerInfo);
+      //load printable content
+      this.receiptDetails = this.createReceiptDetails(orDetails, this.collectionBillings, this.collectionCharges, this.data.consumerInfo);
 
-    //update total amount due + adjustment
+      //update total amount due + adjustment
 
-    //to do tom. add the total adjustment to collection details
+      //to do tom. add the total adjustment to collection details
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
+
   }
 
   loadBill(billNumber:string) {
-    this.loadBillSubscription = this.billService.fetchBillByBillNo(billNumber)
-    .subscribe((data) => {
-      this.billDetails = data[0];
-    })
+    try {
+      this.loadBillSubscription = this.billService.fetchBillByBillNo(billNumber)
+      .subscribe((data) => {
+        this.billDetails = data[0];
+      })
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   get amountPaid() {
@@ -212,10 +247,20 @@ export class ViewOrComponent {
         return;
       }
       if (result === "OR Cancelled") {
-        const collectionDetails = await lastValueFrom(this.officialReceiptService.fetchORDetailsByAccountNo(orDetails.AccountNo));
-        this.clearFields();
-        this.collectionDetails = collectionDetails;
-        this.selectedOR = undefined;
+        try {
+          const collectionDetails = await lastValueFrom(this.officialReceiptService.fetchORDetailsByAccountNo(orDetails.AccountNo));
+          this.clearFields();
+          this.collectionDetails = collectionDetails;
+          this.selectedOR = undefined;
+        } catch(error) {
+          if (error instanceof HttpErrorResponse) {
+            if (error.status === 401) {
+              console.log('Forbidden:', error.error);
+              this.sessionStorageService.removeSession();
+              this.router.navigate(['./authentication/login']);
+            }
+          }
+        }
       }
 
     });

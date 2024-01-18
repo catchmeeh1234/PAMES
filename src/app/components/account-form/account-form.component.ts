@@ -10,6 +10,7 @@ import { ZoneService } from 'src/app/services/zone.service';
 import { Router } from '@angular/router';
 import { Observable, Subscription, from, lastValueFrom, map, of,  } from 'rxjs';
 import { MatDialogRef } from '@angular/material/dialog';
+import { HttpErrorResponse } from '@angular/common/http';
 
 type Status = "Adding Failed" | "Consumer Added";
 
@@ -132,19 +133,51 @@ export class AccountFormComponent {
   }
 
   async loadCustomerStatuses() {
-    const statuses = await lastValueFrom(this.consumerService.fetchConsumerStatus());
-    this.customerStatuses = statuses;
+    try {
+      const statuses = await lastValueFrom(this.consumerService.fetchConsumerStatus());
+      this.customerStatuses = statuses;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
 
   }
 
   async loadZones() {
-    const zones = await lastValueFrom(this.zoneService.fetchZones());
-    this.zones = zones;
+    try {
+      const zones = await lastValueFrom(this.zoneService.fetchZones());
+      this.zones = zones;
+
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   async loadRates() {
-    const rates = await lastValueFrom(this.rateService.loadRateSchedule("All"));
-    this.rates = rates;
+
+    try {
+      const rates = await lastValueFrom(this.rateService.loadRateSchedule("All"));
+      this.rates = rates;
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   onZoneAndClassChange() {
@@ -336,63 +369,98 @@ export class AccountFormComponent {
     //console.log(allFormData);
 
     if (formData.action === "Create") {
-      const res:any = await lastValueFrom(this.consumerService.addConsumers(allFormData));
-      let status: Status = res.status;
-      if (status === "Consumer Added") {
-        this.snackbarService.showSuccess(status);
+      try {
+        const res:any = await lastValueFrom(this.consumerService.addConsumers(allFormData));
+        let status: Status = res.status;
+        if (status === "Consumer Added") {
+          this.snackbarService.showSuccess(status);
 
-        //this.loadZones();
-        this.stepper.reset();
+          //this.loadZones();
+          this.stepper.reset();
 
-        this.consumerInfoFormGroup.setValue(this.orgConsumerInfoFormGroup);
-        this.addressFormGroup.setValue(this.orgAddressFormGroup);
-        this.installationFormGroup.setValue(this.orgInstallationFormGroup);
+          this.consumerInfoFormGroup.setValue(this.orgConsumerInfoFormGroup);
+          this.addressFormGroup.setValue(this.orgAddressFormGroup);
+          this.installationFormGroup.setValue(this.orgInstallationFormGroup);
 
 
-        this.accountNumber = "";
-        // const newDataSource:any = this.createAccountForm.value;
-        // newDataSource.push(this.createAccountForm.value);
-        // this.consumerService.fetchConsumers().subscribe(data => {
-        //   this.consumerService.dataSource.data = data;
-        // });
+          this.accountNumber = "";
+          // const newDataSource:any = this.createAccountForm.value;
+          // newDataSource.push(this.createAccountForm.value);
+          // this.consumerService.fetchConsumers().subscribe(data => {
+          //   this.consumerService.dataSource.data = data;
+          // });
 
-        // this.consumerService.loadConsumerSummary();
+          // this.consumerService.loadConsumerSummary();
 
-      } else {
-        this.snackbarService.showError(status);
-        //console.log(status);
-      }
-    } else if(formData.action === "Edit") {
-      const res:any = await lastValueFrom(this.consumerService.updateConsumerInfo(allFormData));
-
-      if (res?.status === undefined) {
-        return;
-      }
-
-      if (res.status === "Consumer Info updated successfully") {
-        this.snackbarService.showSuccess(res.status);
-        this.consumerService.fetchConsumerInfoByAccNo(this.accountNumber).subscribe(result => {
-
-          this.consumerService.consumerInfo$ = of([result]);
-          console.log("Test", result);
-          const data = {
-            status: res.status,
-            consumerInfo: result,
+        } else {
+          this.snackbarService.showError(status);
+          //console.log(status);
+        }
+      } catch(error) {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            console.log('Forbidden:', error.error);
+            this.sessionStorageService.removeSession();
+            this.router.navigate(['./authentication/login']);
           }
-          this.response.emit(data);
-
-          // for (const consumerInfo of data) {
-          //   if (consumerInfo.Consumer_id === allFormData.Consumer_id) {
-          //     this.consumerService.consumerInfo$ = of([consumerInfo]);
-          //   }
-          // }
-        });
-        this.consumerService.loadConsumerSummary();
-      } else {
-        console.log(res.status);
-
-        this.snackbarService.showError(res.status);
+        }
       }
+
+
+    } else if(formData.action === "Edit") {
+      try {
+        const res:any = await lastValueFrom(this.consumerService.updateConsumerInfo(allFormData));
+
+        if (res?.status === undefined) {
+          return;
+        }
+
+        if (res.status === "Consumer Info updated successfully") {
+          this.snackbarService.showSuccess(res.status);
+
+          try {
+             this.consumerService.fetchConsumerInfoByAccNo(this.accountNumber).subscribe(result => {
+
+              this.consumerService.consumerInfo$ = of([result]);
+              console.log("Test", result);
+              const data = {
+                status: res.status,
+                consumerInfo: result,
+              }
+              this.response.emit(data);
+
+              // for (const consumerInfo of data) {
+              //   if (consumerInfo.Consumer_id === allFormData.Consumer_id) {
+              //     this.consumerService.consumerInfo$ = of([consumerInfo]);
+              //   }
+              // }
+            });
+            this.consumerService.loadConsumerSummary();
+          } catch(error) {
+            if (error instanceof HttpErrorResponse) {
+              if (error.status === 401) {
+                console.log('Forbidden:', error.error);
+                this.sessionStorageService.removeSession();
+                this.router.navigate(['./authentication/login']);
+              }
+            }
+          }
+
+        } else {
+          console.log(res.status);
+
+          this.snackbarService.showError(res.status);
+        }
+      } catch(error) {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            console.log('Forbidden:', error.error);
+            this.sessionStorageService.removeSession();
+            this.router.navigate(['./authentication/login']);
+          }
+        }
+      }
+
     }
 
 

@@ -1,9 +1,12 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
+import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { ChargeType, Charges, ChargesService } from 'src/app/services/charges.service';
+import { SessionStorageServiceService } from 'src/app/services/session-storage-service.service';
 import { SnackbarService } from 'src/app/services/snackbar.service';
 
 @Component({
@@ -21,6 +24,8 @@ export class AddChargesComponent {
     private chargesService:ChargesService,
     private dialogRef: MatDialogRef<AddChargesComponent>,
     private snackbarService:SnackbarService,
+    private sessionStorageService:SessionStorageServiceService,
+    private router:Router
   ) {}
 
   ngOnInit(): void {
@@ -30,7 +35,8 @@ export class AddChargesComponent {
 
 
   async onSave(chargesInfo:Charges) {
-    const res:any = await lastValueFrom(this.chargesService.addCharges(chargesInfo));
+    try {
+      const res:any = await lastValueFrom(this.chargesService.addCharges(chargesInfo));
       if (res.status === "Charges Added") {
         this.snackbarService.showSuccess(res.status);
 
@@ -41,6 +47,16 @@ export class AddChargesComponent {
       } else {
         this.snackbarService.showError(res.status);
       }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
+
   }
 
 }

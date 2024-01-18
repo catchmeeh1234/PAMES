@@ -1,6 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { DateFormatService } from 'src/app/services/date-format.service';
 import { CollectionDetails, OfficialReceiptService } from 'src/app/services/official-receipt.service';
@@ -30,6 +32,7 @@ export class CancelOrComponent {
     private dateFormatService:DateFormatService,
     private officialReceiptService:OfficialReceiptService,
     private dialogRef:MatDialogRef<CancelOrComponent>,
+    private router:Router
   ) {}
 
   async ngOnInit() {
@@ -54,10 +57,20 @@ export class CancelOrComponent {
     this.cancelORForm.patchValue(this.orDetails);
 
     //get cancel cr reference number
-    const cancelBillNo = await lastValueFrom(this.userAccountsService.fetchLogicNumbers("CancelCollection"));
-    if (cancelBillNo.length === 1) {
-      this.cancelORForm.patchValue({ReferenceNo: cancelBillNo[0].number});
-      //console.log(this.cancelBillForm.value);
+    try {
+      const cancelBillNo = await lastValueFrom(this.userAccountsService.fetchLogicNumbers("CancelCollection"));
+      if (cancelBillNo.length === 1) {
+        this.cancelORForm.patchValue({ReferenceNo: cancelBillNo[0].number});
+        //console.log(this.cancelBillForm.value);
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
   }
 
@@ -69,11 +82,22 @@ export class CancelOrComponent {
 
     const newDate = this.dateFormatService.formatDate(this.cancelORForm.get("CurrentDate")?.value);
     details.CurrentDate = newDate;
-    const res:any = await lastValueFrom(this.officialReceiptService.cancelOR(details));
-    if (res.status === "OR Cancelled") {
-      this.dialogRef.close(res.status);
-    } else {
-      this.snackbarService.showError(res.status);
+
+    try {
+      const res:any = await lastValueFrom(this.officialReceiptService.cancelOR(details));
+      if (res.status === "OR Cancelled") {
+        this.dialogRef.close(res.status);
+      } else {
+        this.snackbarService.showError(res.status);
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
   }
 }

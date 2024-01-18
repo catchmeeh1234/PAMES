@@ -17,6 +17,7 @@ import { environment } from 'src/environments/environment';
 import { Data1 } from '../../collection/create-or/create-or.component';
 import { ConsumerService } from 'src/app/services/consumer.service';
 import { lastValueFrom } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-bill-info',
@@ -94,59 +95,112 @@ export class BillInfoComponent {
   }
 
   async loadBillInfo(billno:string) {
-    const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(billno));
 
-    if (billInfo.length === 1) {
-      this.billInfo = billInfo[0];
+    try {
+      const billInfo = await lastValueFrom(this.billService.fetchBillByBillNo(billno));
 
-      await this.loadMeterReader();
-      await this.loadBillCharges(billInfo[0].BillNo);
-      //console.log(billInfo);
-      this.billInfoForm.patchValue(billInfo[0]);
+      if (billInfo.length === 1) {
+        this.billInfo = billInfo[0];
 
-      const scheduleCharges = this.billService.computeScheduleCharge(this.billcharges)
-      const totalAmountDue = this.billService.computeTotalAmountDue(parseFloat(billInfo[0].AmountDue), scheduleCharges, parseFloat(billInfo[0].SeniorDiscount));
+        await this.loadMeterReader();
+        await this.loadBillCharges(billInfo[0].BillNo);
+        //console.log(billInfo);
+        this.billInfoForm.patchValue(billInfo[0]);
 
-      this.billInfoForm.patchValue({ totalAmountDue: totalAmountDue });
+        const scheduleCharges = this.billService.computeScheduleCharge(this.billcharges)
+        const totalAmountDue = this.billService.computeTotalAmountDue(parseFloat(billInfo[0].AmountDue), scheduleCharges, parseFloat(billInfo[0].SeniorDiscount));
 
-      this.billStatus = billInfo[0].BillStatus;
-      //console.log(this.billInfoForm.value);
+        this.billInfoForm.patchValue({ totalAmountDue: totalAmountDue });
 
-      this.BillDiscount = [];
-      this.BillDiscount.push({
-        Name: "Senior",
-        isSenior: billInfo[0].isSenior
-      });
+        this.billStatus = billInfo[0].BillStatus;
+        //console.log(this.billInfoForm.value);
 
-      this.data.consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(billInfo[0].AccountNumber));
+        this.BillDiscount = [];
+        this.BillDiscount.push({
+          Name: "Senior",
+          isSenior: billInfo[0].isSenior
+        });
+
+        this.data.consumerInfo = await lastValueFrom(this.consumerService.fetchConsumerInfoByAccNo(billInfo[0].AccountNumber));
+      }
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
     }
+
+
   }
 
   async loadMeterReader() {
-   this.meterReaders = await lastValueFrom(this.meterReaderService.fetchMeterReader("All"));
+    try {
+      this.meterReaders = await lastValueFrom(this.meterReaderService.fetchMeterReader("All"));
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   async loadBillCharges(billno:string) {
-    this.billcharges = await lastValueFrom(this.billService.fetchBillCharges(billno));
-    //console.log(this.billcharges);
+    try {
+      this.billcharges = await lastValueFrom(this.billService.fetchBillCharges(billno));
+      //console.log(this.billcharges);
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   editBill(billno:string) {
-    this.router.navigate(['./billing/edit-bill', billno]);
+    try {
+      this.router.navigate(['./billing/edit-bill', billno]);
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   async onPostBill(billno:string, accno:string) {
     if (this.user) {
-      const res:any = await lastValueFrom(this.billService.postbill(billno, accno, this.user));
-      //console.log(res);
-      if (res.status === "Bill Posted") {
-        this.snackbarService.showSuccess(res.status);
+      try {
+        const res:any = await lastValueFrom(this.billService.postbill(billno, accno, this.user));
+        //console.log(res);
+        if (res.status === "Bill Posted") {
+          this.snackbarService.showSuccess(res.status);
 
-        const bill = await lastValueFrom(this.billService.fetchBillByBillNo(billno));
-        this.loadBillInfo(bill[0].BillNo);
+          const bill = await lastValueFrom(this.billService.fetchBillByBillNo(billno));
+          this.loadBillInfo(bill[0].BillNo);
 
-      } else {
-        this.snackbarService.showError(res.status);
+        } else {
+          this.snackbarService.showError(res.status);
+        }
+      } catch(error) {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            console.log('Forbidden:', error.error);
+            this.sessionStorageService.removeSession();
+            this.router.navigate(['./authentication/login']);
+          }
+        }
       }
     }
   }
@@ -198,10 +252,19 @@ export class BillInfoComponent {
       billInfo: billInfo,
     }
 
-    this.billService.printBill(receipt).subscribe(data => {
-      console.log(data);
-    });
-
+    try {
+      this.billService.printBill(receipt).subscribe(data => {
+        console.log(data);
+      });
+    } catch(error) {
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          console.log('Forbidden:', error.error);
+          this.sessionStorageService.removeSession();
+          this.router.navigate(['./authentication/login']);
+        }
+      }
+    }
   }
 
   //INSTALL ZADIG KAPAG NAG SESECURITY ERROR OLD
